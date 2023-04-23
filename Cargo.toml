@@ -5,6 +5,8 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Arsynth/schnauzer"
 keywords = ["macho", "mach-o", "binary"]
+categories = ["command-line-interface"]
+description = "Library for parsing Mach-O files"
 exclude = [
     "testable/*"
 ]
