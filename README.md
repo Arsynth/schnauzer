@@ -1,14 +1,13 @@
 # libschnauzer
-![crates.io version]
 
 ### Documentation
-docs.rs/schnauzer/0.1.2
+docs.rs/schnauzer/0.1.3
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.1.2"
+schnauzer = "0.1.3"
 ```
 
 ### Example code
