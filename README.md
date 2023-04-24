@@ -2,13 +2,13 @@
 ![crates.io version]
 
 ### Documentation
-docs.rs/schnauzer/0.1.0
+docs.rs/schnauzer/0.1.2
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.1.0"
+schnauzer = "0.1.2"
 ```
 
 ### Example code
