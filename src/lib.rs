@@ -7,6 +7,9 @@
 //! <https://opensource.apple.com/source/xnu/xnu-4570.71.2/EXTERNAL_HEADERS/mach-o/loader.h.auto.html>
 //! <https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/fat.h.auto.html>
 //! <https://opensource.apple.com/source/cctools/cctools-698/libmacho/arch.c>
+//! <https://opensource.apple.com/source/cctools/cctools-698/ld/>
+//! <https://blog.xpnsec.com/building-a-mach-o-memory-loader-part-1/>
+//! <https://github.com/aidansteele/osx-abi-macho-file-format-reference>
 
 pub mod result;
 pub mod types;
