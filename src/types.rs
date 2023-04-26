@@ -100,10 +100,10 @@ impl<'a> ctx::TryFromCtx<'a, scroll::Endian> for Magic {
 
 impl Magic {
     fn endian(&self) -> scroll::Endian {
-        if self.is_reverse() {
-            scroll::LE
-        } else {
+        if self.is_fat() || !self.is_reverse() {
             scroll::BE
+        } else {
+            scroll::LE
         }
     }
 }
@@ -245,33 +245,34 @@ pub struct FatArch<'a> {
 
 impl<'a> FatArch<'a> {
     fn parse(buf: &'a [u8], base_offset: usize) -> Result<FatArch<'a>> {
+        const ENDIAN: scroll::Endian = scroll::BE;
         let mut c_offset: usize = base_offset;
 
         if buf.len() < BYTES_PER_FAT_ARCH {
             return Err(Error::BadBufferLength);
         }
 
-        let cpu_type: CPUType = buf.pread_with(c_offset, scroll::BE)?;
+        let cpu_type: CPUType = buf.pread_with(c_offset, ENDIAN)?;
         c_offset += mem::size_of::<CPUType>();
 
-        let cpu_subtype: CPUSubtype = buf.pread_with(c_offset, scroll::BE)?;
+        let cpu_subtype: CPUSubtype = buf.pread_with(c_offset, ENDIAN)?;
         c_offset += mem::size_of::<CPUSubtype>();
 
-        let offset: u32 = buf.pread_with(c_offset, scroll::BE)?;
+        let offset: u32 = buf.pread_with(c_offset, ENDIAN)?;
         c_offset += mem::size_of::<u32>();
 
-        let size: u32 = buf.pread_with(c_offset, scroll::BE)?;
+        let size: u32 = buf.pread_with(c_offset, ENDIAN)?;
         c_offset += mem::size_of::<u32>();
 
-        let align: u32 = buf.pread_with(c_offset, scroll::BE)?;
+        let align: u32 = buf.pread_with(c_offset, ENDIAN)?;
 
         Ok(FatArch {
             buf,
-            cpu_type: cpu_type,
-            cpu_subtype: cpu_subtype,
-            offset: offset,
-            size: size,
-            align: align,
+            cpu_type,
+            cpu_subtype,
+            offset,
+            size,
+            align,
         })
     }
 }

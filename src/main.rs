@@ -10,7 +10,7 @@ fn main() {
     let path = match args.next() {
         Some(s) => s,
         None => {
-            println!("Not enough arguments. Provide a valid path to binary");
+            eprintln!("Not enough arguments. Provide a valid path to binary");
             std::process::exit(1);
         },
     };
@@ -19,7 +19,7 @@ fn main() {
     let buf = match fs::read(path) {
         Ok(b) => b,
         Err(e) => {
-            println!("Could not read file at '{:?}': {e}", path);
+            eprintln!("Could not read file at '{:?}': {e}", path);
             std::process::exit(1);
         },
     }; 
@@ -27,7 +27,7 @@ fn main() {
     let object = match Parser::parse(&buf) {
         Ok(o) => o,
         Err(e) => {
-            println!("Error while parsing: {:#?}", e);
+            eprintln!("Error while parsing: {:#?}", e);
             std::process::exit(1);
         },
     };
