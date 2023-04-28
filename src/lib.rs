@@ -15,14 +15,35 @@ pub mod result;
 pub mod types;
 pub mod constants;
 
+mod reader;
+
+use std::path::Path;
+
 use self::result::Result;
 pub use types::*;
 
-pub struct Parser;
+use std::cell::RefCell;
+use std::rc::Rc;
+use reader::Reader;
+
+type RcCell<T> = Rc<RefCell<T>>;
+
+use reader::RcReader;
+
+pub struct Parser {
+    reader: RcReader
+}
 
 impl Parser {
-    pub fn parse(buf: &[u8]) -> Result<ObjectType> {
-        ObjectType::parse(buf)
+    pub fn build(path: &Path) -> Result<Parser> {
+        let reader = Reader::build(path)?;
+        Ok(Parser {
+            reader
+        })
+    }
+
+    pub fn parse(self) -> Result<ObjectType> {
+        ObjectType::parse(self.reader.clone())
     }
 }
 
@@ -31,48 +52,54 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_can_output() {
+        let path = Path::new("testable/cat");
+        let parser = Parser::build(path).unwrap();
+        let obj = parser.parse().unwrap();
+        println!("{:#?}", obj);
+    }
+    
+    #[test]
     fn test_binary() {
-        let path = "testable/cat";
-        let buf = std::fs::read(path).unwrap();
-
-        let obj = Parser::parse(&buf).unwrap();
+        let path = Path::new("testable/cat");
+        let parser = Parser::build(path).unwrap();
+        let obj = parser.parse().unwrap();
+        
         let fat_header = if let ObjectType::Fat(f) = obj {
             f
         } else {
             panic!("Expected fat header, got {:#?}", obj);
         };
 
-        let arch1 = FatArch {
-            buf: &buf,
-            cpu_type: 16777223,
-            cpu_subtype: 3,
-            offset: 16384,
-            size: 70080,
-            align: 14,
-        };
-
-        let arch2 = FatArch {
-            buf: &buf,
-            cpu_type: 16777228,
-            cpu_subtype: constants::CPU_SUBTYPE_LIB64 | 0x00000002,
-            offset: 98304,
-            size: 53488,
-            align: 14,
-        };
-
         let arch_items: Vec<FatArch> = fat_header.arch_iterator().collect();
         assert_eq!(arch_items.len(), 2, "Should be only two architectures");
 
-        assert_eq!(arch1, arch_items[0]);
-        assert_eq!(arch2, arch_items[1]);
+        {
+            let item = &arch_items[0];
+            assert_eq!(item.cpu_type, 16777223);
+            assert_eq!(item.cpu_subtype, 3);
+            assert_eq!(item.offset, 16384);
+            assert_eq!(item.size, 70080);
+            assert_eq!(item.align, 14);
+        }
+
+        {
+            let item = &arch_items[1];
+            assert_eq!(item.cpu_type, 16777228);
+            assert_eq!(item.cpu_subtype, constants::CPU_SUBTYPE_LIB64 | 0x00000002);
+            assert_eq!(item.offset, 98304);
+            assert_eq!(item.size, 53488);
+            assert_eq!(item.align, 14);
+        }
     }
 
+    
     #[test]
     fn test_arch_with_header_consistency() {
-        let path = "testable/cat";
-        let buf = std::fs::read(path).unwrap();
-
-        let obj = Parser::parse(&buf).unwrap();
+        let path = Path::new("testable/cat");
+        let parser = Parser::build(path).unwrap();
+        let obj = parser.parse().unwrap();
+        
         let fat_header = if let ObjectType::Fat(f) = obj {
             f
         } else {
@@ -84,4 +111,5 @@ mod tests {
             assert_eq!(arch.cpu_subtype, arch.mach_header().unwrap().cpu_subtype);
         }
     }
+    
 }

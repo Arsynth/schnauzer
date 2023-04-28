@@ -1,10 +1,10 @@
-use std::{fmt};
+use std::fmt;
 
 #[derive(Debug)]
 pub enum Error {
     BadMagic(u32),
     BadBufferLength,
-    Other(Box<dyn std::error::Error>)
+    Other(Box<dyn std::error::Error>),
 }
 
 impl Error {
@@ -30,5 +30,20 @@ impl From<scroll::Error> for Error {
         Error::Other(Box::new(value))
     }
 }
+
+impl From<Error> for scroll::Error {
+    fn from(value: Error) -> Self {
+        scroll::Error::Custom(value.description())
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Error::Other(Box::new(value))
+    }
+}
+
+unsafe impl Send for Error {}
+unsafe impl Sync for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
