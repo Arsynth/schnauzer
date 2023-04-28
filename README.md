@@ -1,13 +1,13 @@
 # libschnauzer
 
 ### Documentation
-docs.rs/schnauzer/0.1.3
+docs.rs/schnauzer/0.1.4
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.1.3"
+schnauzer = "0.1.4"
 ```
 
 ### Example code
