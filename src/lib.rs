@@ -60,6 +60,18 @@ mod tests {
     }
     
     #[test]
+    fn test_basic_parsing_stability() {
+        let path = Path::new("testable/cat");
+        let parser = Parser::build(path).unwrap();
+        let obj = parser.parse().unwrap();
+
+        let first = format!("{:#?}", obj);
+        let second = format!("{:#?}", obj);
+        
+        assert_eq!(first, second, "Somewhere invalid offset used while parsing!");
+    }
+
+    #[test]
     fn test_binary() {
         let path = Path::new("testable/cat");
         let parser = Parser::build(path).unwrap();
