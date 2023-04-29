@@ -22,6 +22,9 @@ pub use mach_header::*;
 pub mod load_command;
 pub use load_command::*;
 
+pub mod segment;
+pub use segment::*;
+
 pub(crate) use super::constants;
 
 #[derive(Debug)]

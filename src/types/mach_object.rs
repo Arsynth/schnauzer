@@ -48,6 +48,10 @@ impl MachObject {
             self.header.magic.endian(),
         )
     }
+
+    pub fn segments_iterator(&self) -> SegmentIterator {
+        SegmentIterator
+    }
 }
 
 impl Debug for MachObject {
@@ -99,3 +103,5 @@ impl Iterator for LoadCommandIterator {
         Some(lc)
     }
 }
+
+pub struct SegmentIterator;
