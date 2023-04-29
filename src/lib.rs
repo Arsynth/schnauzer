@@ -107,8 +107,8 @@ mod tests {
         };
 
         for arch in fat_header.arch_iterator() {
-            assert_eq!(arch.cpu_type, arch.mach_header().unwrap().cpu_type);
-            assert_eq!(arch.cpu_subtype, arch.mach_header().unwrap().cpu_subtype);
+            assert_eq!(arch.cpu_type, arch.object().unwrap().header().cpu_type);
+            assert_eq!(arch.cpu_subtype, arch.object().unwrap().header().cpu_subtype);
         }
     }
     

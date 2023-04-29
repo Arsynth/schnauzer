@@ -108,8 +108,8 @@ impl Debug for Magic {
 
 #[derive(Debug)]
 pub enum ObjectType {
-    Fat(FatHeader),
-    MachHeader(MachHeader),
+    Fat(FatObject),
+    MachO(MachObject),
 }
 
 impl ObjectType {
@@ -117,28 +117,28 @@ impl ObjectType {
         let magic = reader.borrow_mut().ioread_with::<u32>(scroll::BE)?;
         let magic: Magic = magic.try_into()?;
         if magic.is_fat() {
-            let header = FatHeader::parse(reader.clone())?;
+            let header = FatObject::parse(reader.clone())?;
             Ok(ObjectType::Fat(header))
         } else {
-            let header = MachHeader::parse(reader.clone(), 0)?;
-            Ok(ObjectType::MachHeader(header))
+            let header = MachObject::parse(reader.clone(), 0)?;
+            Ok(ObjectType::MachO(header))
         }
     }
 }
 
-pub struct FatHeader {
+pub struct FatObject {
     pub(super) reader: RcReader,
     arch_list_offset: usize,
     pub(super) nfat_arch: u32,
 }
 
-impl FatHeader {
-    fn parse(reader: RcReader) -> Result<FatHeader> {
+impl FatObject {
+    fn parse(reader: RcReader) -> Result<FatObject> {
         let offset = BYTES_PER_MAGIC;
         reader.borrow_mut().seek(SeekFrom::Start(offset as u64))?;
         let nfat_arch: u32 = reader.borrow_mut().ioread_with(scroll::BE)?;
 
-        Ok(FatHeader {
+        Ok(FatObject {
             reader: reader.clone(),
             arch_list_offset: BYTES_PER_FAT_HEADER,
             nfat_arch,
@@ -146,13 +146,13 @@ impl FatHeader {
     }
 }
 
-impl FatHeader {
+impl FatObject {
     pub fn arch_iterator(&self) -> FatArchIterator {
         FatArchIterator::build(self.reader.clone(), self.nfat_arch, self.arch_list_offset).unwrap()
     }
 }
 
-impl Debug for FatHeader {
+impl Debug for FatObject {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let archs: Vec<FatArch> = self.arch_iterator().collect();
 
@@ -233,8 +233,8 @@ impl FatArch {
 }
 
 impl FatArch {
-    pub fn mach_header(&self) -> Result<MachHeader> {
-        MachHeader::parse(self.reader.clone(), self.offset as usize)
+    pub fn object(&self) -> Result<MachObject> {
+        MachObject::parse(self.reader.clone(), self.offset as usize)
     }
 }
 
@@ -248,7 +248,7 @@ impl Debug for FatArch {
             .field("size", &self.size)
             .field("align", &self.align);
 
-        if let Result::Ok(h) = MachHeader::parse(self.reader.clone(), self.offset as usize) {
+        if let Result::Ok(h) = MachObject::parse(self.reader.clone(), self.offset as usize) {
             s.field("mach_header()", &h);
         }
 
@@ -274,9 +274,63 @@ impl FatArch {
     }
 }
 
+pub struct MachObject {
+    reader: RcReader,
+
+    pub(super) header: MachHeader,
+    pub(super) commands_offset: usize,
+}
+
+impl MachObject {
+    fn parse(reader: RcReader, base_offset: usize) -> Result<MachObject> {
+        let mut reader_mut = reader.borrow_mut();
+        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
+        std::mem::drop(reader_mut);
+
+        let header = MachHeader::parse(reader.clone())?;
+
+        let mut reader_mut = reader.borrow_mut();
+        // After reading the header `reader_mut` should stand on
+        // start of load commands list
+        let commands_offset = reader_mut.stream_position()? as usize;
+
+        Ok(MachObject {
+            reader: reader.clone(),
+            header: header,
+            commands_offset: commands_offset,
+        })
+    }
+}
+
+impl MachObject {
+    pub fn header(&self) -> &MachHeader {
+        &self.header
+    }
+
+    pub fn load_commands_iterator(&self) -> LoadCommandIterator {
+        LoadCommandIterator::new(
+            self.reader.clone(),
+            self.commands_offset,
+            self.header.size_of_cmds,
+            self.header.magic.endian(),
+        )
+    }
+}
+
+impl Debug for MachObject {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let commands: Vec<LoadCommand> = self.load_commands_iterator().collect();
+
+        f.debug_struct("MachObject")
+            .field("header", &self.header)
+            .field("commands_offset", &self.commands_offset)
+            .field("self.load_commands_iterator()", &commands)
+            .finish()
+    }
+}
+
 pub struct MachHeader {
     reader: RcReader,
-    commands_offset: usize,
 
     pub(super) magic: Magic,
     pub(super) cpu_type: CPUType,
@@ -289,9 +343,9 @@ pub struct MachHeader {
 }
 
 impl MachHeader {
-    fn parse(reader: RcReader, base_offset: usize) -> Result<MachHeader> {
+    /// We assume reader is already stands on correct position
+    fn parse(reader: RcReader) -> Result<MachHeader> {
         let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
 
         let mut ctx = scroll::BE;
 
@@ -319,7 +373,6 @@ impl MachHeader {
 
         Ok(MachHeader {
             reader: reader.clone(),
-            commands_offset,
             magic,
             cpu_type,
             cpu_subtype,
@@ -334,8 +387,6 @@ impl MachHeader {
 
 impl Debug for MachHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let commands: Vec<LoadCommand> = self.load_commands_iterator().collect();
-
         f.debug_struct("MachHeader")
             .field("magic", &self.magic)
             .field("cpu_type", &self.cpu_type)
@@ -345,7 +396,6 @@ impl Debug for MachHeader {
             .field("size_of_cmds", &self.size_of_cmds)
             .field("flags", &self.flags)
             .field("reserved", &self.reserved)
-            .field("self.load_commands_iterator()", &commands)
             .finish()
     }
 }
@@ -381,17 +431,6 @@ impl MachHeader {
 
     pub fn reserved(&self) -> u32 {
         self.reserved
-    }
-}
-
-impl MachHeader {
-    pub fn load_commands_iterator(&self) -> LoadCommandIterator {
-        LoadCommandIterator::new(
-            self.reader.clone(),
-            self.commands_offset,
-            self.size_of_cmds,
-            self.magic.endian(),
-        )
     }
 }
 
@@ -441,11 +480,7 @@ pub struct LoadCommand {
 }
 
 impl LoadCommand {
-    fn parse(
-        reader: RcReader,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<LoadCommand> {
+    fn parse(reader: RcReader, base_offset: usize, endian: scroll::Endian) -> Result<LoadCommand> {
         let mut reader_mut = reader.borrow_mut();
         reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
 
