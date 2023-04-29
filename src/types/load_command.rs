@@ -42,52 +42,59 @@ impl LoadCommand {
 /// Load command has variable set of fields dependent to `cmd` field
 /// List of load commands here - <https://opensource.apple.com/source/xnu/xnu-4570.71.2/EXTERNAL_HEADERS/mach-o/loader.h.auto.html>
 pub enum LcVariant {
-    /// prebind_cksum_command LC_PREBIND_CKSUM
+    /// LC_PREBIND_CKSUM
     PrebindChekSum(LcPrebindChekSum),
-    /// uuid_command LC_UUID
+    /// LC_UUID
     Uuid(LcUuid),
-    /// rpath_command LC_RPATH
+    /// LC_RPATH
     Rpath(LcRpath),
-    /// linkedit_data_command LC_...(See `LinkEditDataVariant`)
+    /// LC_...(See `LinkEditDataVariant`)
     LinkEditData(LcLinkEditData),
-    /// encryption_info_command LC_ENCRYPTION_INFO
+    /// LC_ENCRYPTION_INFO
     EncryptionInfo(LcEncryptionInfo),
-    /// encryption_info_command_64 LC_ENCRYPTION_INFO_64
+    /// LC_ENCRYPTION_INFO_64
     EncryptionInfo64(LcEncryptionInfo64),
-    /// version_min_command LC_VERSION_MIN_...(See `VersionMinVariant`)
+    /// LC_VERSION_MIN_...(See `VersionMinVariant`)
     VersionMin(LcVersionMin),
-    /// build_version_command LC_BUILD_VERSION
+    /// LC_BUILD_VERSION
     BuildVersion(LcBuildVersion),
-    /// dyld_info_command LC_DYLD_INFO
+    /// LC_DYLD_INFO
     DyldInfo(LcDyldInfo),
-    /// linker_option_command LC_LINKER_OPTION
+    /// LC_LINKER_OPTION
     LinkerOption(LcLinkerOption),
-    /// symseg_command LC_SYMSEG
+    /// LC_SYMSEG
     SymSeg(LcSymSeg),
-    /// ident_command LC_IDENT
+    /// LC_IDENT
     Ident(LcIdent),
-    /// fvmfile_command LC_FVMFILE
+    /// LC_FVMFILE
     FvmFile(LcFvmFile),
-    /// entry_point_command LC_MAIN
+    /// LC_MAIN
     EntryPoint(LcEntryPoint),
-    /// source_version_command LC_SOURCE_VERSION
+    /// LC_SOURCE_VERSION
     SourceVersion(LcSourceVersion),
-    /// note_command LC_NOTE
+    /// LC_NOTE
     Note(LcNote),
 }
 
+/// prebind_cksum_command
 pub struct LcPrebindChekSum {
     /// cksum
     check_sum: u32,
 }
+
+/// uuid_command
 pub struct LcUuid {
     /// uuid[16]
     uuid: u128,
 }
+
+/// rpath_command
 pub struct LcRpath {
     /// path
     path: String,
 }
+
+/// linkedit_data_command
 pub struct LcLinkEditData {
     variant: LinkEditDataVariant,
     /// dataoff
@@ -95,6 +102,8 @@ pub struct LcLinkEditData {
     /// datasize
     data_size: u32,
 }
+
+/// encryption_info_command
 pub struct LcEncryptionInfo {
     /// cryptoff
     crypt_offset: u32,
@@ -103,6 +112,8 @@ pub struct LcEncryptionInfo {
     /// cryptid
     crypt_id: u32,
 }
+
+/// encryption_info_command_64
 pub struct LcEncryptionInfo64 {
     /// cryptoff
     crypt_offset: u32,
@@ -114,6 +125,8 @@ pub struct LcEncryptionInfo64 {
     /// pad
     pad: u32,
 }
+
+/// version_min_command
 pub struct LcVersionMin {
     variant: VersionMinVariant,
     /// version
@@ -122,6 +135,7 @@ pub struct LcVersionMin {
     sdk: u32,
 }
 
+/// build_version_command
 pub struct LcBuildVersion {
     /// platform
     platform: u32,
@@ -133,7 +147,7 @@ pub struct LcBuildVersion {
     ntools: u32,
 
     /// Did not loaded directly, use `tool_version_iterator()` instead
-    _tools: ()
+    _tools: (),
 }
 
 impl LcBuildVersion {
@@ -145,24 +159,100 @@ impl LcBuildVersion {
 pub struct BuildToolVersionIterator;
 pub struct BuildToolVersion;
 
+/// dyld_info_command
 pub struct LcDyldInfo {
-    
+    /// rebase_off
+    rebase_offset: u32,
+    /// rebase_size
+    rebase_size: u32,
+
+    /// bind_off
+    bind_offset: u32,
+    /// bind_size
+    bind_size: u32,
+
+    /// weak_bind_off
+    weak_bind_offset: u32,
+    /// weak_bind_size
+    weak_bind_size: u32,
+
+    /// lazy_bind_off
+    lazy_bind_offset: u32,
+    /// lazy_bind_size
+    lazy_bind_size: u32,
+
+    /// export_off
+    export_offset: u32,
+    /// export_size
+    export_size: u32,
 }
-pub struct LcLinkerOption;
-pub struct LcSymSeg;
+
+/// linker_option_command
+pub struct LcLinkerOption {
+    /// count
+    count: u32,
+
+    /// TODO: concatenation of zero terminated UTF8 strings.
+    /// Zero filled at end to align
+    _strings: (),
+}
+
+/// symseg_command
+pub struct LcSymSeg {
+    /// offset
+    offset: u32,
+    /// size
+    size: u32,
+}
+
+/// ident_command (Obsolete)
 pub struct LcIdent;
-pub struct LcFvmFile;
-pub struct LcEntryPoint;
-pub struct LcSourceVersion;
-pub struct LcNote;
+
+/// fvmfile_command
+pub struct LcFvmFile {
+    /// name
+    name: String,
+    /// header_addr
+    header_address: u32,
+}
+
+/// entry_point_command
+pub struct LcEntryPoint {
+    /// entryoff
+    entry_offset: u64,
+    /// stacksize
+    stack_size: u64,
+}
+
+/// source_version_command
+pub struct LcSourceVersion {
+    /// version
+    version: u64,
+}
+
+/// note_command
+pub struct LcNote {
+    /// data_owner[16]
+    data_owner: String,
+    /// offset
+    offset: u64,
+    /// size
+    size: u64
+}
 
 pub enum LinkEditDataVariant {
-    CodeSignature,          // LC_CODE_SIGNATURE
-    SegmentSplitInfo,       // LC_SEGMENT_SPLIT_INFO
-    FunctionStarts,         // LC_FUNCTION_STARTS
-    DataInCode,             // LC_DATA_IN_CODE
-    DylibCodeSignDrs,       // LC_DYLIB_CODE_SIGN_DRS
-    LinkerOptimizationHint, // LC_LINKER_OPTIMIZATION_HINT
+    /// LC_CODE_SIGNATURE
+    CodeSignature,
+    /// LC_SEGMENT_SPLIT_INFO
+    SegmentSplitInfo,
+    /// LC_FUNCTION_STARTS
+    FunctionStarts,
+    /// LC_DATA_IN_CODE
+    DataInCode,
+    /// LC_DYLIB_CODE_SIGN_DRS
+    DylibCodeSignDrs,
+    /// LC_LINKER_OPTIMIZATION_HINT
+    LinkerOptimizationHint,
 }
 
 pub enum VersionMinVariant {
