@@ -127,6 +127,8 @@ pub enum LcVariant {
     Symtab(LcSymtab),
     /// LC_DYSYMTAB
     Dysimtab(LcDysimtab),
+    /// LC_TWOLEVEL_HINTS
+    TwoLevelHints(LcTwoLevelHints),
     /// LC_PREBIND_CKSUM
     PrebindChekSum(LcPrebindChekSum),
     /// LC_UUID
@@ -149,8 +151,6 @@ pub enum LcVariant {
     LinkerOption(LcLinkerOption),
     /// LC_SYMSEG
     SymSeg(LcSymSeg),
-    /// LC_IDENT
-    Ident(LcIdent),
     /// LC_FVMFILE
     FvmFile(LcFvmFile),
     /// LC_MAIN
@@ -226,47 +226,157 @@ impl TryFrom<u32> for LcVariant {
 */
 
 /// LC_SEGMENT
-pub struct LcSegment;
+pub struct LcSegment {
+    segname: String,
+    vmaddr: u32,
+	vmsize: u32,
+	fileoff: u32,
+	filesize: u32,
+	maxprot: VmProt,
+	initprot: VmProt,
+	nsects: u32,
+	flags: u32,
+}
 
 /// LC_SEGMENT_64
-pub struct LcSegment64;
+pub struct LcSegment64 {
+    segname: String,
+    vmaddr: u64,
+	vmsize: u64,
+	fileoff: u64,
+	filesize: u64,
+	maxprot: VmProt,
+	initprot: VmProt,
+	nsects: u32,
+	flags: u32,
+}
 
 /// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB
-pub struct LcDylib;
+pub struct LcDylib {
+    variant: DylibVariant,
+    dylib: Dylib, 
+}
+pub enum DylibVariant {
+    /// LC_ID_DYLIB
+    Id,
+    /// LC_LOAD_DYLIB
+    Load,
+    /// LC_LOAD_WEAK_DYLIB
+    LoadWeak,
+    /// LC_REEXPORT_DYLIB
+    Reexport
+}
+pub struct Dylib {
+    name: String,
+    timestamp: u32,
+    current_version: u32,
+    compatibility_version: u32,
+}
 
 /// LC_SUB_FRAMEWORK
-pub struct LcSubframework;
+pub struct LcSubframework {
+    /// union lc_str umbrella
+    umbrella: String,
+}
 
 /// LC_SUB_CLIENT
-pub struct LcSubclient;
+pub struct LcSubclient {
+    /// union lc_str umbrella
+    client: String,
+}
 
 /// LC_SUB_UMBRELLA
-pub struct LcSubumbrella;
+pub struct LcSubumbrella {
+    /// union lc_str umbrella
+    sub_umbrella: String,
+}
 
 /// LC_SUB_LIBRARY
-pub struct LcSublibrary;
+pub struct LcSublibrary {
+    /// union lc_str umbrella
+    sub_library: String,
+}
 
 /// LC_PREBOUND_DYLIB
-pub struct LcPreboundDylib;
+pub struct LcPreboundDylib {
+    /// union lc_str
+    name: String,
+	nmodules: u32,
+    /// union lc_str
+	linked_modules: Vec<u8>,
+}
 
 /// LC_ID_DYLINKER, LC_LOAD_DYLINKER, LC_DYLD_ENVIRONMENT
-pub struct LcDylinker;
+pub struct LcDylinker {
+    /// union lc_str    name;
+    name: String,
+}
 
 /// LC_DYLD_ENVIRONMENT or LC_UNIXTHREAD
-pub struct LcThread;
+pub struct LcThread {
+    _machine_specific: (),
+}
 
 /// LC_ROUTINES
-pub struct LcRoutines;
+pub struct LcRoutines {
+    init_address: u32,
+	init_module: u32,
+
+    /// Would be [u32; 6]
+    _reserved: (),
+}
 
 /// LC_ROUTINES_64
-pub struct LcRoutines64;
+pub struct LcRoutines64 {
+    init_address: u32,
+	init_module: u32,
+
+    /// Would be [u64; 6]
+    _reserved: (),
+}
 
 /// LC_SYMTAB
-pub struct LcSymtab;
+pub struct LcSymtab {
+    symoff: u32,
+	nsyms: u32,
+	stroff: u32,
+	strsize: u32,
+}
 
 /// LC_DYSYMTAB
-pub struct LcDysimtab;
+pub struct LcDysimtab {
+    ilocalsym: u32,
+    nlocalsym: u32,
 
+    iextdefsym: u32,
+    nextdefsym: u32,
+
+    iundefsym: u32,
+    nundefsym: u32,
+
+    tocoff: u32,
+    ntoc: u32,
+
+    modtaboff: u32,
+    nmodtab: u32,
+
+    extrefsymoff: u32,
+    nextrefsyms: u32,
+
+    indirectsymoff: u32,
+    nindirectsyms: u32,
+
+    extreloff: u32,
+    nextrel: u32,
+
+    locreloff: u32,
+    nlocrel: u32,
+}
+
+pub struct LcTwoLevelHints {
+    offset: u32,
+    nhints: u32,
+}
 
 /// prebind_cksum_command
 pub struct LcPrebindChekSum {
@@ -396,9 +506,6 @@ pub struct LcSymSeg {
     /// size
     size: u32,
 }
-
-/// ident_command (Obsolete)
-pub struct LcIdent;
 
 /// fvmfile_command
 pub struct LcFvmFile {

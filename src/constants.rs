@@ -5,6 +5,7 @@ pub const BYTES_PER_LOAD_COMMAND: usize = 8;
 
 pub type CPUType = u32;
 pub type CPUSubtype = u32;
+pub type VmProt = i32;
 
 pub type LoadCommandType = u32;
 
