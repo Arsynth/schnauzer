@@ -159,8 +159,8 @@ pub enum LcVariant {
     SourceVersion(LcSourceVersion),
     /// LC_NOTE
     Note(LcNote),
-    /// Any unknown command type
-    Unknown(u32),
+    /// Any other command type unknown for lib
+    Other(u32),
 }
 /*
 impl TryFrom<u32> for LcVariant {
@@ -225,36 +225,36 @@ impl TryFrom<u32> for LcVariant {
 }
 */
 
-/// LC_SEGMENT
+/// `segment_command`
 pub struct LcSegment {
-    segname: String,
+    segname: [u8; 16],
     vmaddr: u32,
-	vmsize: u32,
-	fileoff: u32,
-	filesize: u32,
-	maxprot: VmProt,
-	initprot: VmProt,
-	nsects: u32,
-	flags: u32,
+    vmsize: u32,
+    fileoff: u32,
+    filesize: u32,
+    maxprot: VmProt,
+    initprot: VmProt,
+    nsects: u32,
+    flags: u32,
 }
 
-/// LC_SEGMENT_64
+/// `segment_command_64`
 pub struct LcSegment64 {
-    segname: String,
+    segname: [u8; 16],
     vmaddr: u64,
-	vmsize: u64,
-	fileoff: u64,
-	filesize: u64,
-	maxprot: VmProt,
-	initprot: VmProt,
-	nsects: u32,
-	flags: u32,
+    vmsize: u64,
+    fileoff: u64,
+    filesize: u64,
+    maxprot: VmProt,
+    initprot: VmProt,
+    nsects: u32,
+    flags: u32,
 }
 
 /// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB
 pub struct LcDylib {
     variant: DylibVariant,
-    dylib: Dylib, 
+    dylib: Dylib,
 }
 pub enum DylibVariant {
     /// LC_ID_DYLIB
@@ -264,10 +264,10 @@ pub enum DylibVariant {
     /// LC_LOAD_WEAK_DYLIB
     LoadWeak,
     /// LC_REEXPORT_DYLIB
-    Reexport
+    Reexport,
 }
 pub struct Dylib {
-    name: String,
+    name: LcStr,
     timestamp: u32,
     current_version: u32,
     compatibility_version: u32,
@@ -275,75 +275,86 @@ pub struct Dylib {
 
 /// LC_SUB_FRAMEWORK
 pub struct LcSubframework {
-    /// union lc_str umbrella
-    umbrella: String,
+    umbrella: LcStr,
 }
 
 /// LC_SUB_CLIENT
 pub struct LcSubclient {
-    /// union lc_str umbrella
-    client: String,
+    client: LcStr,
 }
 
 /// LC_SUB_UMBRELLA
 pub struct LcSubumbrella {
-    /// union lc_str umbrella
-    sub_umbrella: String,
+    sub_umbrella: LcStr,
 }
 
 /// LC_SUB_LIBRARY
 pub struct LcSublibrary {
-    /// union lc_str umbrella
-    sub_library: String,
+    sub_library: LcStr,
 }
 
 /// LC_PREBOUND_DYLIB
 pub struct LcPreboundDylib {
-    /// union lc_str
-    name: String,
-	nmodules: u32,
-    /// union lc_str
-	linked_modules: Vec<u8>,
+    name: LcStr,
+    nmodules: u32,
+    linked_modules: LcStr,
 }
 
 /// LC_ID_DYLINKER, LC_LOAD_DYLINKER, LC_DYLD_ENVIRONMENT
 pub struct LcDylinker {
-    /// union lc_str    name;
-    name: String,
+    name: LcStr,
 }
 
-/// LC_DYLD_ENVIRONMENT or LC_UNIXTHREAD
+/// LC_THREAD or LC_UNIXTHREAD
 pub struct LcThread {
+    /* uint32_t flavor		   flavor of thread state */
+	/* uint32_t count		   count of longs in thread state */
+	/* struct XXX_thread_state state   thread state for this flavor */
+	/* ... */
     _machine_specific: (),
 }
 
-/// LC_ROUTINES
+/// `routines_command`
 pub struct LcRoutines {
     init_address: u32,
-	init_module: u32,
+    init_module: u32,
 
-    /// Would be [u32; 6]
-    _reserved: (),
+    /*
+    uint32_t	reserved1;
+	uint32_t	reserved2;
+	uint32_t	reserved3;
+	uint32_t	reserved4;
+	uint32_t	reserved5;
+	uint32_t	reserved6;
+    */
+    reserved: [u32; 6],
 }
 
-/// LC_ROUTINES_64
+/// `routines_command_64`
 pub struct LcRoutines64 {
     init_address: u32,
-	init_module: u32,
+    init_module: u32,
 
-    /// Would be [u64; 6]
-    _reserved: (),
+    /*
+    uint64_t	reserved1;
+    uint64_t	reserved2;
+    uint64_t	reserved3;
+    uint64_t	reserved4;
+    uint64_t	reserved5;
+    uint64_t	reserved6;
+    */
+    reserved: [u64; 6],
 }
 
-/// LC_SYMTAB
+/// `symtab_command`
 pub struct LcSymtab {
     symoff: u32,
-	nsyms: u32,
-	stroff: u32,
-	strsize: u32,
+    nsyms: u32,
+    stroff: u32,
+    strsize: u32,
 }
 
-/// LC_DYSYMTAB
+/// `dysymtab_command`
 pub struct LcDysimtab {
     ilocalsym: u32,
     nlocalsym: u32,
@@ -373,6 +384,7 @@ pub struct LcDysimtab {
     nlocrel: u32,
 }
 
+/// `twolevel_hints_command`
 pub struct LcTwoLevelHints {
     offset: u32,
     nhints: u32,
@@ -386,45 +398,34 @@ pub struct LcPrebindChekSum {
 
 /// uuid_command
 pub struct LcUuid {
-    /// uuid[16]
-    uuid: u128,
+    uuid: [u8; 16],
 }
 
 /// rpath_command
 pub struct LcRpath {
     /// path
-    path: String,
+    path: LcStr,
 }
 
 /// linkedit_data_command
 pub struct LcLinkEditData {
     variant: LinkEditDataVariant,
-    /// dataoff
-    data_offset: u32,
-    /// datasize
-    data_size: u32,
+    dataoff: u32,
+    datasize: u32,
 }
 
 /// encryption_info_command
 pub struct LcEncryptionInfo {
-    /// cryptoff
-    crypt_offset: u32,
-    /// cryptsize
-    crypt_size: u32,
-    /// cryptid
-    crypt_id: u32,
+    cryptoff: u32,
+    cryptsize: u32,
+    cryptid: u32,
 }
 
 /// encryption_info_command_64
 pub struct LcEncryptionInfo64 {
-    /// cryptoff
-    crypt_offset: u32,
-    /// cryptsize
-    crypt_size: u32,
-    /// cryptid
-    crypt_id: u32,
-
-    /// pad
+    cryptoff: u32,
+    cryptsize: u32,
+    cryptid: u32,
     pad: u32,
 }
 
@@ -452,46 +453,32 @@ pub struct LcBuildVersion {
     _tools: (),
 }
 
-impl LcBuildVersion {
-    pub fn tool_version_iterator(&self) -> BuildToolVersionIterator {
-        BuildToolVersionIterator
-    }
+/// build_tool_version
+pub struct BuildToolVersion {
+    tool: u32,
+    version: u32,
 }
-
-pub struct BuildToolVersionIterator;
-pub struct BuildToolVersion;
 
 /// dyld_info_command
 pub struct LcDyldInfo {
-    /// rebase_off
-    rebase_offset: u32,
-    /// rebase_size
+    rebase_off: u32,
     rebase_size: u32,
 
-    /// bind_off
-    bind_offset: u32,
-    /// bind_size
+    bind_off: u32,
     bind_size: u32,
 
-    /// weak_bind_off
-    weak_bind_offset: u32,
-    /// weak_bind_size
+    weak_bind_off: u32,
     weak_bind_size: u32,
 
-    /// lazy_bind_off
-    lazy_bind_offset: u32,
-    /// lazy_bind_size
+    lazy_bind_off: u32,
     lazy_bind_size: u32,
 
-    /// export_off
-    export_offset: u32,
-    /// export_size
+    export_off: u32,
     export_size: u32,
 }
 
-/// linker_option_command
+/// `linker_option_command`
 pub struct LcLinkerOption {
-    /// count
     count: u32,
 
     /// TODO: concatenation of zero terminated UTF8 strings.
@@ -499,43 +486,35 @@ pub struct LcLinkerOption {
     _strings: (),
 }
 
-/// symseg_command
+/// `symseg_command`
 pub struct LcSymSeg {
-    /// offset
     offset: u32,
-    /// size
     size: u32,
 }
 
-/// fvmfile_command
+/// `fvmfile_command`
 pub struct LcFvmFile {
     /// name
-    name: String,
+    name: LcStr,
     /// header_addr
     header_address: u32,
 }
 
-/// entry_point_command
+/// `entry_point_command`
 pub struct LcEntryPoint {
-    /// entryoff
-    entry_offset: u64,
-    /// stacksize
-    stack_size: u64,
+    entryoff: u64,
+    stacksize: u64,
 }
 
-/// source_version_command
+/// `source_version_command`
 pub struct LcSourceVersion {
-    /// version
     version: u64,
 }
 
-/// note_command
+/// `note_command`
 pub struct LcNote {
-    /// data_owner[16]
-    data_owner: String,
-    /// offset
+    data_owner: [u8; 16],
     offset: u64,
-    /// size
     size: u64,
 }
 

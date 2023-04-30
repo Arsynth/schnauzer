@@ -3,9 +3,14 @@ pub const BYTES_PER_FAT_HEADER: usize = 8;
 pub const BYTES_PER_FAT_ARCH: usize = 20;
 pub const BYTES_PER_LOAD_COMMAND: usize = 8;
 
+/// Represents cpu_type_t
 pub type CPUType = u32;
+/// Represents cpu_subtype_t
 pub type CPUSubtype = u32;
+/// Represents vm_prot_t
 pub type VmProt = i32;
+/// Represents `union lc_str`
+pub type LcStr = u32;
 
 pub type LoadCommandType = u32;
 
