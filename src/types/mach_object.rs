@@ -98,7 +98,7 @@ impl Iterator for LoadCommandIterator {
 
         let lc = LoadCommand::parse(self.reader.clone(), self.current_offset, self.endian).unwrap();
 
-        self.current_offset += lc.cmd_size as usize;
+        self.current_offset += lc.cmdsize as usize;
 
         Some(lc)
     }

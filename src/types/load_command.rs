@@ -64,10 +64,11 @@ pub const LC_NOTE: u32 = 0x31;
 pub const LC_BUILD_VERSION: u32 = 0x32;
 
 /// Represents general load command struct - `load_command`
+#[repr(C)]
 #[derive(Debug)]
 pub struct LoadCommand {
-    pub(super) cmd: u32,
-    pub(super) cmd_size: u32,
+    pub cmd: u32,
+    pub cmdsize: u32,
 }
 
 impl LoadCommand {
@@ -80,19 +81,9 @@ impl LoadCommand {
         reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
 
         let cmd: u32 = reader_mut.ioread_with(endian)?;
-        let cmd_size: u32 = reader_mut.ioread_with(endian)?;
+        let cmdsize: u32 = reader_mut.ioread_with(endian)?;
 
-        Ok(LoadCommand { cmd, cmd_size })
-    }
-}
-
-impl LoadCommand {
-    pub fn cmd(&self) -> LoadCommandType {
-        self.cmd
-    }
-
-    pub fn cmd_size(&self) -> u32 {
-        self.cmd_size
+        Ok(LoadCommand { cmd, cmdsize })
     }
 }
 
@@ -103,7 +94,10 @@ pub enum LcVariant {
     Segment(LcSegment),
     /// LC_SEGMENT_64
     Segment64(LcSegment64),
-    /// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB
+    /// LC_ID_DYLIB
+    /// LC_LOAD_DYLIB
+    /// LC_LOAD_WEAK_DYLIB
+    /// LC_REEXPORT_DYLIB
     Dylib(LcDylib),
     /// LC_SUB_FRAMEWORK
     Subframework(LcSubframework),
@@ -115,7 +109,9 @@ pub enum LcVariant {
     Sublibrary(LcSublibrary),
     /// LC_PREBOUND_DYLIB
     PreboundDylib(LcPreboundDylib),
-    /// LC_ID_DYLINKER, LC_LOAD_DYLINKER, LC_DYLD_ENVIRONMENT
+    /// LC_ID_DYLINKER, 
+    /// LC_LOAD_DYLINKER, 
+    /// LC_DYLD_ENVIRONMENT
     Dylinker(LcDylinker),
     /// LC_DYLD_ENVIRONMENT or LC_UNIXTHREAD
     Thread(LcThread),
@@ -135,13 +131,21 @@ pub enum LcVariant {
     Uuid(LcUuid),
     /// LC_RPATH
     Rpath(LcRpath),
-    /// LC_...(See `LinkEditDataVariant`)
+    /// LC_CODE_SIGNATURE,
+    /// LC_SEGMENT_SPLIT_INFO,
+    /// LC_FUNCTION_STARTS,
+    /// LC_DATA_IN_CODE,
+    /// LC_DYLIB_CODE_SIGN_DRS,
+    /// LC_LINKER_OPTIMIZATION_HINT,
     LinkEditData(LcLinkEditData),
     /// LC_ENCRYPTION_INFO
     EncryptionInfo(LcEncryptionInfo),
     /// LC_ENCRYPTION_INFO_64
     EncryptionInfo64(LcEncryptionInfo64),
-    /// LC_VERSION_MIN_...(See `VersionMinVariant`)
+    /// LC_VERSION_MIN_MACOSX,
+    /// LC_VERSION_MIN_IPHONEOS,
+    /// LC_VERSION_MIN_WATCHOS,
+    /// LC_VERSION_MIN_TVOS,
     VersionMin(LcVersionMin),
     /// LC_BUILD_VERSION
     BuildVersion(LcBuildVersion),
@@ -160,7 +164,7 @@ pub enum LcVariant {
     /// LC_NOTE
     Note(LcNote),
     /// Any other command type unknown for lib
-    Other(u32),
+    Other,
 }
 /*
 impl TryFrom<u32> for LcVariant {
@@ -226,86 +230,87 @@ impl TryFrom<u32> for LcVariant {
 */
 
 /// `segment_command`
+#[repr(C)]
 pub struct LcSegment {
-    segname: [u8; 16],
-    vmaddr: u32,
-    vmsize: u32,
-    fileoff: u32,
-    filesize: u32,
-    maxprot: VmProt,
-    initprot: VmProt,
-    nsects: u32,
-    flags: u32,
+    pub segname: [u8; 16],
+    pub vmaddr: u32,
+    pub vmsize: u32,
+    pub fileoff: u32,
+    pub filesize: u32,
+    pub maxprot: VmProt,
+    pub initprot: VmProt,
+    pub nsects: u32,
+    pub flags: u32,
 }
 
 /// `segment_command_64`
+#[repr(C)]
 pub struct LcSegment64 {
-    segname: [u8; 16],
-    vmaddr: u64,
-    vmsize: u64,
-    fileoff: u64,
-    filesize: u64,
-    maxprot: VmProt,
-    initprot: VmProt,
-    nsects: u32,
-    flags: u32,
+    pub segname: [u8; 16],
+    pub vmaddr: u64,
+    pub vmsize: u64,
+    pub fileoff: u64,
+    pub filesize: u64,
+    pub maxprot: VmProt,
+    pub initprot: VmProt,
+    pub nsects: u32,
+    pub flags: u32,
 }
 
 /// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB
+#[repr(C)]
 pub struct LcDylib {
-    variant: DylibVariant,
-    dylib: Dylib,
+    pub dylib: Dylib,
 }
-pub enum DylibVariant {
-    /// LC_ID_DYLIB
-    Id,
-    /// LC_LOAD_DYLIB
-    Load,
-    /// LC_LOAD_WEAK_DYLIB
-    LoadWeak,
-    /// LC_REEXPORT_DYLIB
-    Reexport,
-}
+
+#[repr(C)]
 pub struct Dylib {
-    name: LcStr,
-    timestamp: u32,
-    current_version: u32,
-    compatibility_version: u32,
+    pub name: LcStr,
+    pub timestamp: u32,
+    pub current_version: u32,
+    pub compatibility_version: u32,
 }
 
 /// LC_SUB_FRAMEWORK
+#[repr(C)]
 pub struct LcSubframework {
-    umbrella: LcStr,
+    pub umbrella: LcStr,
 }
 
 /// LC_SUB_CLIENT
+#[repr(C)]
 pub struct LcSubclient {
-    client: LcStr,
+    pub client: LcStr,
 }
 
 /// LC_SUB_UMBRELLA
+#[repr(C)]
 pub struct LcSubumbrella {
-    sub_umbrella: LcStr,
+    pub sub_umbrella: LcStr,
 }
 
 /// LC_SUB_LIBRARY
+#[repr(C)]
 pub struct LcSublibrary {
-    sub_library: LcStr,
+    pub sub_library: LcStr,
 }
 
 /// LC_PREBOUND_DYLIB
+#[repr(C)]
 pub struct LcPreboundDylib {
-    name: LcStr,
-    nmodules: u32,
-    linked_modules: LcStr,
+    pub name: LcStr,
+    pub nmodules: u32,
+    pub linked_modules: LcStr,
 }
 
 /// LC_ID_DYLINKER, LC_LOAD_DYLINKER, LC_DYLD_ENVIRONMENT
+#[repr(C)]
 pub struct LcDylinker {
-    name: LcStr,
+    pub name: LcStr,
 }
 
 /// LC_THREAD or LC_UNIXTHREAD
+#[repr(C)]
 pub struct LcThread {
     /* uint32_t flavor		   flavor of thread state */
 	/* uint32_t count		   count of longs in thread state */
@@ -315,9 +320,10 @@ pub struct LcThread {
 }
 
 /// `routines_command`
+#[repr(C)]
 pub struct LcRoutines {
-    init_address: u32,
-    init_module: u32,
+    pub init_address: u32,
+    pub init_module: u32,
 
     /*
     uint32_t	reserved1;
@@ -327,13 +333,14 @@ pub struct LcRoutines {
 	uint32_t	reserved5;
 	uint32_t	reserved6;
     */
-    reserved: [u32; 6],
+    pub reserved: [u32; 6],
 }
 
 /// `routines_command_64`
+#[repr(C)]
 pub struct LcRoutines64 {
-    init_address: u32,
-    init_module: u32,
+    pub init_address: u32,
+    pub init_module: u32,
 
     /*
     uint64_t	reserved1;
@@ -343,143 +350,147 @@ pub struct LcRoutines64 {
     uint64_t	reserved5;
     uint64_t	reserved6;
     */
-    reserved: [u64; 6],
+    pub reserved: [u64; 6],
 }
 
 /// `symtab_command`
+#[repr(C)]
 pub struct LcSymtab {
-    symoff: u32,
-    nsyms: u32,
-    stroff: u32,
-    strsize: u32,
+    pub symoff: u32,
+    pub nsyms: u32,
+    pub stroff: u32,
+    pub strsize: u32,
 }
 
 /// `dysymtab_command`
+#[repr(C)]
 pub struct LcDysimtab {
-    ilocalsym: u32,
-    nlocalsym: u32,
+    pub ilocalsym: u32,
+    pub nlocalsym: u32,
 
-    iextdefsym: u32,
-    nextdefsym: u32,
+    pub iextdefsym: u32,
+    pub nextdefsym: u32,
 
-    iundefsym: u32,
-    nundefsym: u32,
+    pub iundefsym: u32,
+    pub nundefsym: u32,
 
-    tocoff: u32,
-    ntoc: u32,
+    pub tocoff: u32,
+    pub ntoc: u32,
 
-    modtaboff: u32,
-    nmodtab: u32,
+    pub modtaboff: u32,
+    pub nmodtab: u32,
 
-    extrefsymoff: u32,
-    nextrefsyms: u32,
+    pub extrefsymoff: u32,
+    pub nextrefsyms: u32,
 
-    indirectsymoff: u32,
-    nindirectsyms: u32,
+    pub indirectsymoff: u32,
+    pub nindirectsyms: u32,
 
-    extreloff: u32,
-    nextrel: u32,
+    pub extreloff: u32,
+    pub nextrel: u32,
 
-    locreloff: u32,
-    nlocrel: u32,
+    pub locreloff: u32,
+    pub nlocrel: u32,
 }
 
 /// `twolevel_hints_command`
+#[repr(C)]
 pub struct LcTwoLevelHints {
-    offset: u32,
-    nhints: u32,
+    pub offset: u32,
+    pub nhints: u32,
 }
 
-/// prebind_cksum_command
+/// `prebind_cksum_command`
+#[repr(C)]
 pub struct LcPrebindChekSum {
-    /// cksum
-    check_sum: u32,
+    pub cksum: u32,
 }
 
-/// uuid_command
+/// `uuid_command`
+#[repr(C)]
 pub struct LcUuid {
-    uuid: [u8; 16],
+    pub uuid: [u8; 16],
 }
 
-/// rpath_command
+/// `rpath_command`
+#[repr(C)]
 pub struct LcRpath {
-    /// path
-    path: LcStr,
+    pub path: LcStr,
 }
 
-/// linkedit_data_command
+/// `linkedit_data_command`
+#[repr(C)]
 pub struct LcLinkEditData {
-    variant: LinkEditDataVariant,
-    dataoff: u32,
-    datasize: u32,
+    pub dataoff: u32,
+    pub datasize: u32,
 }
 
-/// encryption_info_command
+/// `encryption_info_command`
+#[repr(C)]
 pub struct LcEncryptionInfo {
-    cryptoff: u32,
-    cryptsize: u32,
-    cryptid: u32,
+    pub cryptoff: u32,
+    pub cryptsize: u32,
+    pub cryptid: u32,
 }
 
-/// encryption_info_command_64
+/// `encryption_info_command_64`
+#[repr(C)]
 pub struct LcEncryptionInfo64 {
-    cryptoff: u32,
-    cryptsize: u32,
-    cryptid: u32,
-    pad: u32,
+    pub cryptoff: u32,
+    pub cryptsize: u32,
+    pub cryptid: u32,
+    pub pad: u32,
 }
 
-/// version_min_command
+/// `version_min_command`
+#[repr(C)]
 pub struct LcVersionMin {
-    variant: VersionMinVariant,
-    /// version
-    version: u32,
-    /// sdk
-    sdk: u32,
+    pub version: u32,
+    pub sdk: u32,
 }
 
-/// build_version_command
+/// `build_version_command`
+#[repr(C)]
 pub struct LcBuildVersion {
-    /// platform
-    platform: u32,
-    /// minos
-    min_os: u32,
-    /// sdk
-    sdk: u32,
-    /// ntools
-    ntools: u32,
+    pub platform: u32,
+    pub minos: u32,
+    pub sdk: u32,
+    pub ntools: u32,
 
-    /// Did not loaded directly, use `tool_version_iterator()` instead
+    /// TODO: Accurate way to provide BuildToolVersion
     _tools: (),
 }
 
-/// build_tool_version
+/// `build_tool_version`
+#[repr(C)]
 pub struct BuildToolVersion {
-    tool: u32,
-    version: u32,
+    pub tool: u32,
+    pub version: u32,
 }
 
-/// dyld_info_command
+/// `dyld_info_command`
+#[repr(C)]
 pub struct LcDyldInfo {
-    rebase_off: u32,
-    rebase_size: u32,
+    pub rebase_off: u32,
+    pub rebase_size: u32,
 
-    bind_off: u32,
-    bind_size: u32,
+    pub bind_off: u32,
+    pub bind_size: u32,
 
-    weak_bind_off: u32,
-    weak_bind_size: u32,
+    pub weak_bind_off: u32,
+    pub weak_bind_size: u32,
 
-    lazy_bind_off: u32,
-    lazy_bind_size: u32,
+    pub lazy_bind_off: u32,
+    pub lazy_bind_size: u32,
 
-    export_off: u32,
-    export_size: u32,
+    pub export_off: u32,
+    pub export_size: u32,
 }
 
 /// `linker_option_command`
+#[repr(C)]
 pub struct LcLinkerOption {
-    count: u32,
+    pub count: u32,
 
     /// TODO: concatenation of zero terminated UTF8 strings.
     /// Zero filled at end to align
@@ -487,59 +498,36 @@ pub struct LcLinkerOption {
 }
 
 /// `symseg_command`
+#[repr(C)]
 pub struct LcSymSeg {
-    offset: u32,
-    size: u32,
+    pub offset: u32,
+    pub size: u32,
 }
 
 /// `fvmfile_command`
+#[repr(C)]
 pub struct LcFvmFile {
-    /// name
-    name: LcStr,
-    /// header_addr
-    header_address: u32,
+    pub name: LcStr,
+    pub header_addr: u32,
 }
 
 /// `entry_point_command`
+#[repr(C)]
 pub struct LcEntryPoint {
-    entryoff: u64,
-    stacksize: u64,
+    pub entryoff: u64,
+    pub stacksize: u64,
 }
 
 /// `source_version_command`
+#[repr(C)]
 pub struct LcSourceVersion {
-    version: u64,
+    pub version: u64,
 }
 
 /// `note_command`
+#[repr(C)]
 pub struct LcNote {
-    data_owner: [u8; 16],
-    offset: u64,
-    size: u64,
-}
-
-pub enum LinkEditDataVariant {
-    /// LC_CODE_SIGNATURE
-    CodeSignature,
-    /// LC_SEGMENT_SPLIT_INFO
-    SegmentSplitInfo,
-    /// LC_FUNCTION_STARTS
-    FunctionStarts,
-    /// LC_DATA_IN_CODE
-    DataInCode,
-    /// LC_DYLIB_CODE_SIGN_DRS
-    DylibCodeSignDrs,
-    /// LC_LINKER_OPTIMIZATION_HINT
-    LinkerOptimizationHint,
-}
-
-pub enum VersionMinVariant {
-    /// LC_VERSION_MIN_MACOSX
-    MacOsX,
-    /// LC_VERSION_MIN_IPHONEOS
-    IphoneOs,
-    /// LC_VERSION_MIN_WATCHOS
-    WatchOs,
-    /// LC_VERSION_MIN_TVOS
-    TvOs,
+    pub data_owner: [u8; 16],
+    pub offset: u64,
+    pub size: u64,
 }
