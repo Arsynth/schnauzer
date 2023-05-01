@@ -2,7 +2,7 @@ use super::constants::*;
 use super::RcReader;
 use super::Result;
 use crate::result::Error;
-use scroll::IOread;
+use scroll::{IOread, Endian};
 
 use std::fmt::Debug;
 use std::io::{Seek, SeekFrom};
@@ -14,11 +14,19 @@ pub const LC_SYMTAB: u32 = 0x2;
 pub const LC_SYMSEG: u32 = 0x3;
 pub const LC_THREAD: u32 = 0x4;
 pub const LC_UNIXTHREAD: u32 = 0x5;
+
+/// Obsolete
 pub const LC_LOADFVMLIB: u32 = 0x6;
+/// Obsolete
 pub const LC_IDFVMLIB: u32 = 0x7;
+/// Obsolete
 pub const LC_IDENT: u32 = 0x8;
+
 pub const LC_FVMFILE: u32 = 0x9;
+
+/// No information
 pub const LC_PREPAGE: u32 = 0xa;
+
 pub const LC_DYSYMTAB: u32 = 0xb;
 pub const LC_LOAD_DYLIB: u32 = 0xc;
 pub const LC_ID_DYLIB: u32 = 0xd;
@@ -42,11 +50,17 @@ pub const LC_RPATH: u32 = 0x1c | LC_REQ_DYLD;
 pub const LC_CODE_SIGNATURE: u32 = 0x1d;
 pub const LC_SEGMENT_SPLIT_INFO: u32 = 0x1e;
 pub const LC_REEXPORT_DYLIB: u32 = 0x1f | LC_REQ_DYLD;
+
+/// No info
 pub const LC_LAZY_LOAD_DYLIB: u32 = 0x20;
+
 pub const LC_ENCRYPTION_INFO: u32 = 0x21;
 pub const LC_DYLD_INFO: u32 = 0x22;
 pub const LC_DYLD_INFO_ONLY: u32 = 0x22 | LC_REQ_DYLD;
+
+/// No info
 pub const LC_LOAD_UPWARD_DYLIB: u32 = 0x23 | LC_REQ_DYLD;
+
 pub const LC_VERSION_MIN_MACOSX: u32 = 0x24;
 pub const LC_VERSION_MIN_IPHONEOS: u32 = 0x25;
 pub const LC_FUNCTION_STARTS: u32 = 0x26;
@@ -64,11 +78,12 @@ pub const LC_NOTE: u32 = 0x31;
 pub const LC_BUILD_VERSION: u32 = 0x32;
 
 /// Represents general load command struct - `load_command`
-#[repr(C)]
 #[derive(Debug)]
 pub struct LoadCommand {
     pub cmd: u32,
     pub cmdsize: u32,
+    
+    pub variant: LcVariant,
 }
 
 impl LoadCommand {
@@ -83,22 +98,28 @@ impl LoadCommand {
         let cmd: u32 = reader_mut.ioread_with(endian)?;
         let cmdsize: u32 = reader_mut.ioread_with(endian)?;
 
-        Ok(LoadCommand { cmd, cmdsize })
+        let variant = LcVariant::parse(reader.clone(), cmd, cmdsize)?;
+
+        Ok(LoadCommand { cmd, cmdsize, variant })
     }
 }
 
 /// Load command has variable set of fields dependent to `cmd` field
 /// List of load commands here - <https://opensource.apple.com/source/xnu/xnu-4570.71.2/EXTERNAL_HEADERS/mach-o/loader.h.auto.html>
+#[derive(Debug)]
 pub enum LcVariant {
     /// LC_SEGMENT
     Segment(LcSegment),
     /// LC_SEGMENT_64
     Segment64(LcSegment64),
     /// LC_ID_DYLIB
+    IdDylib(LcDylib),
     /// LC_LOAD_DYLIB
+    LoadDylib(LcDylib),
     /// LC_LOAD_WEAK_DYLIB
+    LoadWeakDylib(LcDylib),
     /// LC_REEXPORT_DYLIB
-    Dylib(LcDylib),
+    ReexportDylib(LcDylib),
     /// LC_SUB_FRAMEWORK
     Subframework(LcSubframework),
     /// LC_SUB_CLIENT
@@ -110,11 +131,15 @@ pub enum LcVariant {
     /// LC_PREBOUND_DYLIB
     PreboundDylib(LcPreboundDylib),
     /// LC_ID_DYLINKER, 
+    IdDylinker(LcDylinker),
     /// LC_LOAD_DYLINKER, 
+    LoadDylinker(LcDylinker),
     /// LC_DYLD_ENVIRONMENT
-    Dylinker(LcDylinker),
-    /// LC_DYLD_ENVIRONMENT or LC_UNIXTHREAD
+    DyldEnvironment(LcDylinker),
+    /// LC_THREAD
     Thread(LcThread),
+    /// LC_UNIXTHREAD
+    UnixThread(LcThread),
     /// LC_ROUTINES
     Routines(LcRoutines),
     /// LC_ROUTINES_64
@@ -132,25 +157,35 @@ pub enum LcVariant {
     /// LC_RPATH
     Rpath(LcRpath),
     /// LC_CODE_SIGNATURE,
+    CodeSignature(LcLinkEditData),
     /// LC_SEGMENT_SPLIT_INFO,
+    SegmentSplitInfo(LcLinkEditData),
     /// LC_FUNCTION_STARTS,
+    FunctionStarts(LcLinkEditData),
     /// LC_DATA_IN_CODE,
+    DataInCode(LcLinkEditData),
     /// LC_DYLIB_CODE_SIGN_DRS,
+    DylibCodeSignature(LcLinkEditData),
     /// LC_LINKER_OPTIMIZATION_HINT,
-    LinkEditData(LcLinkEditData),
+    LinkerOptimizationHint(LcLinkEditData),
     /// LC_ENCRYPTION_INFO
     EncryptionInfo(LcEncryptionInfo),
     /// LC_ENCRYPTION_INFO_64
     EncryptionInfo64(LcEncryptionInfo64),
     /// LC_VERSION_MIN_MACOSX,
+    VersionMinMacOsx(LcVersionMin),
     /// LC_VERSION_MIN_IPHONEOS,
+    VersionMinIphoneOs(LcVersionMin),
     /// LC_VERSION_MIN_WATCHOS,
+    VersionMinWatchOs(LcVersionMin),
     /// LC_VERSION_MIN_TVOS,
-    VersionMin(LcVersionMin),
+    VersionMinTvOs(LcVersionMin),
     /// LC_BUILD_VERSION
     BuildVersion(LcBuildVersion),
     /// LC_DYLD_INFO
     DyldInfo(LcDyldInfo),
+    /// LC_DYLD_INFO_ONLY
+    DyldInfoOnly(LcDyldInfo),
     /// LC_LINKER_OPTION
     LinkerOption(LcLinkerOption),
     /// LC_SYMSEG
@@ -166,71 +201,202 @@ pub enum LcVariant {
     /// Any other command type unknown for lib
     Other,
 }
-/*
-impl TryFrom<u32> for LcVariant {
-    type Error = Error;
 
-    fn try_from(value: u32) -> std::result::Result<Self, Self::Error> {
-        match value {
-            LC_SEGMENT => Ok(Self::),
-            LC_SYMTAB => Ok(Self::TYPE),
-            LC_SYMSEG => Ok(Self::TYPE),
-            LC_THREAD => Ok(Self::TYPE),
-            LC_UNIXTHREAD => Ok(Self::TYPE),
-            LC_LOADFVMLIB => Ok(Self::TYPE),
-            LC_IDFVMLIB => Ok(Self::TYPE),
-            LC_IDENT => Ok(Self::TYPE),
-            LC_FVMFILE => Ok(Self::TYPE),
-            LC_PREPAGE => Ok(Self::TYPE),
-            LC_DYSYMTAB => Ok(Self::TYPE),
-            LC_LOAD_DYLIB => Ok(Self::TYPE),
-            LC_ID_DYLIB => Ok(Self::TYPE),
-            LC_LOAD_DYLINKER => Ok(Self::TYPE),
-            LC_ID_DYLINKER => Ok(Self::TYPE),
-            LC_PREBOUND_DYLIB => Ok(Self::TYPE),
-            LC_ROUTINES => Ok(Self::TYPE),
-            LC_SUB_FRAMEWORK => Ok(Self::TYPE),
-            LC_SUB_UMBRELLA => Ok(Self::TYPE),
-            LC_SUB_CLIENT => Ok(Self::TYPE),
-            LC_SUB_LIBRARY => Ok(Self::TYPE),
-            LC_TWOLEVEL_HINTS => Ok(Self::TYPE),
-            LC_PREBIND_CKSUM => Ok(Self::TYPE),
-            LC_LOAD_WEAK_DYLIB => Ok(Self::TYPE),
-            LC_SEGMENT_64 => Ok(Self::TYPE),
-            LC_ROUTINES_64 => Ok(Self::TYPE),
-            LC_UUID => Ok(Self::TYPE),
-            LC_RPATH => Ok(Self::TYPE),
-            LC_CODE_SIGNATURE => Ok(Self::TYPE),
-            LC_SEGMENT_SPLIT_INFO => Ok(Self::TYPE),
-            LC_REEXPORT_DYLIB => Ok(Self::TYPE),
-            LC_LAZY_LOAD_DYLIB => Ok(Self::TYPE),
-            LC_ENCRYPTION_INFO => Ok(Self::TYPE),
-            LC_DYLD_INFO => Ok(Self::TYPE),
-            LC_DYLD_INFO_ONLY => Ok(Self::TYPE),
-            LC_LOAD_UPWARD_DYLIB => Ok(Self::TYPE),
-            LC_VERSION_MIN_MACOSX => Ok(Self::TYPE),
-            LC_VERSION_MIN_IPHONEOS => Ok(Self::TYPE),
-            LC_FUNCTION_STARTS => Ok(Self::TYPE),
-            LC_DYLD_ENVIRONMENT => Ok(Self::TYPE),
-            LC_MAIN => Ok(Self::TYPE),
-            LC_DATA_IN_CODE => Ok(Self::TYPE),
-            LC_SOURCE_VERSION => Ok(Self::TYPE),
-            LC_DYLIB_CODE_SIGN_DRS => Ok(Self::TYPE),
-            LC_ENCRYPTION_INFO_64 => Ok(Self::TYPE),
-            LC_LINKER_OPTION => Ok(Self::TYPE),
-            LC_LINKER_OPTIMIZATION_HINT => Ok(Self::TYPE),
-            LC_VERSION_MIN_TVOS => Ok(Self::TYPE),
-            LC_VERSION_MIN_WATCHOS => Ok(Self::TYPE),
-            LC_NOTE => Ok(Self::TYPE),
-            LC_BUILD_VERSION => Ok(Self::TYPE),
-            _ => Ok(Self::Unknown(value)),
+impl LcVariant {
+    fn parse(reader: RcReader, cmd: u32, cmdsize: u32, endian: Endian) -> Result<Self> {
+        let mut reader_mut = reader.borrow_mut();
+        // We assume reader already stay right after `cmd` and `cmdsize`
+        match cmd {
+            LC_SEGMENT => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Segment(c))
+            },
+            LC_SEGMENT_64 => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Segment64(c))
+            },
+            LC_ID_DYLIB => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::IdDylib(c))
+            },
+            LC_LOAD_DYLIB => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::LoadDylib(c))
+            },
+            LC_LOAD_WEAK_DYLIB => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::LoadWeakDylib(c))
+            },
+            LC_REEXPORT_DYLIB => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::ReexportDylib(c))
+            },
+            LC_SUB_FRAMEWORK => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Subframework(c))
+            },
+            LC_SUB_CLIENT => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Subclient(c))
+            },
+            LC_SUB_UMBRELLA => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Subumbrella(c))
+            },
+            LC_SUB_LIBRARY => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Sublibrary(c))
+            },
+            LC_PREBOUND_DYLIB => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::PreboundDylib(c))
+            },
+            LC_ID_DYLINKER => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::IdDylinker(c))
+            },
+            LC_LOAD_DYLINKER => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::LoadDylinker(c))
+            },
+            LC_DYLD_ENVIRONMENT => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::DyldEnvironment(c))
+            },
+            LC_THREAD => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Thread(c))
+            },
+            LC_UNIXTHREAD => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Thread(c))
+            },
+            LC_ROUTINES => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Routines(c))
+            },
+            LC_ROUTINES_64 => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Routines64(c))
+            },
+            LC_SYMTAB => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Symtab(c))
+            },
+            LC_DYSYMTAB => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Dysimtab(c))
+            },
+            LC_TWOLEVEL_HINTS => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::TwoLevelHints(c))
+            },
+            LC_PREBIND_CKSUM => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::PrebindChekSum(c))
+            },
+            LC_UUID => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Uuid(c))
+            },
+            LC_RPATH => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Rpath(c))
+            },
+            LC_CODE_SIGNATURE => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::CodeSignature(c))
+            },
+            LC_SEGMENT_SPLIT_INFO => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::SegmentSplitInfo(c))
+            },
+            LC_FUNCTION_STARTS => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::FunctionStarts(c))
+            },
+            LC_DATA_IN_CODE => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::DataInCode(c))
+            },
+            LC_DYLIB_CODE_SIGN_DRS => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::DylibCodeSignature(c))
+            },
+            LC_LINKER_OPTIMIZATION_HINT => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::LinkerOptimizationHint(c))
+            },
+            LC_ENCRYPTION_INFO => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::EncryptionInfo(c))
+            },
+            LC_ENCRYPTION_INFO_64 => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::EncryptionInfo64(c))
+            },
+            LC_VERSION_MIN_MACOSX => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::VersionMinMacOsx(c))
+            },
+            LC_VERSION_MIN_IPHONEOS => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::VersionMinIphoneOs(c))
+            },
+            LC_VERSION_MIN_WATCHOS => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::VersionMinWatchOs(c))
+            },
+            LC_VERSION_MIN_TVOS => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::VersionMinTvOs(c))
+            },
+            LC_BUILD_VERSION => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::BuildVersion(c))
+            },
+            LC_DYLD_INFO => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::DyldInfo(c))
+            },
+            LC_DYLD_INFO_ONLY => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::DyldInfoOnly(c))
+            },
+            LC_LINKER_OPTION => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::LinkerOption(c))
+            },
+            LC_SYMSEG => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::SymSeg(c))
+            },
+            LC_FVMFILE => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::FvmFile(c))
+            },
+            LC_MAIN => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::EntryPoint(c))
+            },
+            LC_SOURCE_VERSION => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::SourceVersion(c))
+            },
+            LC_NOTE => {
+                let c = reader_mut.ioread_with(endian)?;
+                Ok(Self::Note(c))
+            },
+            _ => {
+                Ok(Self::Other)
+            },
         }
     }
 }
-*/
 
 /// `segment_command`
 #[repr(C)]
+#[derive(Debug, )]
 pub struct LcSegment {
     pub segname: [u8; 16],
     pub vmaddr: u32,
@@ -245,6 +411,7 @@ pub struct LcSegment {
 
 /// `segment_command_64`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcSegment64 {
     pub segname: [u8; 16],
     pub vmaddr: u64,
@@ -259,11 +426,13 @@ pub struct LcSegment64 {
 
 /// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcDylib {
     pub dylib: Dylib,
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct Dylib {
     pub name: LcStr,
     pub timestamp: u32,
@@ -273,30 +442,35 @@ pub struct Dylib {
 
 /// LC_SUB_FRAMEWORK
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcSubframework {
     pub umbrella: LcStr,
 }
 
 /// LC_SUB_CLIENT
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcSubclient {
     pub client: LcStr,
 }
 
 /// LC_SUB_UMBRELLA
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcSubumbrella {
     pub sub_umbrella: LcStr,
 }
 
 /// LC_SUB_LIBRARY
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcSublibrary {
     pub sub_library: LcStr,
 }
 
 /// LC_PREBOUND_DYLIB
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcPreboundDylib {
     pub name: LcStr,
     pub nmodules: u32,
@@ -305,12 +479,14 @@ pub struct LcPreboundDylib {
 
 /// LC_ID_DYLINKER, LC_LOAD_DYLINKER, LC_DYLD_ENVIRONMENT
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcDylinker {
     pub name: LcStr,
 }
 
 /// LC_THREAD or LC_UNIXTHREAD
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcThread {
     /* uint32_t flavor		   flavor of thread state */
 	/* uint32_t count		   count of longs in thread state */
@@ -321,6 +497,7 @@ pub struct LcThread {
 
 /// `routines_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcRoutines {
     pub init_address: u32,
     pub init_module: u32,
@@ -338,6 +515,7 @@ pub struct LcRoutines {
 
 /// `routines_command_64`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcRoutines64 {
     pub init_address: u32,
     pub init_module: u32,
@@ -355,6 +533,7 @@ pub struct LcRoutines64 {
 
 /// `symtab_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcSymtab {
     pub symoff: u32,
     pub nsyms: u32,
@@ -364,6 +543,7 @@ pub struct LcSymtab {
 
 /// `dysymtab_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcDysimtab {
     pub ilocalsym: u32,
     pub nlocalsym: u32,
@@ -395,6 +575,7 @@ pub struct LcDysimtab {
 
 /// `twolevel_hints_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcTwoLevelHints {
     pub offset: u32,
     pub nhints: u32,
@@ -402,24 +583,28 @@ pub struct LcTwoLevelHints {
 
 /// `prebind_cksum_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcPrebindChekSum {
     pub cksum: u32,
 }
 
 /// `uuid_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcUuid {
     pub uuid: [u8; 16],
 }
 
 /// `rpath_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcRpath {
     pub path: LcStr,
 }
 
 /// `linkedit_data_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcLinkEditData {
     pub dataoff: u32,
     pub datasize: u32,
@@ -427,6 +612,7 @@ pub struct LcLinkEditData {
 
 /// `encryption_info_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcEncryptionInfo {
     pub cryptoff: u32,
     pub cryptsize: u32,
@@ -435,6 +621,7 @@ pub struct LcEncryptionInfo {
 
 /// `encryption_info_command_64`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcEncryptionInfo64 {
     pub cryptoff: u32,
     pub cryptsize: u32,
@@ -444,6 +631,7 @@ pub struct LcEncryptionInfo64 {
 
 /// `version_min_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcVersionMin {
     pub version: u32,
     pub sdk: u32,
@@ -451,6 +639,7 @@ pub struct LcVersionMin {
 
 /// `build_version_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcBuildVersion {
     pub platform: u32,
     pub minos: u32,
@@ -463,6 +652,7 @@ pub struct LcBuildVersion {
 
 /// `build_tool_version`
 #[repr(C)]
+#[derive(Debug)]
 pub struct BuildToolVersion {
     pub tool: u32,
     pub version: u32,
@@ -470,6 +660,7 @@ pub struct BuildToolVersion {
 
 /// `dyld_info_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcDyldInfo {
     pub rebase_off: u32,
     pub rebase_size: u32,
@@ -489,6 +680,7 @@ pub struct LcDyldInfo {
 
 /// `linker_option_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcLinkerOption {
     pub count: u32,
 
@@ -499,6 +691,7 @@ pub struct LcLinkerOption {
 
 /// `symseg_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcSymSeg {
     pub offset: u32,
     pub size: u32,
@@ -506,6 +699,7 @@ pub struct LcSymSeg {
 
 /// `fvmfile_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcFvmFile {
     pub name: LcStr,
     pub header_addr: u32,
@@ -513,6 +707,7 @@ pub struct LcFvmFile {
 
 /// `entry_point_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcEntryPoint {
     pub entryoff: u64,
     pub stacksize: u64,
@@ -520,12 +715,14 @@ pub struct LcEntryPoint {
 
 /// `source_version_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcSourceVersion {
     pub version: u64,
 }
 
 /// `note_command`
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcNote {
     pub data_owner: [u8; 16],
     pub offset: u64,
