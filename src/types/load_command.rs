@@ -1,7 +1,7 @@
 use super::constants::*;
 use super::RcReader;
 use super::Result;
-use crate::result::Error;
+use scroll::SizeWith;
 use scroll::{IOread, Endian};
 
 use std::fmt::Debug;
@@ -98,7 +98,9 @@ impl LoadCommand {
         let cmd: u32 = reader_mut.ioread_with(endian)?;
         let cmdsize: u32 = reader_mut.ioread_with(endian)?;
 
-        let variant = LcVariant::parse(reader.clone(), cmd, cmdsize)?;
+        std::mem::drop(reader_mut);
+
+        let variant = LcVariant::parse(reader.clone(), cmd, endian)?;
 
         Ok(LoadCommand { cmd, cmdsize, variant })
     }
@@ -203,7 +205,7 @@ pub enum LcVariant {
 }
 
 impl LcVariant {
-    fn parse(reader: RcReader, cmd: u32, cmdsize: u32, endian: Endian) -> Result<Self> {
+    fn parse(reader: RcReader, cmd: u32, endian: Endian) -> Result<Self> {
         let mut reader_mut = reader.borrow_mut();
         // We assume reader already stay right after `cmd` and `cmdsize`
         match cmd {
@@ -396,7 +398,7 @@ impl LcVariant {
 
 /// `segment_command`
 #[repr(C)]
-#[derive(Debug, )]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSegment {
     pub segname: [u8; 16],
     pub vmaddr: u32,
@@ -411,7 +413,7 @@ pub struct LcSegment {
 
 /// `segment_command_64`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSegment64 {
     pub segname: [u8; 16],
     pub vmaddr: u64,
@@ -426,13 +428,13 @@ pub struct LcSegment64 {
 
 /// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcDylib {
     pub dylib: Dylib,
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct Dylib {
     pub name: LcStr,
     pub timestamp: u32,
@@ -442,35 +444,35 @@ pub struct Dylib {
 
 /// LC_SUB_FRAMEWORK
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSubframework {
     pub umbrella: LcStr,
 }
 
 /// LC_SUB_CLIENT
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSubclient {
     pub client: LcStr,
 }
 
 /// LC_SUB_UMBRELLA
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSubumbrella {
     pub sub_umbrella: LcStr,
 }
 
 /// LC_SUB_LIBRARY
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSublibrary {
     pub sub_library: LcStr,
 }
 
 /// LC_PREBOUND_DYLIB
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcPreboundDylib {
     pub name: LcStr,
     pub nmodules: u32,
@@ -479,25 +481,24 @@ pub struct LcPreboundDylib {
 
 /// LC_ID_DYLINKER, LC_LOAD_DYLINKER, LC_DYLD_ENVIRONMENT
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcDylinker {
     pub name: LcStr,
 }
 
 /// LC_THREAD or LC_UNIXTHREAD
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcThread {
-    /* uint32_t flavor		   flavor of thread state */
-	/* uint32_t count		   count of longs in thread state */
+    flavor: u32,
+    count: u32,
 	/* struct XXX_thread_state state   thread state for this flavor */
 	/* ... */
-    _machine_specific: (),
 }
 
 /// `routines_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcRoutines {
     pub init_address: u32,
     pub init_module: u32,
@@ -515,7 +516,7 @@ pub struct LcRoutines {
 
 /// `routines_command_64`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcRoutines64 {
     pub init_address: u32,
     pub init_module: u32,
@@ -533,7 +534,7 @@ pub struct LcRoutines64 {
 
 /// `symtab_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSymtab {
     pub symoff: u32,
     pub nsyms: u32,
@@ -543,7 +544,7 @@ pub struct LcSymtab {
 
 /// `dysymtab_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcDysimtab {
     pub ilocalsym: u32,
     pub nlocalsym: u32,
@@ -575,7 +576,7 @@ pub struct LcDysimtab {
 
 /// `twolevel_hints_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcTwoLevelHints {
     pub offset: u32,
     pub nhints: u32,
@@ -583,28 +584,28 @@ pub struct LcTwoLevelHints {
 
 /// `prebind_cksum_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcPrebindChekSum {
     pub cksum: u32,
 }
 
 /// `uuid_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcUuid {
     pub uuid: [u8; 16],
 }
 
 /// `rpath_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcRpath {
     pub path: LcStr,
 }
 
 /// `linkedit_data_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcLinkEditData {
     pub dataoff: u32,
     pub datasize: u32,
@@ -612,7 +613,7 @@ pub struct LcLinkEditData {
 
 /// `encryption_info_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcEncryptionInfo {
     pub cryptoff: u32,
     pub cryptsize: u32,
@@ -621,7 +622,7 @@ pub struct LcEncryptionInfo {
 
 /// `encryption_info_command_64`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcEncryptionInfo64 {
     pub cryptoff: u32,
     pub cryptsize: u32,
@@ -631,7 +632,7 @@ pub struct LcEncryptionInfo64 {
 
 /// `version_min_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcVersionMin {
     pub version: u32,
     pub sdk: u32,
@@ -639,20 +640,20 @@ pub struct LcVersionMin {
 
 /// `build_version_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcBuildVersion {
     pub platform: u32,
     pub minos: u32,
     pub sdk: u32,
     pub ntools: u32,
 
-    /// TODO: Accurate way to provide BuildToolVersion
-    _tools: (),
+    // TODO: Accurate way to provide BuildToolVersion
+    // tools: (),
 }
 
 /// `build_tool_version`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct BuildToolVersion {
     pub tool: u32,
     pub version: u32,
@@ -660,7 +661,7 @@ pub struct BuildToolVersion {
 
 /// `dyld_info_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcDyldInfo {
     pub rebase_off: u32,
     pub rebase_size: u32,
@@ -680,18 +681,18 @@ pub struct LcDyldInfo {
 
 /// `linker_option_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcLinkerOption {
     pub count: u32,
 
-    /// TODO: concatenation of zero terminated UTF8 strings.
-    /// Zero filled at end to align
-    _strings: (),
+    // TODO: concatenation of zero terminated UTF8 strings.
+    // Zero filled at end to align
+    // strings: (),
 }
 
 /// `symseg_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSymSeg {
     pub offset: u32,
     pub size: u32,
@@ -699,7 +700,7 @@ pub struct LcSymSeg {
 
 /// `fvmfile_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcFvmFile {
     pub name: LcStr,
     pub header_addr: u32,
@@ -707,7 +708,7 @@ pub struct LcFvmFile {
 
 /// `entry_point_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcEntryPoint {
     pub entryoff: u64,
     pub stacksize: u64,
@@ -715,14 +716,14 @@ pub struct LcEntryPoint {
 
 /// `source_version_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcSourceVersion {
     pub version: u64,
 }
 
 /// `note_command`
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IOread, SizeWith)]
 pub struct LcNote {
     pub data_owner: [u8; 16],
     pub offset: u64,

@@ -14,4 +14,4 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-scroll = "0.11.0"
+scroll = { version = "0.11.0", features = ["derive"] }
