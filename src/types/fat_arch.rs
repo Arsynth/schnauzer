@@ -8,13 +8,13 @@ use std::fmt::{Debug};
 use std::io::{Seek, SeekFrom};
 
 pub struct FatArch {
-    pub(crate) reader: RcReader,
+    pub reader: RcReader,
 
-    pub(crate) cpu_type: CPUType,
-    pub(crate) cpu_subtype: CPUSubtype,
-    pub(crate) offset: u32,
-    pub(crate) size: u32,
-    pub(crate) align: u32,
+    pub cputype: CPUType,
+    pub cpusubtype: CPUSubtype,
+    pub offset: u32,
+    pub size: u32,
+    pub align: u32,
 }
 
 impl FatArch {
@@ -31,8 +31,8 @@ impl FatArch {
 
         Ok(FatArch {
             reader: reader.clone(),
-            cpu_type,
-            cpu_subtype,
+            cputype: cpu_type,
+            cpusubtype: cpu_subtype,
             offset,
             size,
             align,
@@ -50,8 +50,8 @@ impl Debug for FatArch {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut s = f.debug_struct("FatArch");
 
-        s.field("cpu_type", &self.cpu_type)
-            .field("cpu_subtype", &self.cpu_subtype)
+        s.field("cpu_type", &self.cputype)
+            .field("cpu_subtype", &self.cpusubtype)
             .field("offset", &self.offset)
             .field("size", &self.size)
             .field("align", &self.align);
@@ -61,23 +61,5 @@ impl Debug for FatArch {
         }
 
         s.finish()
-    }
-}
-
-impl FatArch {
-    pub fn cpu_type(&self) -> CPUType {
-        self.cpu_type
-    }
-
-    pub fn cpu_subtype(&self) -> CPUSubtype {
-        self.cpu_subtype & !CPU_SUBTYPE_MASK
-    }
-
-    pub fn feature_flags(&self) -> u32 {
-        (self.cpu_subtype & CPU_SUBTYPE_MASK) >> 24
-    }
-
-    pub fn is_64(&self) -> bool {
-        (self.cpu_type & CPU_ARCH_ABI64) == CPU_ARCH_ABI64
     }
 }

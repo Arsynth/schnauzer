@@ -44,7 +44,7 @@ impl MachObject {
         LoadCommandIterator::new(
             self.reader.clone(),
             self.commands_offset,
-            self.header.size_of_cmds,
+            self.header.sizeofcmds,
             self.header.magic.endian(),
         )
     }

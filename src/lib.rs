@@ -89,8 +89,8 @@ mod tests {
 
         {
             let item = &arch_items[0];
-            assert_eq!(item.cpu_type, 16777223);
-            assert_eq!(item.cpu_subtype, 3);
+            assert_eq!(item.cputype, 16777223);
+            assert_eq!(item.cpusubtype, 3);
             assert_eq!(item.offset, 16384);
             assert_eq!(item.size, 70080);
             assert_eq!(item.align, 14);
@@ -98,8 +98,8 @@ mod tests {
 
         {
             let item = &arch_items[1];
-            assert_eq!(item.cpu_type, 16777228);
-            assert_eq!(item.cpu_subtype, constants::CPU_SUBTYPE_LIB64 | 0x00000002);
+            assert_eq!(item.cputype, 16777228);
+            assert_eq!(item.cpusubtype, constants::CPU_SUBTYPE_LIB64 | 0x00000002);
             assert_eq!(item.offset, 98304);
             assert_eq!(item.size, 53488);
             assert_eq!(item.align, 14);
@@ -120,8 +120,8 @@ mod tests {
         };
 
         for arch in fat_header.arch_iterator() {
-            assert_eq!(arch.cpu_type, arch.object().unwrap().header().cpu_type);
-            assert_eq!(arch.cpu_subtype, arch.object().unwrap().header().cpu_subtype);
+            assert_eq!(arch.cputype, arch.object().unwrap().header().cputype);
+            assert_eq!(arch.cpusubtype, arch.object().unwrap().header().cpusubtype);
         }
     }
     

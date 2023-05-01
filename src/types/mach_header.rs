@@ -7,14 +7,14 @@ use super::Magic;
 use std::fmt::{Debug};
 
 pub struct MachHeader {
-    pub(crate) magic: Magic,
-    pub(crate) cpu_type: CPUType,
-    pub(crate) cpu_subtype: CPUSubtype,
-    pub(crate) file_type: u32,
-    pub(crate) ncmds: u32,
-    pub(crate) size_of_cmds: u32,
-    pub(crate) flags: u32,
-    pub(crate) reserved: u32, // For 64 bit headers
+    pub magic: Magic,
+    pub cputype: CPUType,
+    pub cpusubtype: CPUSubtype,
+    pub filetype: u32,
+    pub ncmds: u32,
+    pub sizeofcmds: u32,
+    pub flags: u32,
+    pub reserved: u32, // For 64 bit headers
 }
 
 impl MachHeader {
@@ -46,11 +46,11 @@ impl MachHeader {
 
         Ok(MachHeader {
             magic,
-            cpu_type,
-            cpu_subtype,
-            file_type,
+            cputype: cpu_type,
+            cpusubtype: cpu_subtype,
+            filetype: file_type,
             ncmds,
-            size_of_cmds,
+            sizeofcmds: size_of_cmds,
             flags,
             reserved,
         })
@@ -61,11 +61,11 @@ impl Debug for MachHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MachHeader")
             .field("magic", &self.magic)
-            .field("cpu_type", &self.cpu_type)
-            .field("cpu_subtype", &self.cpu_subtype)
-            .field("file_type", &self.file_type)
+            .field("cpu_type", &self.cputype)
+            .field("cpu_subtype", &self.cpusubtype)
+            .field("file_type", &self.filetype)
             .field("ncmds", &self.ncmds)
-            .field("size_of_cmds", &self.size_of_cmds)
+            .field("size_of_cmds", &self.sizeofcmds)
             .field("flags", &self.flags)
             .field("reserved", &self.reserved)
             .finish()
@@ -78,15 +78,15 @@ impl MachHeader {
     }
 
     pub fn cpu_type(&self) -> CPUType {
-        self.cpu_type
+        self.cputype
     }
 
     pub fn cpu_subtype(&self) -> CPUSubtype {
-        self.cpu_subtype & !CPU_SUBTYPE_MASK
+        self.cpusubtype & !CPU_SUBTYPE_MASK
     }
 
     pub fn file_type(&self) -> u32 {
-        self.file_type
+        self.filetype
     }
 
     pub fn ncmds(&self) -> u32 {
@@ -94,7 +94,7 @@ impl MachHeader {
     }
 
     pub fn size_of_cmds(&self) -> u32 {
-        self.size_of_cmds
+        self.sizeofcmds
     }
 
     pub fn flags(&self) -> u32 {

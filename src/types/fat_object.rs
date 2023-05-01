@@ -10,7 +10,7 @@ use std::io::{Seek, SeekFrom};
 pub struct FatObject {
     pub(super) reader: RcReader,
     arch_list_offset: usize,
-    pub(super) nfat_arch: u32,
+    pub nfat_arch: u32,
 }
 
 impl FatObject {
