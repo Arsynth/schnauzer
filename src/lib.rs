@@ -14,6 +14,7 @@
 pub mod result;
 pub mod types;
 pub mod constants;
+pub mod fmt_ext;
 
 mod reader;
 

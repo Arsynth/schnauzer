@@ -25,6 +25,8 @@ pub use load_command::*;
 pub mod segment;
 pub use segment::*;
 
+pub use super::fmt_ext;
+
 pub(crate) use super::constants;
 
 #[derive(Debug)]
