@@ -7,6 +7,8 @@ use super::MachObject;
 use std::fmt::{Debug};
 use std::io::{Seek, SeekFrom};
 
+use super::utils;
+
 pub struct FatArch {
     pub reader: RcReader,
 
@@ -43,6 +45,21 @@ impl FatArch {
 impl FatArch {
     pub fn object(&self) -> Result<MachObject> {
         MachObject::parse(self.reader.clone(), self.offset as usize)
+    }
+}
+
+impl FatArch {
+    pub fn masked_cpu_subtype(&self) -> CPUSubtype {
+        utils::masked_cpu_subtype(self.cpusubtype)
+         & !CPU_SUBTYPE_MASK
+    }
+
+    pub fn feature_flags(&self) -> u32 {
+        utils::feature_flags(self.cpusubtype)
+    }
+
+    pub fn is_64(&self) -> bool {
+        utils::is_64(self.cputype)
     }
 }
 

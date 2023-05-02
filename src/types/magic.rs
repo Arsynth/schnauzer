@@ -11,7 +11,7 @@ pub enum Magic {
 }
 
 impl Magic {
-    pub(super) fn raw_value(&self) -> u32 {
+    pub fn raw_value(&self) -> u32 {
         match self {
             Magic::Fat => 0xcafebabe,
             Magic::FatReverse => 0xbebafeca,

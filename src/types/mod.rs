@@ -27,6 +27,8 @@ pub use segment::*;
 
 pub use super::fmt_ext;
 
+pub use super::utils;
+
 pub(crate) use super::constants;
 
 #[derive(Debug)]
