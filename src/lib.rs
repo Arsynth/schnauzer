@@ -16,6 +16,7 @@ pub mod types;
 pub mod constants;
 pub mod fmt_ext;
 pub mod utils;
+pub mod auto_enum_fields;
 
 mod reader;
 
