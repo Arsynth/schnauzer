@@ -1,7 +1,7 @@
-use colored::{self, Colorize};
-use schnauzer::*;
-use std::path::Path;
 use auto_enum_fields::*;
+use colored::{self, ColoredString, Colorize};
+use schnauzer::*;
+use std::{path::Path};
 
 struct DashLine {
     head: String,
@@ -96,7 +96,7 @@ fn handle_arch(arch: FatArch) {
     out_header("Fat arch:", 1);
 
     for field in arch.all_fields() {
-        out_dashed_field(&field.name, field.value, 1);
+        out_dashed_field(field.name, field.value, 1);
     }
 
     handle_macho(arch.object().unwrap(), true);
@@ -111,7 +111,7 @@ fn handle_macho(macho: MachObject, nested: bool) {
 
     let h = macho.header();
     for field in h.all_fields() {
-        out_dashed_field(&field.name, field.value, level);
+        out_dashed_field(field.name, field.value, level);
     }
 
     handle_load_commands(macho.load_commands_iterator(), level + 1);
@@ -121,12 +121,16 @@ fn handle_load_commands(commands: LoadCommandIterator, level: usize) {
     out_header("Load commands:", level);
     for (index, cmd) in commands.enumerate() {
         out_list_item_dash(level, index);
-        out_field("cmd", fmt_ext::load_command_to_string(cmd.cmd), " ");
-        out_field("cmdsize", format!("{}", cmd.cmdsize), "\n");
+        out_field(
+            "cmd".bright_white(),
+            fmt_ext::load_command_to_string(cmd.cmd).yellow(),
+            " ",
+        );
+        out_field("cmdsize".bright_white(), cmd.cmdsize.to_string().yellow(), "\n");
 
         for field in cmd.variant.all_fields() {
             out_field_dash(level + 1);
-            out_field(&field.name, field.value, "\n")
+            out_default_colored_field(field.name, field.value, "\n")
         }
     }
 }
@@ -137,9 +141,9 @@ fn out_header(hdr: &str, level: usize) {
     println!("");
 }
 
-fn out_dashed_field(name: &str, value: String, level: usize) {
+fn out_dashed_field(name: String, value: String, level: usize) {
     out_field_dash(level);
-    out_field(name, value, "\n");
+    out_default_colored_field(name, value, "\n");
 }
 
 fn out_field_dash(level: usize) {
@@ -154,10 +158,13 @@ fn out_list_item_dash(level: usize, index: usize) {
     );
 }
 
-fn out_field(name: &str, value: String, delimiter: &str) {
+fn out_default_colored_field(name: String, value: String, delimiter: &str) {
+    out_field(name.white(), value.green(), delimiter);
+}
+
+fn out_field(name: ColoredString, value: ColoredString, delimiter: &str) {
     if name.len() > 0 {
-        let value = format!("{}", value).green();
-        print!("{name}: {}", value);
+        print!("{name}: {value}");
     }
     print!("{delimiter}");
 }

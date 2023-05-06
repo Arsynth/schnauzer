@@ -416,9 +416,9 @@ impl LcVariant {
 #[repr(C)]
 #[derive(IOread, SizeWith, AutoEnumFields)]
 pub struct LcSegment {
-    pub segname: [u8; 16],
-    pub vmaddr: u32,
-    pub vmsize: u32,
+    pub segname: Segname,
+    pub vmaddr: Hu32,
+    pub vmsize: Hu32,
     pub fileoff: u32,
     pub filesize: u32,
     pub maxprot: VmProt,
@@ -430,7 +430,7 @@ pub struct LcSegment {
 impl Debug for LcSegment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("LcSegment")
-            .field("segname", &printable_string(&self.segname))
+            .field("segname", &self.segname)
             .field("vmaddr", &self.vmaddr)
             .field("vmsize", &self.vmsize)
             .field("fileoff", &self.fileoff)
@@ -447,9 +447,9 @@ impl Debug for LcSegment {
 #[repr(C)]
 #[derive(IOread, SizeWith, AutoEnumFields)]
 pub struct LcSegment64 {
-    pub segname: [u8; 16],
-    pub vmaddr: u64,
-    pub vmsize: u64,
+    pub segname: Segname,
+    pub vmaddr: Hu64,
+    pub vmsize: Hu64,
     pub fileoff: u64,
     pub filesize: u64,
     pub maxprot: VmProt,
@@ -461,7 +461,7 @@ pub struct LcSegment64 {
 impl Debug for LcSegment64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("LcSegment64")
-            .field("segname", &printable_string(&self.segname))
+            .field("segname", &self.segname)
             .field("vmaddr", &self.vmaddr)
             .field("vmsize", &self.vmsize)
             .field("fileoff", &self.fileoff)
@@ -641,12 +641,12 @@ pub struct LcPrebindChekSum {
 #[repr(C)]
 #[derive(IOread, SizeWith, AutoEnumFields)]
 pub struct LcUuid {
-    pub uuid: [u8; 16],
+    pub uuid: Uuid,
 }
 
 impl Debug for LcUuid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("LcUuid").field("uuid", &printable_uuid_string(&self.uuid)).finish()
+        f.debug_struct("LcUuid").field("uuid", &self.uuid).finish()
     }
 }
 
