@@ -28,6 +28,7 @@ pub use segment::*;
 pub use super::fmt_ext;
 
 pub use super::utils;
+pub use super::auto_enum_fields;
 
 pub(crate) use super::constants;
 

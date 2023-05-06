@@ -1,4 +1,6 @@
 use super::RcReader;
+use super::auto_enum_fields::*;
+use schnauzer_derive::AutoEnumFields;
 use scroll::IOread;
 use super::constants::*;
 use super::Result;
@@ -8,6 +10,7 @@ use std::fmt::{Debug};
 
 use super::utils;
 
+#[derive(AutoEnumFields)]
 pub struct MachHeader {
     pub magic: Magic,
     pub cputype: CPUType,

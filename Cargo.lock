@@ -68,8 +68,18 @@ name = "schnauzer"
 version = "0.1.6"
 dependencies = [
  "colored",
+ "schnauzer-derive",
  "scroll",
  "uuid",
+]
+
+[[package]]
+name = "schnauzer-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

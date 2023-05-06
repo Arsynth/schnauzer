@@ -96,11 +96,11 @@ fn handle_fat(fat: FatObject) {
 fn handle_arch(arch: FatArch) {
     out_header("Fat arch:", 1);
 
-    out_dashed_field("cputype", Field::U32(arch.cputype), 1);
-    out_dashed_field("cpusubtype", Field::U32(arch.masked_cpu_subtype()), 1);
-    out_dashed_field("offset", Field::U32(arch.offset), 1);
-    out_dashed_field("size", Field::U32(arch.size), 1);
-    out_dashed_field("align", Field::U32(arch.align), 1);
+    out_dashed_field("cputype", FieldValue::U32(arch.cputype), 1);
+    out_dashed_field("cpusubtype", FieldValue::U32(arch.masked_cpu_subtype()), 1);
+    out_dashed_field("offset", FieldValue::U32(arch.offset), 1);
+    out_dashed_field("size", FieldValue::U32(arch.size), 1);
+    out_dashed_field("align", FieldValue::U32(arch.align), 1);
 
     handle_macho(arch.object().unwrap(), true);
 }
@@ -113,11 +113,14 @@ fn handle_macho(macho: MachObject, nested: bool) {
     out_header("Mach header:", level);
 
     let h = macho.header();
-    out_dashed_field("magic", Field::HexU32(h.magic.raw_value(), 9), level);
-    out_dashed_field("cputype", Field::U32(h.masked_cpu_subtype()), level);
-    out_dashed_field("filetype", Field::U32(h.file_type()), level);
-    out_dashed_field("ncmds", Field::U32(h.ncmds), level);
-    out_dashed_field("flags", Field::HexU32(h.flags, 9), level);
+    for field in h.all_fields() {
+        out_dashed_field(&field.name, field.value, level);
+    }
+    // out_dashed_field("magic", FieldValue::HexU32(h.magic.raw_value(), 9), level);
+    // out_dashed_field("cputype", FieldValue::U32(h.masked_cpu_subtype()), level);
+    // out_dashed_field("filetype", FieldValue::U32(h.file_type()), level);
+    // out_dashed_field("ncmds", FieldValue::U32(h.ncmds), level);
+    // out_dashed_field("flags", FieldValue::HexU32(h.flags, 9), level);
 
     handle_load_commands(macho.load_commands_iterator(), level + 1);
 }
@@ -126,8 +129,8 @@ fn handle_load_commands(commands: LoadCommandIterator, level: usize) {
     out_header("Load commands:", level);
     for (index, cmd) in commands.enumerate() {
         out_list_item_dash(level, index);
-        out_field("cmd", Field::String(fmt_ext::load_commang_to_string(cmd.cmd)), " ");
-        out_field("cmdsize", Field::U32(cmd.cmdsize), "\n");
+        out_field("cmd", FieldValue::String(fmt_ext::load_commang_to_string(cmd.cmd)), " ");
+        out_field("cmdsize", FieldValue::U32(cmd.cmdsize), "\n");
     }
 }
 
@@ -137,7 +140,7 @@ fn out_header(hdr: &str, level: usize) {
     println!("");
 }
 
-fn out_dashed_field(name: &str, value: Field, level: usize) {
+fn out_dashed_field(name: &str, value: FieldValue, level: usize) {
     out_field_dash(level);
     out_field(name, value, "\n");
 }
@@ -155,7 +158,7 @@ fn out_list_item_dash(level: usize, index: usize) {
 }
 
 use std::io::Write;
-fn out_field(name: &str, value: Field, delimiter: &str) {
+fn out_field(name: &str, value: FieldValue, delimiter: &str) {
     if name.len() > 0 {
         let value = format!("{:?}", value).green();
         print!("{name}: {}", value);
