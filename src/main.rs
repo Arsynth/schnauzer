@@ -98,11 +98,6 @@ fn handle_arch(arch: FatArch) {
     for field in arch.all_fields() {
         out_dashed_field(&field.name, field.value, 1);
     }
-    // out_dashed_field("cputype", FieldValue::U32(arch.cputype), 1);
-    // out_dashed_field("cpusubtype", FieldValue::U32(arch.masked_cpu_subtype()), 1);
-    // out_dashed_field("offset", FieldValue::U32(arch.offset), 1);
-    // out_dashed_field("size", FieldValue::U32(arch.size), 1);
-    // out_dashed_field("align", FieldValue::U32(arch.align), 1);
 
     handle_macho(arch.object().unwrap(), true);
 }
@@ -118,11 +113,6 @@ fn handle_macho(macho: MachObject, nested: bool) {
     for field in h.all_fields() {
         out_dashed_field(&field.name, field.value, level);
     }
-    // out_dashed_field("magic", FieldValue::HexU32(h.magic.raw_value(), 9), level);
-    // out_dashed_field("cputype", FieldValue::U32(h.masked_cpu_subtype()), level);
-    // out_dashed_field("filetype", FieldValue::U32(h.file_type()), level);
-    // out_dashed_field("ncmds", FieldValue::U32(h.ncmds), level);
-    // out_dashed_field("flags", FieldValue::HexU32(h.flags, 9), level);
 
     handle_load_commands(macho.load_commands_iterator(), level + 1);
 }
@@ -133,6 +123,11 @@ fn handle_load_commands(commands: LoadCommandIterator, level: usize) {
         out_list_item_dash(level, index);
         out_field("cmd", fmt_ext::load_command_to_string(cmd.cmd), " ");
         out_field("cmdsize", format!("{}", cmd.cmdsize), "\n");
+
+        for field in cmd.variant.all_fields() {
+            out_field_dash(level + 1);
+            out_field(&field.name, field.value, "\n")
+        }
     }
 }
 

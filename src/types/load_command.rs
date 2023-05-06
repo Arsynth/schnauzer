@@ -8,6 +8,9 @@ use scroll::{Endian, IOread};
 use std::fmt::Debug;
 use std::io::{Seek, SeekFrom};
 
+use super::auto_enum_fields::*;
+use schnauzer_derive::AutoEnumFields;
+
 pub const LC_REQ_DYLD: u32 = 0x80000000;
 
 pub const LC_SEGMENT: u32 = 0x1;
@@ -79,6 +82,7 @@ pub const LC_NOTE: u32 = 0x31;
 pub const LC_BUILD_VERSION: u32 = 0x32;
 
 /// Represents general load command struct - `load_command`
+#[derive(AutoEnumFields)]
 pub struct LoadCommand {
     pub cmd: u32,
     pub cmdsize: u32,
@@ -122,7 +126,7 @@ impl LoadCommand {
 
 /// Load command has variable set of fields dependent to `cmd` field
 /// List of load commands here - <https://opensource.apple.com/source/xnu/xnu-4570.71.2/EXTERNAL_HEADERS/mach-o/loader.h.auto.html>
-#[derive(Debug)]
+#[derive(Debug, AutoEnumFields)]
 pub enum LcVariant {
     /// LC_SEGMENT
     Segment(LcSegment),
@@ -410,7 +414,7 @@ impl LcVariant {
 
 /// `segment_command`
 #[repr(C)]
-#[derive(IOread, SizeWith)]
+#[derive(IOread, SizeWith, AutoEnumFields)]
 pub struct LcSegment {
     pub segname: [u8; 16],
     pub vmaddr: u32,
@@ -441,7 +445,7 @@ impl Debug for LcSegment {
 
 /// `segment_command_64`
 #[repr(C)]
-#[derive(IOread, SizeWith)]
+#[derive(IOread, SizeWith, AutoEnumFields)]
 pub struct LcSegment64 {
     pub segname: [u8; 16],
     pub vmaddr: u64,
@@ -472,13 +476,13 @@ impl Debug for LcSegment64 {
 
 /// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcDylib {
     pub dylib: Dylib,
 }
 
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct Dylib {
     pub name: LcStr,
     pub timestamp: u32,
@@ -488,35 +492,35 @@ pub struct Dylib {
 
 /// LC_SUB_FRAMEWORK
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcSubframework {
     pub umbrella: LcStr,
 }
 
 /// LC_SUB_CLIENT
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcSubclient {
     pub client: LcStr,
 }
 
 /// LC_SUB_UMBRELLA
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcSubumbrella {
     pub sub_umbrella: LcStr,
 }
 
 /// LC_SUB_LIBRARY
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcSublibrary {
     pub sub_library: LcStr,
 }
 
 /// LC_PREBOUND_DYLIB
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcPreboundDylib {
     pub name: LcStr,
     pub nmodules: u32,
@@ -525,14 +529,14 @@ pub struct LcPreboundDylib {
 
 /// LC_ID_DYLINKER, LC_LOAD_DYLINKER, LC_DYLD_ENVIRONMENT
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcDylinker {
     pub name: LcStr,
 }
 
 /// LC_THREAD or LC_UNIXTHREAD
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcThread {
     flavor: u32,
     count: u32,
@@ -542,7 +546,7 @@ pub struct LcThread {
 
 /// `routines_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcRoutines {
     pub init_address: u32,
     pub init_module: u32,
@@ -560,7 +564,7 @@ pub struct LcRoutines {
 
 /// `routines_command_64`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcRoutines64 {
     pub init_address: u32,
     pub init_module: u32,
@@ -578,7 +582,7 @@ pub struct LcRoutines64 {
 
 /// `symtab_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcSymtab {
     pub symoff: u32,
     pub nsyms: u32,
@@ -588,7 +592,7 @@ pub struct LcSymtab {
 
 /// `dysymtab_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcDysimtab {
     pub ilocalsym: u32,
     pub nlocalsym: u32,
@@ -620,7 +624,7 @@ pub struct LcDysimtab {
 
 /// `twolevel_hints_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcTwoLevelHints {
     pub offset: u32,
     pub nhints: u32,
@@ -628,14 +632,14 @@ pub struct LcTwoLevelHints {
 
 /// `prebind_cksum_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcPrebindChekSum {
     pub cksum: u32,
 }
 
 /// `uuid_command`
 #[repr(C)]
-#[derive(IOread, SizeWith)]
+#[derive(IOread, SizeWith, AutoEnumFields)]
 pub struct LcUuid {
     pub uuid: [u8; 16],
 }
@@ -648,14 +652,14 @@ impl Debug for LcUuid {
 
 /// `rpath_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcRpath {
     pub path: LcStr,
 }
 
 /// `linkedit_data_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcLinkEditData {
     pub dataoff: u32,
     pub datasize: u32,
@@ -663,7 +667,7 @@ pub struct LcLinkEditData {
 
 /// `encryption_info_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcEncryptionInfo {
     pub cryptoff: u32,
     pub cryptsize: u32,
@@ -672,7 +676,7 @@ pub struct LcEncryptionInfo {
 
 /// `encryption_info_command_64`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcEncryptionInfo64 {
     pub cryptoff: u32,
     pub cryptsize: u32,
@@ -682,7 +686,7 @@ pub struct LcEncryptionInfo64 {
 
 /// `version_min_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcVersionMin {
     pub version: u32,
     pub sdk: u32,
@@ -690,7 +694,7 @@ pub struct LcVersionMin {
 
 /// `build_version_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcBuildVersion {
     pub platform: u32,
     pub minos: u32,
@@ -702,7 +706,7 @@ pub struct LcBuildVersion {
 
 /// `build_tool_version`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct BuildToolVersion {
     pub tool: u32,
     pub version: u32,
@@ -710,7 +714,7 @@ pub struct BuildToolVersion {
 
 /// `dyld_info_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcDyldInfo {
     pub rebase_off: u32,
     pub rebase_size: u32,
@@ -730,7 +734,7 @@ pub struct LcDyldInfo {
 
 /// `linker_option_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcLinkerOption {
     pub count: u32,
     // TODO: concatenation of zero terminated UTF8 strings.
@@ -740,7 +744,7 @@ pub struct LcLinkerOption {
 
 /// `symseg_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcSymSeg {
     pub offset: u32,
     pub size: u32,
@@ -748,7 +752,7 @@ pub struct LcSymSeg {
 
 /// `fvmfile_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcFvmFile {
     pub name: LcStr,
     pub header_addr: u32,
@@ -756,7 +760,7 @@ pub struct LcFvmFile {
 
 /// `entry_point_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcEntryPoint {
     pub entryoff: u64,
     pub stacksize: u64,
@@ -764,14 +768,14 @@ pub struct LcEntryPoint {
 
 /// `source_version_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcSourceVersion {
     pub version: u64,
 }
 
 /// `note_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith)]
+#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcNote {
     pub data_owner: [u8; 16],
     pub offset: u64,
