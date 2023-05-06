@@ -7,10 +7,14 @@ use super::MachObject;
 use std::fmt::{Debug};
 use std::io::{Seek, SeekFrom};
 
+use super::auto_enum_fields::*;
+use schnauzer_derive::AutoEnumFields;
+
 use super::utils;
 
+#[derive(AutoEnumFields)]
 pub struct FatArch {
-    pub reader: RcReader,
+    pub(crate) reader: RcReader,
 
     pub cputype: CPUType,
     pub cpusubtype: CPUSubtype,

@@ -89,7 +89,7 @@ pub struct LoadCommand {
 impl Debug for LoadCommand {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("LoadCommand")
-            .field("cmd", &load_commang_to_string(self.cmd))
+            .field("cmd", &load_command_to_string(self.cmd))
             .field("cmdsize", &self.cmdsize)
             .field("variant", &self.variant)
             .finish()

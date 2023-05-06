@@ -1,6 +1,5 @@
 use colored::{self, Colorize};
 use schnauzer::*;
-use std::fmt::*;
 use std::path::Path;
 use auto_enum_fields::*;
 
@@ -96,11 +95,14 @@ fn handle_fat(fat: FatObject) {
 fn handle_arch(arch: FatArch) {
     out_header("Fat arch:", 1);
 
-    out_dashed_field("cputype", FieldValue::U32(arch.cputype), 1);
-    out_dashed_field("cpusubtype", FieldValue::U32(arch.masked_cpu_subtype()), 1);
-    out_dashed_field("offset", FieldValue::U32(arch.offset), 1);
-    out_dashed_field("size", FieldValue::U32(arch.size), 1);
-    out_dashed_field("align", FieldValue::U32(arch.align), 1);
+    for field in arch.all_fields() {
+        out_dashed_field(&field.name, field.value, 1);
+    }
+    // out_dashed_field("cputype", FieldValue::U32(arch.cputype), 1);
+    // out_dashed_field("cpusubtype", FieldValue::U32(arch.masked_cpu_subtype()), 1);
+    // out_dashed_field("offset", FieldValue::U32(arch.offset), 1);
+    // out_dashed_field("size", FieldValue::U32(arch.size), 1);
+    // out_dashed_field("align", FieldValue::U32(arch.align), 1);
 
     handle_macho(arch.object().unwrap(), true);
 }
@@ -129,18 +131,18 @@ fn handle_load_commands(commands: LoadCommandIterator, level: usize) {
     out_header("Load commands:", level);
     for (index, cmd) in commands.enumerate() {
         out_list_item_dash(level, index);
-        out_field("cmd", FieldValue::String(fmt_ext::load_commang_to_string(cmd.cmd)), " ");
-        out_field("cmdsize", FieldValue::U32(cmd.cmdsize), "\n");
+        out_field("cmd", fmt_ext::load_command_to_string(cmd.cmd), " ");
+        out_field("cmdsize", format!("{}", cmd.cmdsize), "\n");
     }
 }
 
 fn out_header(hdr: &str, level: usize) {
     print!("{}", DashLine::new_header().get_string(level));
-    print!("{}", hdr.bright_white());
+    print!("{}", hdr.bold().bright_white());
     println!("");
 }
 
-fn out_dashed_field(name: &str, value: FieldValue, level: usize) {
+fn out_dashed_field(name: &str, value: String, level: usize) {
     out_field_dash(level);
     out_field(name, value, "\n");
 }
@@ -157,10 +159,9 @@ fn out_list_item_dash(level: usize, index: usize) {
     );
 }
 
-use std::io::Write;
-fn out_field(name: &str, value: FieldValue, delimiter: &str) {
+fn out_field(name: &str, value: String, delimiter: &str) {
     if name.len() > 0 {
-        let value = format!("{:?}", value).green();
+        let value = format!("{}", value).green();
         print!("{name}: {}", value);
     }
     print!("{delimiter}");

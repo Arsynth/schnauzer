@@ -1,3 +1,7 @@
+use scroll::SizeWith;
+use scroll::{IOread};
+use std::fmt::{LowerHex, Debug};
+
 pub const BYTES_PER_MAGIC: usize = 4;
 pub const BYTES_PER_FAT_HEADER: usize = 8;
 pub const BYTES_PER_FAT_ARCH: usize = 20;
@@ -20,3 +24,19 @@ pub const CPU_SUBTYPE_MASK: u32 = 0xff000000;
 pub const CPU_SUBTYPE_LIB64: u32 = 0x80000000;
 
 pub const CPU_ARCH_ABI64: CPUType = 0x01000000;
+
+#[repr(transparent)]
+#[derive(IOread, SizeWith)]
+pub struct Hu32(pub u32);
+
+impl Debug for Hu32 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:#09x}", self.0)
+    }
+}
+
+impl LowerHex for Hu32 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:#09x}", self.0)
+    }
+}

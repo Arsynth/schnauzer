@@ -1,6 +1,6 @@
 use proc_macro::{self, TokenStream};
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{parse_macro_input};
 
 #[proc_macro_derive(AutoEnumFields)]
 pub fn derive(input: TokenStream) -> TokenStream {
@@ -31,7 +31,7 @@ fn impl_auto_enum_fields(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     .map(|(idx, field)| {
         let ident = &field.ident.as_ref().map(|i| quote!{#i}).unwrap_or({let t = proc_macro2::Literal::usize_unsuffixed(idx); quote!{#t}});
         let value = quote! {
-            FieldValue::String(format!("{:?}", self.#ident))
+            format!("{:?}", self.#ident)
         };
         quote! {
             v.push(Field::new(stringify!(#ident).to_string(), #value));

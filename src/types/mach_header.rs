@@ -18,8 +18,8 @@ pub struct MachHeader {
     pub filetype: u32,
     pub ncmds: u32,
     pub sizeofcmds: u32,
-    pub flags: u32,
-    pub reserved: u32, // For 64 bit headers
+    pub flags: Hu32,
+    pub reserved: Hu32, // For 64 bit headers
 }
 
 impl MachHeader {
@@ -56,8 +56,8 @@ impl MachHeader {
             filetype: file_type,
             ncmds,
             sizeofcmds: size_of_cmds,
-            flags,
-            reserved,
+            flags: Hu32(flags),
+            reserved: Hu32(reserved),
         })
     }
 }
@@ -89,39 +89,5 @@ impl Debug for MachHeader {
             .field("flags", &self.flags)
             .field("reserved", &self.reserved)
             .finish()
-    }
-}
-
-impl MachHeader {
-    pub fn magic(&self) -> Magic {
-        self.magic
-    }
-
-    pub fn cpu_type(&self) -> CPUType {
-        self.cputype
-    }
-
-    pub fn cpu_subtype(&self) -> CPUSubtype {
-        self.cpusubtype & !CPU_SUBTYPE_MASK
-    }
-
-    pub fn file_type(&self) -> u32 {
-        self.filetype
-    }
-
-    pub fn ncmds(&self) -> u32 {
-        self.ncmds
-    }
-
-    pub fn size_of_cmds(&self) -> u32 {
-        self.sizeofcmds
-    }
-
-    pub fn flags(&self) -> u32 {
-        self.flags
-    }
-
-    pub fn reserved(&self) -> u32 {
-        self.reserved
     }
 }

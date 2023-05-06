@@ -1,3 +1,5 @@
+use crate::constants::Hu32;
+
 use super::load_command::*;
 use uuid::Uuid;
 
@@ -30,7 +32,7 @@ pub fn printable_uuid_string(from: &[u8; 16]) -> String {
     }
 }
 
-pub fn load_commang_to_string(cmd: u32) -> String {
+pub fn load_command_to_string(cmd: u32) -> String {
     match cmd {
         LC_SEGMENT => "LC_SEGMENT".to_string(),
         LC_SYMTAB => "LC_SYMTAB".to_string(),
@@ -83,6 +85,6 @@ pub fn load_commang_to_string(cmd: u32) -> String {
         LC_VERSION_MIN_WATCHOS => "LC_VERSION_MIN_WATCHOS".to_string(),
         LC_NOTE => "LC_NOTE".to_string(),
         LC_BUILD_VERSION => "LC_BUILD_VERSION".to_string(),
-        _ => cmd.to_string(),
+        _ => format!("{:#x}", Hu32(cmd)),
     }
 }
