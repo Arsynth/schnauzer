@@ -2,6 +2,10 @@
 name = "schnauzer-derive"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/Arsynth/schnauzer"
+keywords = ["derive", "macho", "mach-o", "binary"]
+license = "MIT OR Apache-2.0"
+description = "Derives for schnauzer library"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
