@@ -25,7 +25,7 @@ schnauzer /bin/cat
 
 And you get:
 
-![example output](https://github.com/Arsynth/schnauzer/readme_res/example_output.png)
+![example output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output.png?raw=true)
 
 ### Documentation
 docs.rs/schnauzer/0.1.7
