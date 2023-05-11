@@ -14,8 +14,6 @@ pub type CPUType = u32;
 pub type CPUSubtype = u32;
 /// Represents vm_prot_t
 pub type VmProt = Hi32;
-/// Represents `union lc_str`
-pub type LcStr = u32;
 
 pub type LoadCommandType = u32;
 
