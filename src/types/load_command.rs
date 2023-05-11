@@ -546,26 +546,13 @@ impl Debug for LcSegment64 {
 #[repr(C)]
 #[derive(Debug, AutoEnumFields)]
 pub struct LcDylib {
-    pub dylib: Dylib,
-}
-
-impl LcDylib {
-    fn parse(reader: RcReader, command_offset: usize, base_offset: usize, endian: scroll::Endian) -> Result<Self> {
-        let dylib = Dylib::parse(reader.clone(), command_offset, base_offset, endian)?;
-        Ok(LcDylib { dylib })
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct Dylib {
     pub name: LcStr,
     pub timestamp: u32,
     pub current_version: Version32,
     pub compatibility_version: Version32,
 }
 
-impl Dylib {
+impl LcDylib {
     fn parse(reader: RcReader, command_offset: usize, base_offset: usize, endian: scroll::Endian) -> Result<Self> {
         let mut reader_mut = reader.borrow_mut();
         reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
@@ -584,7 +571,7 @@ impl Dylib {
             file_offset: name_offset,
         };
 
-        Ok(Dylib {
+        Ok(LcDylib {
             name,
             timestamp,
             current_version,
