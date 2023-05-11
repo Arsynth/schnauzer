@@ -1,5 +1,7 @@
 # libschnauzer
 
+![](https://github.com/Arsynth/schnauzer/actions/workflows/rust.yml/badge.svg)
+
 Schnauzer is both library and tool for parsing mach-o files
 
 ### Features
