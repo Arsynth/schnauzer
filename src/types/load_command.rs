@@ -492,7 +492,7 @@ pub struct LcSegment {
     pub maxprot: VmProt,
     pub initprot: VmProt,
     pub nsects: u32,
-    pub flags: u32,
+    pub flags: Hu32,
 }
 
 impl Debug for LcSegment {
@@ -523,7 +523,7 @@ pub struct LcSegment64 {
     pub maxprot: VmProt,
     pub initprot: VmProt,
     pub nsects: u32,
-    pub flags: u32,
+    pub flags: Hu32,
 }
 
 impl Debug for LcSegment64 {
@@ -561,8 +561,8 @@ impl LcDylib {
 pub struct Dylib {
     pub name: LcStr,
     pub timestamp: u32,
-    pub current_version: u32,
-    pub compatibility_version: u32,
+    pub current_version: Version32,
+    pub compatibility_version: Version32,
 }
 
 impl Dylib {
@@ -572,8 +572,8 @@ impl Dylib {
 
         let name_offset: u32 = reader_mut.ioread_with(endian)?;
         let timestamp: u32 = reader_mut.ioread_with(endian)?;
-        let current_version: u32 = reader_mut.ioread_with(endian)?;
-        let compatibility_version: u32 = reader_mut.ioread_with(endian)?;
+        let current_version: Version32 = reader_mut.ioread_with(endian)?;
+        let compatibility_version: Version32 = reader_mut.ioread_with(endian)?;
 
         let name_offset = name_offset + command_offset as u32;
 
@@ -928,8 +928,8 @@ pub struct LcEncryptionInfo64 {
 #[repr(C)]
 #[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcVersionMin {
-    pub version: u32,
-    pub sdk: u32,
+    pub version: Version32,
+    pub sdk: Version32,
 }
 
 /// `build_version_command`
@@ -937,8 +937,8 @@ pub struct LcVersionMin {
 #[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcBuildVersion {
     pub platform: u32,
-    pub minos: u32,
-    pub sdk: u32,
+    pub minos: Version32,
+    pub sdk: Version32,
     pub ntools: u32,
     // TODO: Accurate way to provide BuildToolVersion
     // tools: (),
@@ -1030,7 +1030,7 @@ pub struct LcEntryPoint {
 #[repr(C)]
 #[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcSourceVersion {
-    pub version: u64,
+    pub version: Version64,
 }
 
 /// `note_command`
