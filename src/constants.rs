@@ -7,6 +7,8 @@ pub const BYTES_PER_MAGIC: usize = 4;
 pub const BYTES_PER_FAT_HEADER: usize = 8;
 pub const BYTES_PER_FAT_ARCH: usize = 20;
 pub const BYTES_PER_LOAD_COMMAND: usize = 8;
+pub const BYTES_PER_SECTION32: usize = 68;
+pub const BYTES_PER_SECTION64: usize = 80;
 
 /// Represents cpu_type_t
 pub type CPUType = u32;
@@ -149,5 +151,15 @@ impl Version64 {
 impl Debug for Version64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}.{}.{}.{}.{}", self.a(), self.b(), self.c(), self.d(), self.e())
+    }
+}
+
+#[repr(transparent)]
+#[derive(IOread, SizeWith)]
+pub struct Str16Bytes(pub [u8; 16]);
+
+impl Debug for Str16Bytes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &printable_string(&self.0))
     }
 }

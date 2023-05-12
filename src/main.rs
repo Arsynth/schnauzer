@@ -128,10 +128,45 @@ fn handle_load_commands(commands: LoadCommandIterator, level: usize) {
         );
         out_field("cmdsize".bright_white(), cmd.cmdsize.to_string().yellow(), "\n");
 
-        for field in cmd.variant.all_fields() {
-            out_field_dash(level + 1);
-            out_default_colored_field(field.name, field.value, "\n")
-        }
+        handle_command_variant(cmd.variant, level + 1);
+    }
+}
+
+fn handle_command_variant(variant: LcVariant, level: usize) {
+    for field in variant.all_fields() {
+        out_field_dash(level);
+        out_default_colored_field(field.name, field.value, "\n");
+    }
+    match variant {
+        LcVariant::Segment32(seg) => handle_segment_command32(seg, level),
+        LcVariant::Segment64(seg) => handle_segment_command64(seg, level),
+        _ => (),
+    }
+}
+
+fn handle_segment_command32(seg: LcSegment32, level: usize) {
+    for section in seg.sections_iterator() {
+        handle_section32(section, level + 1);
+    }
+}
+
+fn handle_section32(section: Section32, level: usize) {
+    out_header("Section32", level);
+    for field in section.all_fields() {
+        out_dashed_field(field.name, field.value, level + 1);
+    }
+}
+
+fn handle_segment_command64(seg: LcSegment64, level: usize) {
+    for section in seg.sections_iterator() {
+        handle_section64(section, level + 1);
+    }
+}
+
+fn handle_section64(section: Section64, level: usize) {
+    out_header("Section64", level);
+    for field in section.all_fields() {
+        out_dashed_field(field.name, field.value, level + 1);
     }
 }
 

@@ -22,9 +22,6 @@ pub use mach_header::*;
 pub mod load_command;
 pub use load_command::*;
 
-pub mod segment;
-pub use segment::*;
-
 pub use super::fmt_ext;
 
 pub use super::utils;
