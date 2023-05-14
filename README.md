@@ -27,16 +27,17 @@ schnauzer /bin/cat
 
 And you get:
 
-![example output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output.png?raw=true)
+![example output №1](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_1.png?raw=true)
+![example output №2](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_2.png?raw=true)
 
 ### Documentation
-docs.rs/schnauzer/0.1.7
+docs.rs/schnauzer/0.1.8
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.1.7"
+schnauzer = "0.1.8"
 ```
 
 ### Examples
