@@ -1,9 +1,9 @@
+use super::LoadCommand;
+use super::MachHeader;
 use super::RcReader;
 use super::Result;
-use super::MachHeader;
-use super::LoadCommand;
 
-use std::fmt::{Debug};
+use std::fmt::Debug;
 use std::io::{Seek, SeekFrom};
 
 pub struct MachObject {
@@ -11,6 +11,8 @@ pub struct MachObject {
 
     pub(super) header: MachHeader,
     pub(super) commands_offset: usize,
+
+    base_offset: u64,
 }
 
 impl MachObject {
@@ -29,8 +31,9 @@ impl MachObject {
 
         Ok(MachObject {
             reader: reader.clone(),
-            header: header,
-            commands_offset: commands_offset,
+            header,
+            commands_offset,
+            base_offset: base_offset as u64,
         })
     }
 }
@@ -46,6 +49,8 @@ impl MachObject {
             self.commands_offset,
             self.header.sizeofcmds,
             self.header.magic.endian(),
+            self.header.magic.is_64(),
+            self.base_offset,
         )
     }
 
@@ -70,6 +75,8 @@ pub struct LoadCommandIterator {
     current_offset: usize,
     end_offset: usize,
     endian: scroll::Endian,
+    is_64: bool,
+    object_file_offset: u64,
 }
 
 impl LoadCommandIterator {
@@ -78,12 +85,16 @@ impl LoadCommandIterator {
         base_offset: usize,
         size_of_cmds: u32,
         endian: scroll::Endian,
+        is_64: bool,
+        object_file_offset: u64,
     ) -> LoadCommandIterator {
         LoadCommandIterator {
-            reader: reader,
+            reader,
             current_offset: base_offset,
             end_offset: base_offset + size_of_cmds as usize,
-            endian: endian,
+            endian,
+            is_64,
+            object_file_offset,
         }
     }
 }
@@ -96,7 +107,14 @@ impl Iterator for LoadCommandIterator {
             return None;
         }
 
-        let lc = LoadCommand::parse(self.reader.clone(), self.current_offset, self.endian).unwrap();
+        let lc = LoadCommand::parse(
+            self.reader.clone(),
+            self.current_offset,
+            self.endian,
+            self.is_64,
+            self.object_file_offset,
+        )
+        .unwrap();
 
         self.current_offset += lc.cmdsize as usize;
 

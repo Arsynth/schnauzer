@@ -1,5 +1,6 @@
 use super::constants::*;
 use super::fmt_ext::*;
+use super::nlist::*;
 use super::RcReader;
 use super::Result;
 use scroll::SizeWith;
@@ -157,6 +158,8 @@ impl LoadCommand {
         reader: RcReader,
         base_offset: usize,
         endian: scroll::Endian,
+        is_64: bool,
+        object_file_offset: u64,
     ) -> Result<LoadCommand> {
         let mut reader_mut = reader.borrow_mut();
         reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
@@ -166,7 +169,14 @@ impl LoadCommand {
 
         std::mem::drop(reader_mut);
 
-        let variant = LcVariant::parse(reader.clone(), cmd, base_offset, endian)?;
+        let variant = LcVariant::parse(
+            reader.clone(),
+            cmd,
+            base_offset,
+            endian,
+            is_64,
+            object_file_offset,
+        )?;
 
         Ok(LoadCommand {
             cmd,
@@ -275,7 +285,14 @@ pub enum LcVariant {
 }
 
 impl LcVariant {
-    fn parse(reader: RcReader, cmd: u32, command_offset: usize, endian: Endian) -> Result<Self> {
+    fn parse(
+        reader: RcReader,
+        cmd: u32,
+        command_offset: usize,
+        endian: Endian,
+        is_64: bool,
+        object_file_offset: u64,
+    ) -> Result<Self> {
         let reader_clone = reader.clone();
         let mut reader_mut = reader.borrow_mut();
         let base_offset = reader_mut.stream_position()? as usize;
@@ -367,7 +384,9 @@ impl LcVariant {
                 Ok(Self::Routines64(c))
             }
             LC_SYMTAB => {
-                let c = reader_mut.ioread_with(endian)?;
+                std::mem::drop(reader_mut);
+                let c =
+                    LcSymtab::parse(reader_clone, is_64, base_offset, endian, object_file_offset)?;
                 Ok(Self::Symtab(c))
             }
             LC_DYSYMTAB => {
@@ -502,41 +521,37 @@ pub struct LcSegment32 {
 }
 
 impl LcSegment32 {
-    fn parse(
-        reader: RcReader,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
+    fn parse(reader: RcReader, base_offset: usize, endian: scroll::Endian) -> Result<Self> {
         let reader_clone = reader.clone();
         let mut reader_mut = reader.borrow_mut();
         reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
 
         let segname: Segname = reader_mut.ioread_with(endian)?;
-    let vmaddr: Hu32 = reader_mut.ioread_with(endian)?;
-    let vmsize: Hu32 = reader_mut.ioread_with(endian)?;
-    let fileoff: u32 = reader_mut.ioread_with(endian)?;
-    let filesize: u32 = reader_mut.ioread_with(endian)?;
-    let maxprot: VmProt = reader_mut.ioread_with(endian)?;
-    let initprot: VmProt = reader_mut.ioread_with(endian)?;
-    let nsects: u32 = reader_mut.ioread_with(endian)?;
-    let flags: Hu32 = reader_mut.ioread_with(endian)?;
-    
-    let sects_offset = reader_mut.stream_position()?;
-    
-    Ok(LcSegment32 {
-        reader: reader_clone,
-        segname,
-        vmaddr,
-        vmsize,
-        fileoff,
-        filesize,
-        maxprot,
-        initprot,
-        nsects,
-        flags,
-        sects_offset,
-        endian,
-    })
+        let vmaddr: Hu32 = reader_mut.ioread_with(endian)?;
+        let vmsize: Hu32 = reader_mut.ioread_with(endian)?;
+        let fileoff: u32 = reader_mut.ioread_with(endian)?;
+        let filesize: u32 = reader_mut.ioread_with(endian)?;
+        let maxprot: VmProt = reader_mut.ioread_with(endian)?;
+        let initprot: VmProt = reader_mut.ioread_with(endian)?;
+        let nsects: u32 = reader_mut.ioread_with(endian)?;
+        let flags: Hu32 = reader_mut.ioread_with(endian)?;
+
+        let sects_offset = reader_mut.stream_position()?;
+
+        Ok(LcSegment32 {
+            reader: reader_clone,
+            segname,
+            vmaddr,
+            vmsize,
+            fileoff,
+            filesize,
+            maxprot,
+            initprot,
+            nsects,
+            flags,
+            sects_offset,
+            endian,
+        })
     }
 }
 
@@ -558,7 +573,12 @@ impl Debug for LcSegment32 {
 
 impl LcSegment32 {
     pub fn sections_iterator(&self) -> Section32Iterator {
-        Section32Iterator::new(self.reader.clone(), self.nsects, self.sects_offset, self.endian)
+        Section32Iterator::new(
+            self.reader.clone(),
+            self.nsects,
+            self.sects_offset,
+            self.endian,
+        )
     }
 }
 
@@ -643,41 +663,37 @@ pub struct LcSegment64 {
 }
 
 impl LcSegment64 {
-    fn parse(
-        reader: RcReader,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
+    fn parse(reader: RcReader, base_offset: usize, endian: scroll::Endian) -> Result<Self> {
         let reader_clone = reader.clone();
         let mut reader_mut = reader.borrow_mut();
         reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
 
         let segname: Segname = reader_mut.ioread_with(endian)?;
-    let vmaddr: Hu64 = reader_mut.ioread_with(endian)?;
-    let vmsize: Hu64 = reader_mut.ioread_with(endian)?;
-    let fileoff: u64 = reader_mut.ioread_with(endian)?;
-    let filesize: u64 = reader_mut.ioread_with(endian)?;
-    let maxprot: VmProt = reader_mut.ioread_with(endian)?;
-    let initprot: VmProt = reader_mut.ioread_with(endian)?;
-    let nsects: u32 = reader_mut.ioread_with(endian)?;
-    let flags: Hu32 = reader_mut.ioread_with(endian)?;
-    
-    let sects_offset = reader_mut.stream_position()?;
-    
-    Ok(LcSegment64 {
-        reader: reader_clone,
-        segname,
-        vmaddr,
-        vmsize,
-        fileoff,
-        filesize,
-        maxprot,
-        initprot,
-        nsects,
-        flags,
-        sects_offset,
-        endian,
-    })
+        let vmaddr: Hu64 = reader_mut.ioread_with(endian)?;
+        let vmsize: Hu64 = reader_mut.ioread_with(endian)?;
+        let fileoff: u64 = reader_mut.ioread_with(endian)?;
+        let filesize: u64 = reader_mut.ioread_with(endian)?;
+        let maxprot: VmProt = reader_mut.ioread_with(endian)?;
+        let initprot: VmProt = reader_mut.ioread_with(endian)?;
+        let nsects: u32 = reader_mut.ioread_with(endian)?;
+        let flags: Hu32 = reader_mut.ioread_with(endian)?;
+
+        let sects_offset = reader_mut.stream_position()?;
+
+        Ok(LcSegment64 {
+            reader: reader_clone,
+            segname,
+            vmaddr,
+            vmsize,
+            fileoff,
+            filesize,
+            maxprot,
+            initprot,
+            nsects,
+            flags,
+            sects_offset,
+            endian,
+        })
     }
 }
 
@@ -699,7 +715,12 @@ impl Debug for LcSegment64 {
 
 impl LcSegment64 {
     pub fn sections_iterator(&self) -> Section64Iterator {
-        Section64Iterator::new(self.reader.clone(), self.nsects, self.sects_offset, self.endian)
+        Section64Iterator::new(
+            self.reader.clone(),
+            self.nsects,
+            self.sects_offset,
+            self.endian,
+        )
     }
 }
 
@@ -1052,12 +1073,145 @@ pub struct LcRoutines64 {
 
 /// `symtab_command`
 #[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
+#[derive(AutoEnumFields)]
 pub struct LcSymtab {
+    reader: RcReader,
+
+    pub is_64: bool,
+
     pub symoff: u32,
     pub nsyms: u32,
     pub stroff: u32,
     pub strsize: u32,
+
+    endian: scroll::Endian,
+    object_file_offset: u64,
+}
+
+impl LcSymtab {
+    fn parse(
+        reader: RcReader,
+        is_64: bool,
+        base_offset: usize,
+        endian: scroll::Endian,
+        object_file_offset: u64,
+    ) -> Result<Self> {
+        let reader_clone = reader.clone();
+        let mut reader_mut = reader.borrow_mut();
+
+        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
+
+        let symoff: u32 = reader_mut.ioread_with(endian)?;
+        let nsyms: u32 = reader_mut.ioread_with(endian)?;
+        let stroff: u32 = reader_mut.ioread_with(endian)?;
+        let strsize: u32 = reader_mut.ioread_with(endian)?;
+
+        Ok(LcSymtab {
+            reader: reader_clone,
+            is_64,
+            symoff,
+            nsyms,
+            stroff,
+            strsize,
+            endian,
+            object_file_offset,
+        })
+    }
+}
+
+impl Debug for LcSymtab {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LcSymtab")
+            .field("is_64", &self.is_64)
+            .field("symoff", &self.symoff)
+            .field("nsyms", &self.nsyms)
+            .field("stroff", &self.stroff)
+            .field("strsize", &self.strsize)
+            .finish()
+    }
+}
+
+impl LcSymtab {
+    pub fn nlist_iterator(&self) -> NlistIterator {
+        NlistIterator::new(
+            self.reader.clone(),
+            self.is_64,
+            self.object_file_offset + self.symoff as u64,
+            self.nsyms,
+            self.endian,
+        )
+    }
+}
+
+pub struct NlistIterator {
+    reader: RcReader,
+    pub is_64: bool,
+
+    base_offset: u64,
+    nsyms: u32,
+
+    current: usize,
+    endian: scroll::Endian,
+}
+
+impl NlistIterator {
+    fn new(
+        reader: RcReader,
+        is_64: bool,
+        base_offset: u64,
+        nsyms: u32,
+        endian: scroll::Endian,
+    ) -> Self {
+        NlistIterator {
+            reader,
+            is_64,
+            base_offset,
+            nsyms,
+            current: 0,
+            endian,
+        }
+    }
+}
+
+impl Iterator for NlistIterator {
+    type Item = NlistVariant;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current >= self.nsyms as usize {
+            return None;
+        }
+
+        let mut reader_mut = self.reader.borrow_mut();
+
+        let offset = match self.is_64 {
+            true => self.base_offset + BYTES_PER_NLIST64 as u64 * self.current as u64,
+            false => self.base_offset + BYTES_PER_NLIST32 as u64 * self.current as u64,
+        };
+        if let Err(_) = reader_mut.seek(SeekFrom::Start(offset)) {
+            return None;
+        }
+
+        self.current += 1;
+
+        match self.is_64 {
+            true => {
+                let nlist = reader_mut.ioread_with::<Nlist64>(self.endian);
+                if let Ok(nlist) = nlist {
+                    return Some(NlistVariant::Nlist64(nlist));
+                } else {
+                    return None;
+                }
+            }
+            false => {
+                let nlist = reader_mut.ioread_with::<Nlist32>(self.endian);
+                if let Ok(nlist) = nlist {
+                    return Some(NlistVariant::Nlist32(nlist));
+                } else {
+                    return None;
+                }
+            }
+        }
+    }
 }
 
 /// `dysymtab_command`

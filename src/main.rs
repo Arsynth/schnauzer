@@ -3,49 +3,6 @@ use colored::{self, ColoredString, Colorize};
 use schnauzer::*;
 use std::{path::Path};
 
-struct DashLine {
-    head: String,
-    body: String,
-    tail: String,
-}
-
-impl DashLine {
-    pub fn new(head: &str, body: &str, tail: &str) -> Self {
-        DashLine {
-            head: head.to_string(),
-            body: body.to_string(),
-            tail: tail.to_string(),
-        }
-    }
-
-    pub fn new_header() -> Self {
-        let body = format!("{}", "----|");
-        DashLine::new("|", &body, "----")
-    }
-
-    pub fn new_field() -> Self {
-        let tail = format! {"{}{}", "|", "*".dimmed()};
-        let body = format!("{}", "    ".dimmed());
-        DashLine::new("|", &body, &tail)
-    }
-
-    pub fn new_list_item() -> Self {
-        let tail = format! {"{}{}", " |", "#".dimmed()};
-        let body = format!("{}", "    ".dimmed());
-        DashLine::new("|", &body, &tail)
-    }
-}
-
-impl DashLine {
-    pub fn get_string(&self, size: usize) -> String {
-        if size == 0 {
-            return "".to_string();
-        }
-
-        format!("{}{}{}", self.head, self.body.repeat(size - 1), self.tail)
-    }
-}
-
 fn main() {
     let mut args = std::env::args();
     let _exec_name = args.next();
@@ -86,18 +43,18 @@ fn handle_object(obj: ObjectType) {
 }
 
 fn handle_fat(fat: FatObject) {
-    out_header("Fat:", 0);
     for arch in fat.arch_iterator() {
         handle_arch(arch);
     }
 }
 
 fn handle_arch(arch: FatArch) {
-    out_header("Fat arch:", 1);
+    println!("{}", "Fat arch:".bold().bright_white());
 
     for field in arch.all_fields() {
-        out_dashed_field(field.name, field.value, 1);
+        out_dashed_field(field.name, field.value, 0);
     }
+    out_dashed_field("Mach header".to_string(), "".to_string(), 0);
 
     handle_macho(arch.object().unwrap(), true);
 }
@@ -107,18 +64,17 @@ fn handle_macho(macho: MachObject, nested: bool) {
         true => 2,
         false => 1,
     };
-    out_header("Mach header:", level);
 
     let h = macho.header();
     for field in h.all_fields() {
         out_dashed_field(field.name, field.value, level);
     }
+    out_dashed_field("Load commands".to_string(), "".to_string(), level);
 
     handle_load_commands(macho.load_commands_iterator(), level + 1);
 }
 
 fn handle_load_commands(commands: LoadCommandIterator, level: usize) {
-    out_header("Load commands:", level);
     for (index, cmd) in commands.enumerate() {
         out_list_item_dash(level, index);
         out_field(
@@ -140,39 +96,57 @@ fn handle_command_variant(variant: LcVariant, level: usize) {
     match variant {
         LcVariant::Segment32(seg) => handle_segment_command32(seg, level),
         LcVariant::Segment64(seg) => handle_segment_command64(seg, level),
+        LcVariant::Symtab(symtab) => handle_symtab_command(symtab, level),
         _ => (),
     }
 }
 
 fn handle_segment_command32(seg: LcSegment32, level: usize) {
+    if seg.nsects > 0 {
+        out_dashed_field("Sections".to_string(), "".to_string(), level);
+    }
     for section in seg.sections_iterator() {
         handle_section32(section, level + 1);
     }
 }
 
 fn handle_section32(section: Section32, level: usize) {
-    out_header("Section32", level);
     for field in section.all_fields() {
-        out_dashed_field(field.name, field.value, level + 1);
+        out_dashed_field(field.name, field.value, level);
     }
 }
 
 fn handle_segment_command64(seg: LcSegment64, level: usize) {
+    if seg.nsects > 0 {
+        out_dashed_field("Sections".to_string(), "".to_string(), level);
+    }
     for section in seg.sections_iterator() {
         handle_section64(section, level + 1);
+        out_tile(level + 1);
     }
 }
 
 fn handle_section64(section: Section64, level: usize) {
-    out_header("Section64", level);
     for field in section.all_fields() {
         out_dashed_field(field.name, field.value, level + 1);
     }
 }
 
-fn out_header(hdr: &str, level: usize) {
-    print!("{}", DashLine::new_header().get_string(level));
-    print!("{}", hdr.bold().bright_white());
+fn handle_symtab_command(symtab: LcSymtab, level: usize) {
+    for (index, nlist) in symtab.nlist_iterator().enumerate() {
+        handle_nlist(nlist, level, index);
+    }
+}
+
+fn handle_nlist(nlist: NlistVariant, level: usize, index: usize) {
+    out_list_item_dash(level, index);
+    for field in nlist.all_fields() {
+        out_field(
+            field.name.bright_white(),
+            field.value.yellow(),
+            " ",
+        );
+    }
     println!("");
 }
 
@@ -182,13 +156,14 @@ fn out_dashed_field(name: String, value: String, level: usize) {
 }
 
 fn out_field_dash(level: usize) {
-    print!("{}", DashLine::new_field().get_string(level + 1));
+    let tail = format! {"{}{}", "|", "*".dimmed()};
+    print!("{}{}", " ".repeat(level + 1), tail);
 }
 
 fn out_list_item_dash(level: usize, index: usize) {
     print!(
         "{}[{}] ",
-        DashLine::new_list_item().get_string(level + 1),
+        " ".repeat(level + 1),
         index.to_string().red()
     );
 }
@@ -202,4 +177,13 @@ fn out_field(name: ColoredString, value: ColoredString, delimiter: &str) {
         print!("{name}: {value}");
     }
     print!("{delimiter}");
+}
+
+fn out_tile(level: usize) {
+    out_string("-".repeat(20), level)
+}
+
+fn out_string(string: String, level: usize) {
+    print!("{}", " ".repeat(level));
+    println!("{string}");
 }
