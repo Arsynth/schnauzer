@@ -1,14 +1,14 @@
 mod handler;
-mod default_handler;
-mod symtab_handler;
+mod default;
+mod syms;
 mod helpers;
 
 use super::output::Printer;
 use super::result::*;
 
 use handler::*;
-use default_handler::*;
-use symtab_handler::*;
+use default::*;
+use syms::*;
 
 
 pub fn handle_with_args() -> Result<()> {
@@ -24,5 +24,6 @@ pub fn handle_with_args() -> Result<()> {
 }
 
 fn available_handlers() -> Vec<Box<dyn Handler>> {
-    vec![Box::new(SymtabHandler {})]
+    let printer = Printer {};
+    vec![Box::new(SymsHandler::new(printer))]
 }

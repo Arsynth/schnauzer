@@ -38,3 +38,15 @@ pub(crate) fn load_object_type_with(args: &mut Args) -> ObjectType {
 
     object
 }
+
+pub(crate) fn args_after_command_name(name: String) -> Option<Args> {
+    let mut args = std::env::args();
+        let _exec_name = args.next();
+        match args.next() {
+            Some(subcomm) => match subcomm == name {
+                true => Some(args),
+                false => None,
+            },
+            _ => return None,
+        }
+}
