@@ -30,14 +30,22 @@ And you get:
 ![example output №1](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_1.png?raw=true)
 ![example output №2](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_2.png?raw=true)
 
+Some info may be too big to be printed with other info that may be inconvenient. So there separate subcommand to print all `nlist`s:
+
+```shell
+schnauzer syms /bin/cat
+```
+
+![example syms output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_syms.png?raw=true)
+
 ### Documentation
-docs.rs/schnauzer/0.1.8
+docs.rs/schnauzer/0.1.9
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.1.8"
+schnauzer = "0.1.9"
 ```
 
 ### Examples
