@@ -1,10 +1,10 @@
-pub use std::env::Args;
-use std::{path::Path};
+use std::env::Args;
 use super::Printer;
 use super::Result;
 use crate::*;
 use crate::auto_enum_fields::*;
 use colored::*;
+use super::helpers;
 
 pub(super) struct DefaultHandler {
     printer: Printer,
@@ -21,31 +21,7 @@ impl DefaultHandler {
         let mut args = std::env::args();
     let _exec_name = args.next();
 
-    let path = match args.next() {
-        Some(s) => s,
-        None => {
-            eprintln!("Not enough arguments. Provide a valid path to binary");
-            std::process::exit(1);
-        }
-    };
-    let path = Path::new(&path);
-
-    let parser = match Parser::build(path) {
-        Ok(b) => b,
-        Err(e) => {
-            eprintln!("Could not create parser at '{:?}': {e}", path);
-            std::process::exit(1);
-        }
-    };
-
-    let object = match parser.parse() {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("Error while parsing: {:#?}", e);
-            std::process::exit(1);
-        }
-    };
-
+    let object = helpers::load_object_type_with(&mut args);
     self.handle_object(object);
 
     Ok(())

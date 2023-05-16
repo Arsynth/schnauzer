@@ -1,6 +1,7 @@
 mod handler;
 mod default_handler;
 mod symtab_handler;
+mod helpers;
 
 use super::output::Printer;
 use super::result::*;
