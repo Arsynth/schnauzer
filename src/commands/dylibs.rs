@@ -79,10 +79,10 @@ impl DylibsHandler {
 
     fn handle_dylib_command(&self, dylib: LcDylib, index: usize) {
         self.printer.out_list_item_dash(0, index);
-        let name = dylib.name.to_string().green();
-        self.printer.print_string(format!("{} ", name));
+        let name = Self::colored_path_string(dylib.name);
+        self.printer.print_string(name);
 
-        self.printer.print_colored_string("(".bright_white());
+        self.printer.print_colored_string(" (".bright_white());
         self.printer.out_default_colored_field(
             "Timestamp".to_string(),
             dylib.timestamp.to_string(),
@@ -100,5 +100,27 @@ impl DylibsHandler {
         );
         self.printer.print_colored_string(")".bright_white());
         self.printer.print_line("".to_string());
+    }
+
+    fn colored_path_string(path: LcStr) -> String {
+        let path = path.to_string();
+    
+        let mut parts: Vec<String> = path.split("/").map(|s| s.to_string()).collect();
+    
+        let len = parts.len();
+        for idx in 0..parts.len() {
+            let part = &parts[idx];
+            let updated = if idx == len - 1 {
+                format!("{}", part.yellow())
+            } else if part.starts_with("@") {
+                format!("{}", part.trim().blue())
+            } else {
+                format!("{}", part.trim().green())
+            };
+    
+            parts[idx] = updated;
+        }
+    
+        parts.join("/")
     }
 }

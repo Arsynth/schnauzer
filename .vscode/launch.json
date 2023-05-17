@@ -19,7 +19,8 @@
                     "kind": "bin"
                 }
             },
-            "args": ["/bin/cat"],
+            // "args": ["/bin/cat"],
+            "args": ["dylibs", "/Applications/Oculus.app/Wrapper/Twilight.app/Twilight"],
             "cwd": "${workspaceFolder}"
         },
         {
