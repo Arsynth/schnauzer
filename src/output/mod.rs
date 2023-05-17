@@ -1,7 +1,11 @@
 use colored::{self, ColoredString, Colorize};
 
-pub struct Printer {
+pub struct Printer {}
 
+impl Clone for Printer {
+    fn clone(&self) -> Self {
+        Self {  }
+    }
 }
 
 impl Printer {
@@ -18,7 +22,7 @@ impl Printer {
     pub(crate) fn out_list_item_dash(&self, level: usize, index: usize) {
         print!(
             "{}[{}] ",
-            " ".repeat(level + 1),
+            " ".repeat(level),
             index.to_string().red()
         );
     }
@@ -41,5 +45,17 @@ impl Printer {
     pub(crate) fn out_string(&self, string: String, level: usize) {
         print!("{}", " ".repeat(level));
         println!("{string}");
+    }
+
+    pub(crate) fn print_line(&self, line: String) {
+        println!("{line}");
+    }
+
+    pub(crate) fn print_string(&self, string: String) {
+        print!("{string}");
+    }
+    
+    pub(crate) fn print_colored_string(&self, string: ColoredString) {
+        print!("{string}");
     }
 }

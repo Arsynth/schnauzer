@@ -17,6 +17,18 @@ Schnauzer is both library and tool for parsing mach-o files
 cargo install schnauzer
 ```
 
+### Supported commands
+```shell
+# Prints almost all binary info
+schnauzer path_to_binary
+# Prints symtab
+schnauzer syms path_to_binary
+# Prints relative paths
+schnauzer rpaths path_to_binary
+# Prints used dynamic libraries
+schnauzer dylibs path_to_binary
+```
+
 ### Example output
 
 Put something like in your console:
@@ -39,13 +51,13 @@ schnauzer syms /bin/cat
 ![example syms output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_syms.png?raw=true)
 
 ### Documentation
-docs.rs/schnauzer/0.1.9
+docs.rs/schnauzer/0.2.0
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.1.9"
+schnauzer = "0.2.0"
 ```
 
 ### Examples
@@ -103,3 +115,10 @@ for field in h.all_fields() {
     out_dashed_field(field.name, field.value, level);
 }
 ```
+
+# Contacts
+
+You may email me: 
+[arsynthdev@gmail.com](mailto:arsynthdev@gmail.com)
+
+[GitHub profile](https://github.com/Arsynth)

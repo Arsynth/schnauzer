@@ -1,26 +1,25 @@
+use super::common;
 use super::handler::*;
 use super::helpers::args_after_command_name;
 use super::helpers::load_object_type_with;
 use super::Printer;
 use super::Result;
-use crate::auto_enum_fields::*;
 use crate::*;
 use colored::*;
-use super::common;
 
-static SUBCOMM_NAME: &str = "syms";
+static SUBCOMM_NAME: &str = "dylibs";
 
-pub(super) struct SymsHandler {
+pub(super) struct DylibsHandler {
     pub(super) printer: Printer,
 }
 
-impl SymsHandler {
+impl DylibsHandler {
     pub(super) fn new(printer: Printer) -> Self {
-        SymsHandler { printer }
+        DylibsHandler { printer }
     }
 }
 
-impl Handler for SymsHandler {
+impl Handler for DylibsHandler {
     fn can_handle_with_args(&self) -> bool {
         match args_after_command_name(SUBCOMM_NAME.to_string()) {
             Some(_) => true,
@@ -43,7 +42,7 @@ impl Handler for SymsHandler {
     }
 }
 
-impl SymsHandler {
+impl DylibsHandler {
     fn handle_object(&self, obj: ObjectType) {
         match obj {
             ObjectType::Fat(fat) => self.handle_fat(fat),
@@ -70,26 +69,36 @@ impl SymsHandler {
 
     fn handle_load_commands(&self, commands: LoadCommandIterator) {
         let commands = commands.flat_map(|cmd| match cmd.variant {
-            LcVariant::Symtab(symtab) => Some(symtab),
+            LcVariant::LoadDylib(dylib) => Some(dylib),
             _ => None,
         });
-        for cmd in commands {
-            self.handle_symtab_command(cmd);
+        for (index, cmd) in commands.enumerate() {
+            self.handle_dylib_command(cmd, index);
         }
     }
 
-    fn handle_symtab_command(&self, symtab: LcSymtab) {
-        for (index, nlist) in symtab.nlist_iterator().enumerate() {
-            self.handle_nlist(nlist, index);
-        }
-    }
-
-    fn handle_nlist(&self, nlist: NlistVariant, index: usize) {
+    fn handle_dylib_command(&self, dylib: LcDylib, index: usize) {
         self.printer.out_list_item_dash(0, index);
-        for field in nlist.all_fields() {
-            self.printer
-                .out_field(field.name.bright_white(), field.value.yellow(), " ");
-        }
-        println!("");
+        let name = dylib.name.to_string().green();
+        self.printer.print_string(format!("{} ", name));
+
+        self.printer.print_colored_string("(".bright_white());
+        self.printer.out_default_colored_field(
+            "Timestamp".to_string(),
+            dylib.timestamp.to_string(),
+            ", ",
+        );
+        self.printer.out_default_colored_field(
+            "Current version".to_string(),
+            dylib.current_version.to_string(),
+            ", ",
+        );
+        self.printer.out_default_colored_field(
+            "Compatibility version".to_string(),
+            dylib.compatibility_version.to_string(),
+            "",
+        );
+        self.printer.print_colored_string(")".bright_white());
+        self.printer.print_line("".to_string());
     }
 }

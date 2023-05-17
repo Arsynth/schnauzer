@@ -1,15 +1,21 @@
-mod handler;
 mod default;
+mod handler;
 mod syms;
+mod rpaths;
+mod dylibs;
+
+mod common;
 mod helpers;
+
+use crate::commands::dylibs::DylibsHandler;
+use crate::commands::rpaths::RpathsHandler;
 
 use super::output::Printer;
 use super::result::*;
 
-use handler::*;
 use default::*;
+use handler::*;
 use syms::*;
-
 
 pub fn handle_with_args() -> Result<()> {
     for handler in available_handlers().iter() {
@@ -25,5 +31,9 @@ pub fn handle_with_args() -> Result<()> {
 
 fn available_handlers() -> Vec<Box<dyn Handler>> {
     let printer = Printer {};
-    vec![Box::new(SymsHandler::new(printer))]
+    vec![
+        Box::new(SymsHandler::new(printer.clone())),
+        Box::new(RpathsHandler::new(printer.clone())),
+        Box::new(DylibsHandler::new(printer.clone())),
+    ]
 }

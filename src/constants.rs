@@ -1,6 +1,6 @@
 use scroll::SizeWith;
 use scroll::{IOread};
-use std::fmt::{LowerHex, Debug};
+use std::fmt::{LowerHex, Debug, Display};
 use super::fmt_ext::*;
 
 pub const BYTES_PER_MAGIC: usize = 4;
@@ -123,6 +123,12 @@ impl Debug for Version32 {
     }
 }
 
+impl Display for Version32 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}", self.x(), self.y(), self.z())
+    }
+}
+
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
 pub struct Version64(pub u64);
@@ -151,6 +157,12 @@ impl Version64 {
 }
 
 impl Debug for Version64 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}.{}.{}", self.a(), self.b(), self.c(), self.d(), self.e())
+    }
+}
+
+impl Display for Version64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}.{}.{}.{}.{}", self.a(), self.b(), self.c(), self.d(), self.e())
     }

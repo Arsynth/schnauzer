@@ -109,6 +109,16 @@ impl Debug for LcStr {
     }
 }
 
+impl std::fmt::Display for LcStr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self.load_string() {
+            Ok(s) => s,
+            Err(_) => "".to_string(),
+        };
+        write!(f, "{}", &s)
+    }
+}
+
 pub struct BitVec {
     reader: RcReader,
 
