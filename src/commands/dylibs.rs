@@ -84,18 +84,18 @@ impl DylibsHandler {
 
         self.printer.print_colored_string(" (".bright_white());
         self.printer.out_default_colored_field(
-            "Timestamp".to_string(),
-            dylib.timestamp.to_string(),
+            "Timestamp",
+            &dylib.timestamp.to_string(),
             ", ",
         );
         self.printer.out_default_colored_field(
-            "Current version".to_string(),
-            dylib.current_version.to_string(),
+            "Current version",
+            &dylib.current_version.to_string(),
             ", ",
         );
         self.printer.out_default_colored_field(
-            "Compatibility version".to_string(),
-            dylib.compatibility_version.to_string(),
+            "Compatibility version",
+            &dylib.compatibility_version.to_string(),
             "",
         );
         self.printer.print_colored_string(")".bright_white());

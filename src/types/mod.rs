@@ -22,6 +22,9 @@ pub use mach_header::*;
 pub mod load_command;
 pub use load_command::*;
 
+pub mod section;
+pub use section::*;
+
 pub mod nlist;
 pub use nlist::*;
 

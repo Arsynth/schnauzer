@@ -3,6 +3,7 @@ mod handler;
 mod syms;
 mod rpaths;
 mod dylibs;
+mod segs;
 
 mod common;
 mod helpers;
@@ -16,6 +17,7 @@ use super::result::*;
 use default::*;
 use handler::*;
 use syms::*;
+use segs::*;
 
 pub fn handle_with_args() -> Result<()> {
     for handler in available_handlers().iter() {
@@ -35,5 +37,6 @@ fn available_handlers() -> Vec<Box<dyn Handler>> {
         Box::new(SymsHandler::new(printer.clone())),
         Box::new(RpathsHandler::new(printer.clone())),
         Box::new(DylibsHandler::new(printer.clone())),
+        Box::new(SegsHandler::new(printer.clone())),
     ]
 }

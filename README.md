@@ -27,6 +27,8 @@ schnauzer syms path_to_binary
 schnauzer rpaths path_to_binary
 # Prints used dynamic libraries
 schnauzer dylibs path_to_binary
+# Prints all the segments with sections
+schnauzer segs path_to_binary
 ```
 
 ### Example output

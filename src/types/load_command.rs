@@ -1,6 +1,8 @@
 use super::constants::*;
 use super::fmt_ext::*;
 use super::nlist::*;
+use super::Section32;
+use super::Section64;
 use super::RcReader;
 use super::Result;
 use scroll::SizeWith;
@@ -637,21 +639,6 @@ impl Iterator for Section32Iterator {
     }
 }
 
-#[derive(IOread, SizeWith, Debug, AutoEnumFields)]
-pub struct Section32 {
-    pub sectname: Str16Bytes,
-    pub segname: Str16Bytes,
-    pub addr: Hu32,
-    pub size: Hu32,
-    pub offset: u32,
-    pub align: u32,
-    pub reloff: u32,
-    pub nreloc: u32,
-    pub flags: Hu32,
-    pub reserved1: u32,
-    pub reserved2: u32,
-}
-
 /// `segment_command_64`
 #[repr(C)]
 #[derive(AutoEnumFields)]
@@ -777,22 +764,6 @@ impl Iterator for Section64Iterator {
             Err(_) => return None,
         }
     }
-}
-
-#[derive(IOread, SizeWith, Debug, AutoEnumFields)]
-pub struct Section64 {
-    pub sectname: Str16Bytes,
-    pub segname: Str16Bytes,
-    pub addr: Hu64,
-    pub size: Hu64,
-    pub offset: u32,
-    pub align: u32,
-    pub reloff: u32,
-    pub nreloc: u32,
-    pub flags: Hu32,
-    pub reserved1: u32,
-    pub reserved2: u32,
-    pub reserved3: u32,
 }
 
 /// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB

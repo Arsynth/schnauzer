@@ -177,3 +177,9 @@ impl Debug for Str16Bytes {
         write!(f, "{}", &printable_string(&self.0))
     }
 }
+
+impl Display for Str16Bytes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &printable_string(&self.0))
+    }
+}

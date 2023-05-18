@@ -45,10 +45,10 @@ impl DefaultHandler {
         println!("{}", "Fat arch:".bold().bright_white());
 
         for field in arch.all_fields() {
-            self.printer.out_dashed_field(field.name, field.value, 0);
+            self.printer.out_dashed_field(&field.name, &field.value, 0);
         }
         self.printer
-            .out_dashed_field("Mach header".to_string(), "".to_string(), 0);
+            .out_dashed_field("Mach header", "", 0);
 
         self.handle_macho(arch.object().unwrap(), true);
     }
@@ -62,10 +62,10 @@ impl DefaultHandler {
         let h = macho.header();
         for field in h.all_fields() {
             self.printer
-                .out_dashed_field(field.name, field.value, level);
+                .out_dashed_field(&field.name, &field.value, level);
         }
         self.printer
-            .out_dashed_field("Load commands".to_string(), "".to_string(), level);
+            .out_dashed_field("Load commands", "", level);
 
         self.handle_load_commands(macho.load_commands_iterator(), level + 1);
     }
@@ -92,7 +92,7 @@ impl DefaultHandler {
         for field in variant.all_fields() {
             self.printer.out_field_dash(level);
             self.printer
-                .out_default_colored_field(field.name, field.value, "\n");
+                .out_default_colored_field(&field.name, &field.value, "\n");
         }
         match variant {
             LcVariant::Segment32(seg) => self.handle_segment_command32(seg, level),
@@ -104,7 +104,7 @@ impl DefaultHandler {
     fn handle_segment_command32(&self, seg: LcSegment32, level: usize) {
         if seg.nsects > 0 {
             self.printer
-                .out_dashed_field("Sections".to_string(), "".to_string(), level);
+                .out_dashed_field("Sections", "", level);
         }
         for section in seg.sections_iterator() {
             self.handle_section32(section, level + 1);
@@ -114,14 +114,14 @@ impl DefaultHandler {
     fn handle_section32(&self, section: Section32, level: usize) {
         for field in section.all_fields() {
             self.printer
-                .out_dashed_field(field.name, field.value, level);
+                .out_dashed_field(&field.name, &field.value, level);
         }
     }
 
     fn handle_segment_command64(&self, seg: LcSegment64, level: usize) {
         if seg.nsects > 0 {
             self.printer
-                .out_dashed_field("Sections".to_string(), "".to_string(), level);
+                .out_dashed_field("Sections", "", level);
         }
         for section in seg.sections_iterator() {
             self.handle_section64(section, level + 1);
@@ -132,7 +132,7 @@ impl DefaultHandler {
     fn handle_section64(&self, section: Section64, level: usize) {
         for field in section.all_fields() {
             self.printer
-                .out_dashed_field(field.name, field.value, level + 1);
+                .out_dashed_field(&field.name, &field.value, level + 1);
         }
     }
 }
