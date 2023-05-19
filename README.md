@@ -64,13 +64,13 @@ schnauzer syms /bin/cat
 ![example syms output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_syms.png?raw=true)
 
 ### Documentation
-docs.rs/schnauzer/0.2.1
+docs.rs/schnauzer/0.2.2
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.2.1"
+schnauzer = "0.2.2"
 ```
 
 ### Examples
