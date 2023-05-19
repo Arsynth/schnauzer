@@ -87,9 +87,9 @@ pub const LC_BUILD_VERSION: u32 = 0x32;
 
 /// Represents `union lc_str`
 pub struct LcStr {
-    reader: RcReader,
+    pub(super) reader: RcReader,
 
-    file_offset: u32,
+    pub(super) file_offset: u32,
 }
 
 impl LcStr {
@@ -1118,6 +1118,7 @@ impl LcSymtab {
             self.reader.clone(),
             self.is_64,
             self.object_file_offset + self.symoff as u64,
+            self.object_file_offset + self.stroff as u64,
             self.nsyms,
             self.endian,
         )
@@ -1128,7 +1129,8 @@ pub struct NlistIterator {
     reader: RcReader,
     pub is_64: bool,
 
-    base_offset: u64,
+    symoff: u64,
+    stroff: u64,
     nsyms: u32,
 
     current: usize,
@@ -1139,14 +1141,16 @@ impl NlistIterator {
     fn new(
         reader: RcReader,
         is_64: bool,
-        base_offset: u64,
+        symoff: u64,
+        stroff: u64,
         nsyms: u32,
         endian: scroll::Endian,
     ) -> Self {
         NlistIterator {
             reader,
             is_64,
-            base_offset,
+            symoff,
+            stroff,
             nsyms,
             current: 0,
             endian,
@@ -1165,8 +1169,8 @@ impl Iterator for NlistIterator {
         let mut reader_mut = self.reader.borrow_mut();
 
         let offset = match self.is_64 {
-            true => self.base_offset + BYTES_PER_NLIST64 as u64 * self.current as u64,
-            false => self.base_offset + BYTES_PER_NLIST32 as u64 * self.current as u64,
+            true => self.symoff + BYTES_PER_NLIST64 as u64 * self.current as u64,
+            false => self.symoff + BYTES_PER_NLIST32 as u64 * self.current as u64,
         };
         if let Err(_) = reader_mut.seek(SeekFrom::Start(offset)) {
             return None;
@@ -1174,9 +1178,10 @@ impl Iterator for NlistIterator {
 
         self.current += 1;
 
+        std::mem::drop(reader_mut);
         match self.is_64 {
             true => {
-                let nlist = reader_mut.ioread_with::<Nlist64>(self.endian);
+                let nlist = Nlist64::parse(self.reader.clone(), self.stroff, self.endian);
                 if let Ok(nlist) = nlist {
                     return Some(NlistVariant::Nlist64(nlist));
                 } else {
@@ -1184,7 +1189,7 @@ impl Iterator for NlistIterator {
                 }
             }
             false => {
-                let nlist = reader_mut.ioread_with::<Nlist32>(self.endian);
+                let nlist = Nlist32::parse(self.reader.clone(), self.stroff, self.endian);
                 if let Ok(nlist) = nlist {
                     return Some(NlistVariant::Nlist32(nlist));
                 } else {

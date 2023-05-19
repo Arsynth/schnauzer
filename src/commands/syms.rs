@@ -3,7 +3,6 @@ use super::helpers::args_after_command_name;
 use super::helpers::load_object_type_with;
 use super::Printer;
 use super::Result;
-use crate::auto_enum_fields::*;
 use crate::*;
 use colored::*;
 use super::common;
@@ -86,10 +85,11 @@ impl SymsHandler {
 
     fn handle_nlist(&self, nlist: NlistVariant, index: usize) {
         self.printer.out_list_item_dash(0, index);
-        for field in nlist.all_fields() {
-            self.printer
-                .out_field(field.name.bright_white(), field.value.yellow(), " ");
-        }
+        let name = match nlist {
+            NlistVariant::Nlist32(nlist) => nlist.name,
+            NlistVariant::Nlist64(nlist) => nlist.name,
+        };
+        self.printer.print_colored_string(name.load_string().unwrap().yellow());
         println!("");
     }
 }
