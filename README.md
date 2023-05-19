@@ -61,7 +61,7 @@ Some info may be too big to be printed with other info that may be inconvenient.
 schnauzer syms /bin/cat
 ```
 
-![example syms output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_syms.png?raw=true)
+![example syms output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_syms_2.png?raw=true)
 
 ### Documentation
 docs.rs/schnauzer/0.2.2
