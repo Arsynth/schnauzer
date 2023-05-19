@@ -10,8 +10,6 @@ use std::io::{Seek, SeekFrom};
 use super::auto_enum_fields::*;
 use schnauzer_derive::AutoEnumFields;
 
-use super::utils;
-
 #[derive(AutoEnumFields)]
 pub struct FatArch {
     pub(crate) reader: RcReader,
@@ -49,21 +47,6 @@ impl FatArch {
 impl FatArch {
     pub fn object(&self) -> Result<MachObject> {
         MachObject::parse(self.reader.clone(), self.offset as usize)
-    }
-}
-
-impl FatArch {
-    pub fn masked_cpu_subtype(&self) -> CPUSubtype {
-        utils::masked_cpu_subtype(self.cpusubtype)
-         & !CPU_SUBTYPE_MASK
-    }
-
-    pub fn feature_flags(&self) -> u32 {
-        utils::feature_flags(self.cpusubtype)
-    }
-
-    pub fn is_64(&self) -> bool {
-        utils::is_64(self.cputype)
     }
 }
 

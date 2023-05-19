@@ -12,6 +12,7 @@ pub struct MachObject {
     pub(super) header: MachHeader,
     pub(super) commands_offset: usize,
 
+    /// File offset of single arch
     base_offset: u64,
 }
 
@@ -41,6 +42,11 @@ impl MachObject {
 impl MachObject {
     pub fn header(&self) -> &MachHeader {
         &self.header
+    }
+
+    /// File offset of single arch
+    pub fn file_offset(&self) -> u64 {
+        self.base_offset
     }
 
     pub fn load_commands_iterator(&self) -> LoadCommandIterator {

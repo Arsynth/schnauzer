@@ -29,12 +29,12 @@ impl Printer {
         );
     }
     
-    pub(crate) fn out_default_colored_fields(&self, fields: Vec<Field>, delimiter: &str) {
+    pub(crate) fn out_default_colored_fields(&self, fields: Vec<Field>, tail: &str) {
         let pairs: Vec<String> = fields.iter().map(|f| {
             ColoredField::new_default(&f.name, &f.value).to_string()
         }).collect();
 
-        print!("{}{delimiter}", pairs.join(", "));
+        print!("{}{tail}", pairs.join(", "));
     }
 
     pub(crate) fn out_default_colored_field(&self, name: &str, value: &str, delimiter: &str) {

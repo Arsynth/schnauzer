@@ -8,8 +8,6 @@ use super::Magic;
 
 use std::fmt::{Debug};
 
-use super::utils;
-
 #[derive(AutoEnumFields)]
 pub struct MachHeader {
     pub magic: Magic,
@@ -59,21 +57,6 @@ impl MachHeader {
             flags: Hu32(flags),
             reserved: Hu32(reserved),
         })
-    }
-}
-
-impl MachHeader {
-    pub fn masked_cpu_subtype(&self) -> CPUSubtype {
-        utils::masked_cpu_subtype(self.cpusubtype)
-         & !CPU_SUBTYPE_MASK
-    }
-
-    pub fn feature_flags(&self) -> u32 {
-        utils::feature_flags(self.cpusubtype)
-    }
-
-    pub fn is_64(&self) -> bool {
-        utils::is_64(self.cputype)
     }
 }
 

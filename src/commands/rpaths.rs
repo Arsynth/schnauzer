@@ -5,7 +5,6 @@ use super::Printer;
 use super::Result;
 use crate::*;
 use super::common;
-use colored::*;
 
 static SUBCOMM_NAME: &str = "rpaths";
 
@@ -79,6 +78,6 @@ impl RpathsHandler {
 
     fn handle_rpath_command(&self, cmd: LcRpath, index: usize) {
         self.printer.out_list_item_dash(0, index);
-        self.printer.print_line(format!("{}", cmd.path.to_string().green()));
+        self.printer.print_line(common::colored_path_string(cmd.path));
     }
 }

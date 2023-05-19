@@ -4,12 +4,11 @@ mod syms;
 mod rpaths;
 mod dylibs;
 mod segs;
+mod fat;
+mod headers;
 
 mod common;
 mod helpers;
-
-use crate::commands::dylibs::DylibsHandler;
-use crate::commands::rpaths::RpathsHandler;
 
 use super::output::Printer;
 use super::result::*;
@@ -17,7 +16,11 @@ use super::result::*;
 use default::*;
 use handler::*;
 use syms::*;
+use rpaths::*;
+use dylibs::*;
 use segs::*;
+use fat::*;
+use headers::*;
 
 pub fn handle_with_args() -> Result<()> {
     for handler in available_handlers().iter() {
@@ -38,5 +41,7 @@ fn available_handlers() -> Vec<Box<dyn Handler>> {
         Box::new(RpathsHandler::new(printer.clone())),
         Box::new(DylibsHandler::new(printer.clone())),
         Box::new(SegsHandler::new(printer.clone())),
+        Box::new(ArchsHandler::new(printer.clone())),
+        Box::new(HeadersHandler::new(printer.clone())),
     ]
 }
