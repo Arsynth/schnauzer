@@ -25,6 +25,12 @@ pub use load_command::*;
 pub mod section;
 pub use section::*;
 
+pub mod nlist;
+pub use nlist::*;
+
+pub mod build_tool_version;
+pub use build_tool_version::*;
+
 pub use super::fmt_ext;
 
 pub use super::auto_enum_fields;

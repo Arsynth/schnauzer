@@ -10,8 +10,7 @@ use std::io::{Seek, SeekFrom};
 use crate::auto_enum_fields::*;
 use schnauzer_derive::AutoEnumFields;
 
-pub mod nlist;
-pub use nlist::*;
+use crate::nlist::*;
 
 /// `symtab_command`
 #[repr(C)]

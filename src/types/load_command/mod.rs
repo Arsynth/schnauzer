@@ -4,7 +4,6 @@ use super::Section32;
 use super::Section64;
 use super::RcReader;
 use super::Result;
-use scroll::SizeWith;
 use scroll::{Endian, IOread};
 
 use std::fmt::Debug;
@@ -19,8 +18,86 @@ pub use constants::*;
 pub mod common;
 pub use common::*;
 
+pub mod segment_command;
+pub use segment_command::*;
+
 pub mod symtab_command;
 pub use symtab_command::*;
+
+pub mod dylib_command;
+pub use dylib_command::*;
+
+pub mod sub_framework_command;
+pub use sub_framework_command::*;
+
+pub mod sub_client_command;
+pub use sub_client_command::*;
+
+pub mod sub_umbrella_command;
+pub use sub_umbrella_command::*;
+
+pub mod sub_library_command;
+pub use sub_library_command::*;
+
+pub mod prebound_dylib_command;
+pub use prebound_dylib_command::*;
+
+pub mod dylinker_command;
+pub use dylinker_command::*;
+
+pub mod thread_command;
+pub use thread_command::*;
+
+pub mod routines_command;
+pub use routines_command::*;
+
+pub mod dysymtab_command;
+pub use dysymtab_command::*;
+
+pub mod twolevel_hints_command;
+pub use twolevel_hints_command::*;
+
+pub mod prebind_cksum_command;
+pub use prebind_cksum_command::*;
+
+pub mod uuid_command;
+pub use uuid_command::*;
+
+pub mod rpath_command;
+pub use rpath_command::*;
+
+pub mod linkedit_data_command;
+pub use linkedit_data_command::*;
+
+pub mod encryption_info_command;
+pub use encryption_info_command::*;
+
+pub mod version_min_command;
+pub use version_min_command::*;
+
+pub mod build_version_command;
+pub use build_version_command::*;
+
+pub mod dyld_info_command;
+pub use dyld_info_command::*;
+
+pub mod linker_option_command;
+pub use linker_option_command::*;
+
+pub mod note_command;
+pub use note_command::*;
+
+pub mod source_version_command;
+pub use source_version_command::*;
+
+pub mod entry_point_command;
+pub use entry_point_command::*;
+
+pub mod fvmfile_command;
+pub use fvmfile_command::*;
+
+pub mod symseg_command;
+pub use symseg_command::*;
 
 /// Represents general load command struct - `load_command`
 #[derive(AutoEnumFields)]
@@ -386,784 +463,4 @@ impl LcVariant {
             _ => Ok(Self::Other),
         }
     }
-}
-
-/// `segment_command`
-#[repr(C)]
-#[derive(AutoEnumFields)]
-pub struct LcSegment32 {
-    reader: RcReader,
-
-    pub segname: Segname,
-    pub vmaddr: Hu32,
-    pub vmsize: Hu32,
-    pub fileoff: u32,
-    pub filesize: u32,
-    pub maxprot: VmProt,
-    pub initprot: VmProt,
-    pub nsects: u32,
-    pub flags: Hu32,
-
-    sects_offset: u64,
-    endian: scroll::Endian,
-}
-
-impl LcSegment32 {
-    fn parse(reader: RcReader, base_offset: usize, endian: scroll::Endian) -> Result<Self> {
-        let reader_clone = reader.clone();
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let segname: Segname = reader_mut.ioread_with(endian)?;
-        let vmaddr: Hu32 = reader_mut.ioread_with(endian)?;
-        let vmsize: Hu32 = reader_mut.ioread_with(endian)?;
-        let fileoff: u32 = reader_mut.ioread_with(endian)?;
-        let filesize: u32 = reader_mut.ioread_with(endian)?;
-        let maxprot: VmProt = reader_mut.ioread_with(endian)?;
-        let initprot: VmProt = reader_mut.ioread_with(endian)?;
-        let nsects: u32 = reader_mut.ioread_with(endian)?;
-        let flags: Hu32 = reader_mut.ioread_with(endian)?;
-
-        let sects_offset = reader_mut.stream_position()?;
-
-        Ok(LcSegment32 {
-            reader: reader_clone,
-            segname,
-            vmaddr,
-            vmsize,
-            fileoff,
-            filesize,
-            maxprot,
-            initprot,
-            nsects,
-            flags,
-            sects_offset,
-            endian,
-        })
-    }
-}
-
-impl Debug for LcSegment32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("LcSegment")
-            .field("segname", &self.segname)
-            .field("vmaddr", &self.vmaddr)
-            .field("vmsize", &self.vmsize)
-            .field("fileoff", &self.fileoff)
-            .field("filesize", &self.filesize)
-            .field("maxprot", &self.maxprot)
-            .field("initprot", &self.initprot)
-            .field("nsects", &self.nsects)
-            .field("flags", &self.flags)
-            .finish()
-    }
-}
-
-impl LcSegment32 {
-    pub fn sections_iterator(&self) -> Section32Iterator {
-        Section32Iterator::new(
-            self.reader.clone(),
-            self.nsects,
-            self.sects_offset,
-            self.endian,
-        )
-    }
-}
-
-pub struct Section32Iterator {
-    reader: RcReader,
-
-    nsects: u32,
-    base_offset: u64,
-    endian: scroll::Endian,
-
-    current: u32,
-}
-
-impl Section32Iterator {
-    fn new(reader: RcReader, nsects: u32, base_offset: u64, endian: scroll::Endian) -> Self {
-        Section32Iterator {
-            reader,
-            nsects,
-            base_offset,
-            current: 0,
-            endian,
-        }
-    }
-}
-
-impl Iterator for Section32Iterator {
-    type Item = Section32;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.current >= self.nsects {
-            return None;
-        }
-
-        let offset = self.base_offset + BYTES_PER_SECTION64 as u64 * self.current as u64;
-        self.current += 1;
-
-        let mut reader_mut = self.reader.borrow_mut();
-        if let Err(_) = reader_mut.seek(SeekFrom::Start(offset as u64)) {
-            return None;
-        }
-
-        match reader_mut.ioread_with::<Section32>(self.endian) {
-            Ok(sect) => Some(sect),
-            Err(_) => return None,
-        }
-    }
-}
-
-/// `segment_command_64`
-#[repr(C)]
-#[derive(AutoEnumFields)]
-pub struct LcSegment64 {
-    reader: RcReader,
-
-    pub segname: Segname,
-    pub vmaddr: Hu64,
-    pub vmsize: Hu64,
-    pub fileoff: u64,
-    pub filesize: u64,
-    pub maxprot: VmProt,
-    pub initprot: VmProt,
-    pub nsects: u32,
-    pub flags: Hu32,
-
-    sects_offset: u64,
-    endian: scroll::Endian,
-}
-
-impl LcSegment64 {
-    fn parse(reader: RcReader, base_offset: usize, endian: scroll::Endian) -> Result<Self> {
-        let reader_clone = reader.clone();
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let segname: Segname = reader_mut.ioread_with(endian)?;
-        let vmaddr: Hu64 = reader_mut.ioread_with(endian)?;
-        let vmsize: Hu64 = reader_mut.ioread_with(endian)?;
-        let fileoff: u64 = reader_mut.ioread_with(endian)?;
-        let filesize: u64 = reader_mut.ioread_with(endian)?;
-        let maxprot: VmProt = reader_mut.ioread_with(endian)?;
-        let initprot: VmProt = reader_mut.ioread_with(endian)?;
-        let nsects: u32 = reader_mut.ioread_with(endian)?;
-        let flags: Hu32 = reader_mut.ioread_with(endian)?;
-
-        let sects_offset = reader_mut.stream_position()?;
-
-        Ok(LcSegment64 {
-            reader: reader_clone,
-            segname,
-            vmaddr,
-            vmsize,
-            fileoff,
-            filesize,
-            maxprot,
-            initprot,
-            nsects,
-            flags,
-            sects_offset,
-            endian,
-        })
-    }
-}
-
-impl Debug for LcSegment64 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("LcSegment64")
-            .field("segname", &self.segname)
-            .field("vmaddr", &self.vmaddr)
-            .field("vmsize", &self.vmsize)
-            .field("fileoff", &self.fileoff)
-            .field("filesize", &self.filesize)
-            .field("maxprot", &self.maxprot)
-            .field("initprot", &self.initprot)
-            .field("nsects", &self.nsects)
-            .field("flags", &self.flags)
-            .finish()
-    }
-}
-
-impl LcSegment64 {
-    pub fn sections_iterator(&self) -> Section64Iterator {
-        Section64Iterator::new(
-            self.reader.clone(),
-            self.nsects,
-            self.sects_offset,
-            self.endian,
-        )
-    }
-}
-
-pub struct Section64Iterator {
-    reader: RcReader,
-
-    nsects: u32,
-    base_offset: u64,
-    endian: scroll::Endian,
-
-    current: u32,
-}
-
-impl Section64Iterator {
-    fn new(reader: RcReader, nsects: u32, base_offset: u64, endian: scroll::Endian) -> Self {
-        Section64Iterator {
-            reader,
-            nsects,
-            base_offset,
-            current: 0,
-            endian,
-        }
-    }
-}
-
-impl Iterator for Section64Iterator {
-    type Item = Section64;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.current >= self.nsects {
-            return None;
-        }
-
-        let offset = self.base_offset + BYTES_PER_SECTION64 as u64 * self.current as u64;
-        self.current += 1;
-
-        let mut reader_mut = self.reader.borrow_mut();
-        if let Err(_) = reader_mut.seek(SeekFrom::Start(offset as u64)) {
-            return None;
-        }
-
-        match reader_mut.ioread_with::<Section64>(self.endian) {
-            Ok(sect) => Some(sect),
-            Err(_) => return None,
-        }
-    }
-}
-
-/// LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB, LC_REEXPORT_DYLIB
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcDylib {
-    pub name: LcStr,
-    pub timestamp: u32,
-    pub current_version: Version32,
-    pub compatibility_version: Version32,
-}
-
-impl LcDylib {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let timestamp: u32 = reader_mut.ioread_with(endian)?;
-        let current_version: Version32 = reader_mut.ioread_with(endian)?;
-        let compatibility_version: Version32 = reader_mut.ioread_with(endian)?;
-
-        let name_offset = name_offset + command_offset as u32;
-
-        std::mem::drop(reader_mut);
-
-        let name = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        Ok(LcDylib {
-            name,
-            timestamp,
-            current_version,
-            compatibility_version,
-        })
-    }
-}
-
-/// LC_SUB_FRAMEWORK
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcSubframework {
-    pub umbrella: LcStr,
-}
-
-impl LcSubframework {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let name_offset = name_offset + command_offset as u32;
-        std::mem::drop(reader_mut);
-
-        let umbrella = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        Ok(LcSubframework { umbrella })
-    }
-}
-
-/// LC_SUB_CLIENT
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcSubclient {
-    pub client: LcStr,
-}
-
-impl LcSubclient {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let name_offset = name_offset + command_offset as u32;
-        std::mem::drop(reader_mut);
-
-        let client = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        Ok(LcSubclient { client })
-    }
-}
-
-/// LC_SUB_UMBRELLA
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcSubumbrella {
-    pub sub_umbrella: LcStr,
-}
-
-impl LcSubumbrella {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let name_offset = name_offset + command_offset as u32;
-        std::mem::drop(reader_mut);
-
-        let sub_umbrella = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        Ok(LcSubumbrella { sub_umbrella })
-    }
-}
-
-/// LC_SUB_LIBRARY
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcSublibrary {
-    pub sub_library: LcStr,
-}
-
-impl LcSublibrary {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let name_offset = name_offset + command_offset as u32;
-        std::mem::drop(reader_mut);
-
-        let sub_library = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        Ok(LcSublibrary { sub_library })
-    }
-}
-
-/// LC_PREBOUND_DYLIB
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcPreboundDylib {
-    pub name: LcStr,
-    pub nmodules: u32,
-    pub linked_modules: BitVec,
-}
-
-impl LcPreboundDylib {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let nmodules: u32 = reader_mut.ioread_with(endian)?;
-        let linked_modules_offset: u32 = reader_mut.ioread_with(endian)?;
-
-        let name_offset = name_offset + command_offset as u32;
-        let linked_modules_offset = linked_modules_offset + command_offset as u32;
-
-        std::mem::drop(reader_mut);
-
-        let name = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        let linked_modules = BitVec {
-            reader: reader.clone(),
-            file_offset: linked_modules_offset,
-            bytecount: nmodules,
-        };
-
-        Ok(LcPreboundDylib {
-            name,
-            nmodules,
-            linked_modules,
-        })
-    }
-}
-
-/// LC_ID_DYLINKER, LC_LOAD_DYLINKER, LC_DYLD_ENVIRONMENT
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcDylinker {
-    pub name: LcStr,
-}
-
-impl LcDylinker {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let name_offset = name_offset + command_offset as u32;
-        std::mem::drop(reader_mut);
-
-        let name = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        Ok(LcDylinker { name })
-    }
-}
-
-/// LC_THREAD or LC_UNIXTHREAD
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcThread {
-    flavor: u32,
-    count: u32,
-    /* struct XXX_thread_state state   thread state for this flavor */
-    /* ... */
-}
-
-/// `routines_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcRoutines {
-    pub init_address: u32,
-    pub init_module: u32,
-
-    /*
-    uint32_t	reserved1;
-    uint32_t	reserved2;
-    uint32_t	reserved3;
-    uint32_t	reserved4;
-    uint32_t	reserved5;
-    uint32_t	reserved6;
-    */
-    pub reserved: [u32; 6],
-}
-
-/// `routines_command_64`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcRoutines64 {
-    pub init_address: u32,
-    pub init_module: u32,
-
-    /*
-    uint64_t	reserved1;
-    uint64_t	reserved2;
-    uint64_t	reserved3;
-    uint64_t	reserved4;
-    uint64_t	reserved5;
-    uint64_t	reserved6;
-    */
-    pub reserved: [u64; 6],
-}
-
-/// `dysymtab_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcDysimtab {
-    pub ilocalsym: u32,
-    pub nlocalsym: u32,
-
-    pub iextdefsym: u32,
-    pub nextdefsym: u32,
-
-    pub iundefsym: u32,
-    pub nundefsym: u32,
-
-    pub tocoff: u32,
-    pub ntoc: u32,
-
-    pub modtaboff: u32,
-    pub nmodtab: u32,
-
-    pub extrefsymoff: u32,
-    pub nextrefsyms: u32,
-
-    pub indirectsymoff: u32,
-    pub nindirectsyms: u32,
-
-    pub extreloff: u32,
-    pub nextrel: u32,
-
-    pub locreloff: u32,
-    pub nlocrel: u32,
-}
-
-/// `twolevel_hints_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcTwoLevelHints {
-    pub offset: u32,
-    pub nhints: u32,
-}
-
-/// `prebind_cksum_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcPrebindChekSum {
-    pub cksum: u32,
-}
-
-/// `uuid_command`
-#[repr(C)]
-#[derive(IOread, SizeWith, AutoEnumFields)]
-pub struct LcUuid {
-    pub uuid: Uuid,
-}
-
-impl Debug for LcUuid {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("LcUuid").field("uuid", &self.uuid).finish()
-    }
-}
-
-/// `rpath_command`
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcRpath {
-    pub path: LcStr,
-}
-
-impl LcRpath {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let name_offset = name_offset + command_offset as u32;
-        std::mem::drop(reader_mut);
-
-        let path = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        Ok(LcRpath { path })
-    }
-}
-
-/// `linkedit_data_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcLinkEditData {
-    pub dataoff: u32,
-    pub datasize: u32,
-}
-
-/// `encryption_info_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcEncryptionInfo {
-    pub cryptoff: u32,
-    pub cryptsize: u32,
-    pub cryptid: u32,
-}
-
-/// `encryption_info_command_64`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcEncryptionInfo64 {
-    pub cryptoff: u32,
-    pub cryptsize: u32,
-    pub cryptid: u32,
-    pub pad: u32,
-}
-
-/// `version_min_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcVersionMin {
-    pub version: Version32,
-    pub sdk: Version32,
-}
-
-/// `build_version_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcBuildVersion {
-    pub platform: u32,
-    pub minos: Version32,
-    pub sdk: Version32,
-    pub ntools: u32,
-    // TODO: Accurate way to provide BuildToolVersion
-    // tools: (),
-}
-
-/// `build_tool_version`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct BuildToolVersion {
-    pub tool: u32,
-    pub version: u32,
-}
-
-/// `dyld_info_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcDyldInfo {
-    pub rebase_off: u32,
-    pub rebase_size: u32,
-
-    pub bind_off: u32,
-    pub bind_size: u32,
-
-    pub weak_bind_off: u32,
-    pub weak_bind_size: u32,
-
-    pub lazy_bind_off: u32,
-    pub lazy_bind_size: u32,
-
-    pub export_off: u32,
-    pub export_size: u32,
-}
-
-/// `linker_option_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcLinkerOption {
-    pub count: u32,
-    // TODO: concatenation of zero terminated UTF8 strings.
-    // Zero filled at end to align
-    // strings: (),
-}
-
-/// `symseg_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcSymSeg {
-    pub offset: u32,
-    pub size: u32,
-}
-
-/// `fvmfile_command`
-#[repr(C)]
-#[derive(Debug, AutoEnumFields)]
-pub struct LcFvmFile {
-    pub name: LcStr,
-    pub header_addr: u32,
-}
-
-impl LcFvmFile {
-    fn parse(
-        reader: RcReader,
-        command_offset: usize,
-        base_offset: usize,
-        endian: scroll::Endian,
-    ) -> Result<Self> {
-        let mut reader_mut = reader.borrow_mut();
-        reader_mut.seek(SeekFrom::Start(base_offset as u64))?;
-
-        let name_offset: u32 = reader_mut.ioread_with(endian)?;
-        let header_addr: u32 = reader_mut.ioread_with(endian)?;
-
-        let name_offset = name_offset + command_offset as u32;
-        std::mem::drop(reader_mut);
-
-        let name = LcStr {
-            reader: reader.clone(),
-            file_offset: name_offset,
-        };
-
-        Ok(LcFvmFile { name, header_addr })
-    }
-}
-
-/// `entry_point_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcEntryPoint {
-    pub entryoff: u64,
-    pub stacksize: u64,
-}
-
-/// `source_version_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcSourceVersion {
-    pub version: Version64,
-}
-
-/// `note_command`
-#[repr(C)]
-#[derive(Debug, IOread, SizeWith, AutoEnumFields)]
-pub struct LcNote {
-    pub data_owner: [u8; 16],
-    pub offset: u64,
-    pub size: u64,
 }
