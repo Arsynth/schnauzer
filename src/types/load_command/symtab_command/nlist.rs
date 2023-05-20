@@ -1,9 +1,9 @@
-use super::RcReader;
-use super::Result;
+use crate::RcReader;
+use crate::Result;
 /// <https://opensource.apple.com/source/xnu/xnu-4570.71.2/EXTERNAL_HEADERS/mach-o/nlist.h.auto.html>
 use crate::LcStr;
 
-use super::auto_enum_fields::*;
+use crate::auto_enum_fields::*;
 use schnauzer_derive::AutoEnumFields;
 use scroll::IOread;
 
