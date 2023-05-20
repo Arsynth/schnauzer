@@ -1,8 +1,8 @@
+use crate::constants::*;
 use crate::RcReader;
 use crate::Result;
-use crate::constants::*;
 
-use scroll::{IOread};
+use scroll::IOread;
 
 use std::fmt::Debug;
 use std::io::{Seek, SeekFrom};
@@ -119,7 +119,7 @@ impl NlistIterator {
 }
 
 impl Iterator for NlistIterator {
-    type Item = NlistVariant;
+    type Item = Nlist;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current >= self.nsyms as usize {
@@ -139,23 +139,11 @@ impl Iterator for NlistIterator {
         self.current += 1;
 
         std::mem::drop(reader_mut);
-        match self.is_64 {
-            true => {
-                let nlist = Nlist64::parse(self.reader.clone(), self.stroff, self.endian);
-                if let Ok(nlist) = nlist {
-                    return Some(NlistVariant::Nlist64(nlist));
-                } else {
-                    return None;
-                }
-            }
-            false => {
-                let nlist = Nlist32::parse(self.reader.clone(), self.stroff, self.endian);
-                if let Ok(nlist) = nlist {
-                    return Some(NlistVariant::Nlist32(nlist));
-                } else {
-                    return None;
-                }
-            }
+
+        if let Ok(nlist) = Nlist::parse(self.reader.clone(), self.stroff, self.is_64, self.endian) {
+            return Some(nlist);
+        } else {
+            return None;
         }
     }
 }

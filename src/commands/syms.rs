@@ -83,13 +83,9 @@ impl SymsHandler {
         }
     }
 
-    fn handle_nlist(&self, nlist: NlistVariant, index: usize) {
+    fn handle_nlist(&self, nlist: Nlist, index: usize) {
         self.printer.out_list_item_dash(0, index);
-        let name = match nlist {
-            NlistVariant::Nlist32(nlist) => nlist.name,
-            NlistVariant::Nlist64(nlist) => nlist.name,
-        };
-        self.printer.print_colored_string(name.load_string().unwrap().yellow());
+        self.printer.print_colored_string(nlist.name.load_string().unwrap().yellow());
         println!("");
     }
 }
