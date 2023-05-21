@@ -74,7 +74,7 @@ impl ReferenceBitField {
 /// Describes an item in the file that uses an address that needs to be updated
 /// when the address is changed. Declared in /usr/include/mach-o/reloc.h
 pub struct RelocationInfo {
-    /// In MH_OBJECT files, this is an offset from the start of the section to the item
+    /// In `MH_OBJECT` files, this is an offset from the start of the section to the item
     /// containing the address requiring relocation.
     /// If the high bit of this field is set (which you can check using the R_SCATTERED bit mask),
     /// the relocation_info structure is actually a scattered_relocation_info structure.
@@ -105,21 +105,33 @@ pub struct RelocationInfo {
     /// For the x86 environment, the r_type field may contain any of these values:
     /// `GENERIC_RELOC_VANILLA` — A generic relocation entry for both addresses contained in data and addresses
     /// contained in CPU instructions.
+    /// 
     /// `GENERIC_RELOC_PAIR` — The second relocation entry of a pair.
+    /// 
     /// `GENERIC_RELOC_SECTDIFF` — A relocation entry for an item that contains the difference of two section addresses.
-    /// This is generally used for position-independent code generation. GENERIC_RELOC_SECTDIFF contains the address
-    /// from which to subtract; it must be followed by a GENERIC_RELOC_PAIR containing the address to subtract.
-    /// `GENERIC_RELOC_LOCAL_SECTDIFF` — Similar to GENERIC_RELOC_SECTDIFF except that this entry refers
-    /// specifically to the address in this item. If the address is that of a globally visible coalesced symbol, this relocation entry does not change if the symbol is overridden. This is used to associate stack unwinding information with the object code this relocation entry describes.
+    /// This is generally used for position-independent code generation. `GENERIC_RELOC_SECTDIFF` contains the address
+    /// from which to subtract; it must be followed by a `GENERIC_RELOC_PAIR` containing the address to subtract.
+    /// 
+    /// `GENERIC_RELOC_LOCAL_SECTDIFF` — Similar to `GENERIC_RELOC_SECTDIFF` except that this entry refers
+    /// specifically to the address in this item. If the address is that of a globally visible coalesced symbol, 
+    /// this relocation entry does not change if the symbol is overridden. 
+    /// This is used to associate stack unwinding information with the object code this relocation entry describes.
+    /// 
     /// `GENERIC_RELOC_PB_LA_PTR` — A relocation entry for a prebound lazy pointer. This is always a scattered relocation entry.
     /// The r_value field contains the non-prebound value of the lazy pointer.
     ///
     /// For the x86-64 environment, the r_type field may contain any of these values:
+    /// 
     /// `X86_64_RELOC_BRANCH` — A CALL/JMP instruction with 32-bit displacement.
+    /// 
     /// `X86_64_RELOC_GOT_LOAD` — A MOVQ load of a GOT entry.
+    /// 
     /// `X86_64_RELOC_GOT` — Other GOT references.
+    /// 
     /// `X86_64_RELOC_SIGNED` — Signed 32-bit displacement.
+    /// 
     /// `X86_64_RELOC_UNSIGNED` — Absolute address.
+    /// 
     /// `X86_64_RELOC_SUBTRACTOR` — Must be followed by a X86_64_RELOC_UNSIGNED relocation.
     ///
     /// For PowerPC environments, the r_type field is usually `PPC_RELOC_VANILLA` for addresses contained in data.
