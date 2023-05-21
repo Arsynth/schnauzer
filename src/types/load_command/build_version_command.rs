@@ -2,10 +2,8 @@ use scroll::{IOread, SizeWith};
 
 use std::fmt::Debug;
 
-use crate::auto_enum_fields::*;
+use crate::{auto_enum_fields::*, Version32};
 use schnauzer_derive::AutoEnumFields;
-
-use super::Version32;
 
 /// `build_version_command`
 #[repr(C)]

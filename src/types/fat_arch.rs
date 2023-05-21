@@ -1,6 +1,6 @@
 use super::RcReader;
 use scroll::IOread;
-use super::constants::*;
+use super::primitives::*;
 use super::Result;
 use super::MachObject;
 

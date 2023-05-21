@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use crate::auto_enum_fields::*;
 use schnauzer_derive::AutoEnumFields;
 
-use super::Version32;
+use crate::Version32;
 
 /// `version_min_command`
 #[repr(C)]

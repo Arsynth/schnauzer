@@ -4,6 +4,9 @@ use std::fmt::{Debug};
 use super::result::Result;
 use super::reader::RcReader;
 
+pub mod primitives;
+pub use primitives::*;
+
 pub mod magic;
 pub use magic::Magic;
 
@@ -30,6 +33,9 @@ pub use nlist::*;
 
 pub mod build_tool_version;
 pub use build_tool_version::*;
+
+pub mod dylib;
+pub use dylib::*;
 
 pub use super::fmt_ext;
 

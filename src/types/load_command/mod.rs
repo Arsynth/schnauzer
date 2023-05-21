@@ -1,4 +1,3 @@
-use super::constants::*;
 use super::fmt_ext::*;
 use super::Section32;
 use super::Section64;

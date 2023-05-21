@@ -1,4 +1,4 @@
-use crate::constants::Hu32;
+use crate::primitives::Hu32;
 
 use super::load_command::*;
 use uuid::Uuid;

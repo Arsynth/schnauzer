@@ -2,7 +2,7 @@ use super::RcReader;
 use super::auto_enum_fields::*;
 use schnauzer_derive::AutoEnumFields;
 use scroll::IOread;
-use super::constants::*;
+use super::primitives::*;
 use super::Result;
 use super::Magic;
 

@@ -1,4 +1,4 @@
-use super::constants::*;
+use super::primitives::*;
 
 use std::fmt::{Debug};
 use super::auto_enum_fields::*;

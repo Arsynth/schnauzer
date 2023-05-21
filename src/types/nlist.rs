@@ -2,12 +2,14 @@ use crate::RcReader;
 use crate::Result;
 /// <https://opensource.apple.com/source/xnu/xnu-4570.71.2/EXTERNAL_HEADERS/mach-o/nlist.h.auto.html>
 use crate::LcStr;
+use super::U64U32;
 
 use crate::auto_enum_fields::*;
 use schnauzer_derive::AutoEnumFields;
 use scroll::IOread;
 
 type NlistStr = LcStr;
+type Nvalue = U64U32;
 
 #[repr(C)]
 #[derive(AutoEnumFields)]
@@ -52,30 +54,5 @@ impl Nlist {
             n_value,
             name,
         })
-    }
-}
-
-pub enum Nvalue {
-    U32(u32),
-    U64(u64),
-}
-
-impl AutoEnumFields for Nvalue {
-    fn all_fields(&self) -> Vec<Field> {
-        let field = match self {
-            Nvalue::U32(val) => Field::new("u32".to_string(), val.to_string()),
-            Nvalue::U64(val) => Field::new("u64".to_string(), val.to_string()),
-        };
-
-        vec![field]
-    }
-}
-
-impl std::fmt::Debug for Nvalue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::U32(arg0) => f.debug_tuple("U32").field(arg0).finish(),
-            Self::U64(arg0) => f.debug_tuple("U64").field(arg0).finish(),
-        }
     }
 }

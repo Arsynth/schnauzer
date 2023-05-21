@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use crate::auto_enum_fields::*;
 use schnauzer_derive::AutoEnumFields;
 
-use super::Uuid;
+use crate::Uuid;
 
 /// `uuid_command`
 #[repr(C)]

@@ -1,6 +1,6 @@
 use crate::RcReader;
 use crate::Result;
-use crate::constants::*;
+use crate::Version32;
 
 use scroll::{IOread};
 
