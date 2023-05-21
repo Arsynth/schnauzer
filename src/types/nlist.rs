@@ -5,9 +5,8 @@ use crate::LcStr;
 use crate::RcReader;
 use crate::Result;
 
-use crate::auto_enum_fields::*;
-use schnauzer_derive::AutoEnumFields;
 use scroll::IOread;
+use scroll::SizeWith;
 
 type NlistStr = LcStr;
 type Nvalue = U64U32;
@@ -15,44 +14,14 @@ type Nvalue = U64U32;
 /// `nlist`
 /// Describes an entry in the symbol table. Declared in `/usr/include/mach-o/nlist.h`.
 #[repr(C)]
-#[derive(AutoEnumFields)]
 pub struct Nlist {
     /// In the original `nlist` struct this field is uniun - `n_un`
     /// A union that holds an index into the string table, n_strx. To specify an empty string (""),
     /// set this value to 0. The n_name field is not used in Mach-O files.
     pub n_strx: u32,
-    /// A byte value consisting of data accessed using four bit masks:
-    /// `N_STAB` (0xe0) — If any of these 3 bits are set, the symbol is a symbolic debugging table (stab) entry.
-    /// In that case, the entire n_type field is interpreted as a stabvalue.
-    /// See /usr/include/mach-o/stab.h for valid stab values.
-    ///
-    /// `N_PEXT` (0x10) — If this bit is on, this symbol is marked as having limited global scope.
-    /// When the file is fed to the static linker, it clears the N_EXT bit for
-    /// each symbol with the N_PEXT bit set. (The ld option -keep_private_externs turns off this behavior.)
-    /// With OS X GCC, you can use the __private_extern__ function attribute to set this bit.
-    ///
-    /// `N_TYPE` (0x0e) — These bits define the type of the symbol.
-    ///
-    /// `N_EXT` (0x01) — If this bit is on, this symbol is an external symbol, a symbol that is either
-    /// defined outside this file or that is defined in this file but can be referenced by other files.
-    ///
-    /// Values for the N_TYPE field include:
-    ///
-    /// `N_UNDF` (0x0) — The symbol is undefined. Undefined symbols are symbols referenced in this
-    /// module but defined in a different module. The n_sect field is set to NO_SECT.
-    ///
-    /// `N_ABS` (0x2) — The symbol is absolute. The linker does not change the value of an absolute symbol.
-    /// The n_sect field is set to NO_SECT.
-    ///
-    /// `N_SECT` (0xe) — The symbol is defined in the section number given in n_sect.
-    ///
-    /// `N_PBUD` (0xc) — The symbol is undefined and the image is using a prebound value for the symbol.
-    /// The n_sect field is set to NO_SECT.
-    ///
-    /// `N_INDR` ( 0xa) — The symbol is defined to be the same as another symbol.
-    /// The n_value field is an index into the string table specifying the name of the other symbol.
-    ///  When that symbol is linked, both this and the other symbol have the same defined type and value.
-    pub n_type: u8,
+
+    /// See `Ntype`
+    pub n_type: Ntype,
 
     /// An integer specifying the number of the section that this symbol can be found in,
     /// or `NO_SECT` if the symbol is not to be found in any section of this image.
@@ -137,7 +106,7 @@ impl Nlist {
         let mut reader_mut = reader.borrow_mut();
 
         let n_strx: u32 = reader_mut.ioread_with(endian)?;
-        let n_type: u8 = reader_mut.ioread_with(endian)?;
+        let n_type: Ntype = reader_mut.ioread_with(endian)?;
         let n_sect: u8 = reader_mut.ioread_with(endian)?;
         let n_desc: u16 = reader_mut.ioread_with(endian)?;
         let n_value: Nvalue = if is_64 {
@@ -160,5 +129,89 @@ impl Nlist {
             n_value,
             name,
         })
+    }
+}
+
+pub mod constants {
+    pub const N_STAB: u8 = 0xe0;
+    pub const N_PEXT: u8 = 0x10;
+    pub const N_TYPE: u8 = 0x0e;
+    pub const N_EXT: u8 = 0x01;
+
+    pub const N_UNDF: u8 = 0x0;
+    pub const N_ABS: u8 = 0x2;
+    pub const N_SECT: u8 = 0xe;
+    pub const N_PBUD: u8 = 0xc;
+    pub const N_INDR: u8 = 0xa;
+}
+
+/// A byte value consisting of data accessed using four bit masks:
+/// `N_STAB` (0xe0) — If any of these 3 bits are set, the symbol is a symbolic debugging table (stab) entry.
+/// In that case, the entire n_type field is interpreted as a stabvalue.
+/// See `/usr/include/mach-o/stab.h` for valid stab values.
+///
+/// `N_PEXT` (0x10) — If this bit is on, this symbol is marked as having limited global scope.
+/// When the file is fed to the static linker, it clears the N_EXT bit for
+/// each symbol with the `N_PEXT` bit set. (The ld option -keep_private_externs turns off this behavior.)
+/// With OS X GCC, you can use the `__private_extern__` function attribute to set this bit.
+///
+/// `N_TYPE` (0x0e) — These bits define the type of the symbol.
+///
+/// `N_EXT` (0x01) — If this bit is on, this symbol is an external symbol, a symbol that is either
+/// defined outside this file or that is defined in this file but can be referenced by other files.
+///
+/// Values for the N_TYPE field include:
+///
+/// `N_UNDF` (0x0) — The symbol is undefined. Undefined symbols are symbols referenced in this
+/// module but defined in a different module. The n_sect field is set to NO_SECT.
+///
+/// `N_ABS` (0x2) — The symbol is absolute. The linker does not change the value of an absolute symbol.
+/// The n_sect field is set to NO_SECT.
+///
+/// `N_SECT` (0xe) — The symbol is defined in the section number given in n_sect.
+///
+/// `N_PBUD` (0xc) — The symbol is undefined and the image is using a prebound value for the symbol.
+/// The n_sect field is set to NO_SECT.
+///
+/// `N_INDR` (0xa) — The symbol is defined to be the same as another symbol.
+/// The n_value field is an index into the string table specifying the name of the other symbol.
+/// When that symbol is linked, both this and the other symbol have the same defined type and value.
+#[derive(IOread, SizeWith)]
+pub struct Ntype(pub u8);
+
+use self::constants::*;
+
+impl Ntype {
+    pub fn is_stab(&self) -> bool {
+        self.0 & N_STAB > 0
+    }
+
+    pub fn is_private_external(&self) -> bool {
+        self.0 & N_PEXT > 0
+    }
+
+    pub fn is_external(&self) -> bool {
+        self.0 & N_EXT > 0
+    }
+
+    pub fn is_undefined(&self) -> bool {
+        self.0 & N_TYPE == N_UNDF 
+    }
+
+    pub fn is_absolute(&self) -> bool {
+        self.0 & N_TYPE == N_ABS
+    }
+
+    pub fn is_defined_in_n_sect(&self) -> bool {
+        self.0 & N_TYPE == N_SECT
+    }
+
+    pub fn is_prebound(&self) -> bool {
+        self.0 & N_TYPE == N_PBUD
+    }
+
+    /// If `true`, the n_value field is an index into the string table specifying the name of the other symbol.
+    pub fn is_indirect(&self) -> bool {
+        self.0 & N_TYPE == N_INDR
     }
 }
