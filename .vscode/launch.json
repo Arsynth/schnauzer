@@ -20,7 +20,8 @@
                 }
             },
             // "args": ["/bin/cat"],
-            "args": ["syms", "/bin/cat"],
+            // "args": ["syms", "/bin/cat"],
+            "args": ["syms", "/System/Library/Frameworks/Metal.framework/Versions/Current/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService"],
             "cwd": "${workspaceFolder}"
         },
         {

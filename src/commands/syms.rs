@@ -1,3 +1,4 @@
+use super::common;
 use super::handler::*;
 use super::helpers::args_after_command_name;
 use super::helpers::load_object_type_with;
@@ -5,7 +6,6 @@ use super::Printer;
 use super::Result;
 use crate::*;
 use colored::*;
-use super::common;
 
 static SUBCOMM_NAME: &str = "syms";
 
@@ -87,9 +87,21 @@ impl SymsHandler {
         self.printer.out_list_item_dash(0, index);
 
         let title = self.type_title(&nlist);
-        let name = match nlist.name {
-            Some(name) => name.load_string().unwrap().yellow(),
-            None => "(Unnamed symbol)".dimmed(),
+        let name: String = match nlist.name {
+            Some(name) => match name.load_string() {
+                Ok(s) => s,
+                Err(err) => {
+                    eprintln!("{:?}", err);
+                    "".to_string()
+                }
+            },
+            None => "".to_string(),
+        };
+
+        let name = if name.len() > 0 {
+            name.yellow()
+        } else {
+            "[No name]".dimmed()
         };
 
         let label = format!("{title} {name}");
@@ -100,8 +112,8 @@ impl SymsHandler {
 
     fn type_title(&self, nlist: &Nlist) -> ColoredString {
         let ntype = &nlist.n_type;
-        if ntype.is_stab() {
-            "Stab".to_string()
+        if let Some(stab) = ntype.stab_type() {
+            format!("Stab({:?})", stab)
         } else if ntype.is_private_external() {
             "Private".to_string()
         } else if ntype.is_external() {
@@ -118,6 +130,7 @@ impl SymsHandler {
             "Indirect".to_string()
         } else {
             "".to_string()
-        }.blue()
+        }
+        .blue()
     }
 }
