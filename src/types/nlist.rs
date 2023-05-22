@@ -92,7 +92,7 @@ pub struct Nlist {
     pub n_value: Nvalue,
 
     /// Depends on `n_strx`, `stroff` of `LcSymtab` [and image offset in file if that in fat file]
-    pub name: NlistStr,
+    pub name: Option<NlistStr>,
 }
 
 impl Nlist {
@@ -116,9 +116,13 @@ impl Nlist {
             let val: u32 = reader_mut.ioread_with(endian)?;
             Nvalue::U32(val)
         };
-        let name = NlistStr {
-            reader: reader_clone,
-            file_offset: stroff as u32 + n_strx,
+        let name: Option<LcStr> = if n_strx > 0 {
+            Some(NlistStr {
+                reader: reader_clone,
+                file_offset: stroff as u32 + n_strx,
+            })
+        } else {
+            None
         };
 
         Ok(Self {
@@ -195,7 +199,7 @@ impl Ntype {
     }
 
     pub fn is_undefined(&self) -> bool {
-        self.0 & N_TYPE == N_UNDF 
+        self.0 & N_TYPE == N_UNDF
     }
 
     pub fn is_absolute(&self) -> bool {

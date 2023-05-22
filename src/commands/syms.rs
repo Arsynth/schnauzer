@@ -85,7 +85,39 @@ impl SymsHandler {
 
     fn handle_nlist(&self, nlist: Nlist, index: usize) {
         self.printer.out_list_item_dash(0, index);
-        self.printer.print_colored_string(nlist.name.load_string().unwrap().yellow());
+
+        let title = self.type_title(&nlist);
+        let name = match nlist.name {
+            Some(name) => name.load_string().unwrap().yellow(),
+            None => "(Unnamed symbol)".dimmed(),
+        };
+
+        let label = format!("{title} {name}");
+
+        self.printer.print_string(label);
         println!("");
+    }
+
+    fn type_title(&self, nlist: &Nlist) -> ColoredString {
+        let ntype = &nlist.n_type;
+        if ntype.is_stab() {
+            "Stab".to_string()
+        } else if ntype.is_private_external() {
+            "Private".to_string()
+        } else if ntype.is_external() {
+            "External".to_string()
+        } else if ntype.is_undefined() {
+            "Undefined".to_string()
+        } else if ntype.is_absolute() {
+            "Absolute".to_string()
+        } else if ntype.is_defined_in_n_sect() {
+            format!("Section #{}", nlist.n_sect)
+        } else if ntype.is_prebound() {
+            "Prebound".to_string()
+        } else if ntype.is_indirect() {
+            "Indirect".to_string()
+        } else {
+            "".to_string()
+        }.blue()
     }
 }
