@@ -104,6 +104,15 @@ pub enum U64U32 {
     U64(u64),
 }
 
+impl U64U32 {
+    pub fn hex_string(&self) -> String {
+        match self {
+            U64U32::U32(v) => Hu32(*v).to_string(),
+            U64U32::U64(v) => Hu64(*v).to_string(),
+        }
+    }
+}
+
 impl AutoEnumFields for U64U32 {
     fn all_fields(&self) -> Vec<Field> {
         let field = match self {
@@ -120,6 +129,15 @@ impl std::fmt::Debug for U64U32 {
         match self {
             Self::U32(arg0) => f.debug_tuple("U32").field(arg0).finish(),
             Self::U64(arg0) => f.debug_tuple("U64").field(arg0).finish(),
+        }
+    }
+}
+
+impl Display for U64U32 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            U64U32::U32(v) => write!(f, "{v}"),
+            U64U32::U64(v) => write!(f, "{v}"),
         }
     }
 }

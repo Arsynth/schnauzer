@@ -41,7 +41,6 @@ impl Printer {
         self.out_field(name.white(), value.green(), delimiter);
     }
     
-
     pub(crate) fn out_field(&self, name: ColoredString, value: ColoredString, delimiter: &str) {
         if name.len() > 0 {
             let field = ColoredField::new(name, value);

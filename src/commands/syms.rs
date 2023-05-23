@@ -4,6 +4,7 @@ use super::helpers::args_after_command_name;
 use super::helpers::load_object_type_with;
 use super::Printer;
 use super::Result;
+use crate::auto_enum_fields::*;
 use crate::*;
 use colored::*;
 
@@ -87,7 +88,7 @@ impl SymsHandler {
         self.printer.out_list_item_dash(0, index);
 
         let title = self.type_title(&nlist);
-        let name: String = match nlist.name {
+        let name: String = match &nlist.name {
             Some(name) => match name.load_string() {
                 Ok(s) => s,
                 Err(err) => {
@@ -106,8 +107,12 @@ impl SymsHandler {
 
         let label = format!("{title} {name}");
 
-        self.printer.print_string(label);
-        println!("");
+        self.printer.print_line(label);
+
+        let other_fields = self.other_symbol_fields(&nlist);
+        if other_fields.len() > 0 {
+            self.printer.out_default_colored_fields(other_fields, "\n");
+        }
     }
 
     fn type_title(&self, nlist: &Nlist) -> ColoredString {
@@ -132,5 +137,57 @@ impl SymsHandler {
             "".to_string()
         }
         .blue()
+    }
+
+    fn other_symbol_fields(&self, nlist: &Nlist) -> Vec<Field> {
+        if let Some(stab) = nlist.n_type.stab_type() {
+            self.fields_with_options(nlist, stab.options())
+        } else {
+            vec![]
+        }
+    }
+
+    fn fields_with_options(&self, nlist: &Nlist, opts: StabOptions) -> Vec<Field> {
+        let mut fields = vec![];
+
+        let n_sect: Option<String> = match opts.n_sect {
+            NsectOption::None | NsectOption::Unknown => None,
+            NsectOption::Some => Some(nlist.n_sect.to_string()),
+            NsectOption::Zero => Some(0.to_string()),
+        };
+        if let Some(n_sect) = n_sect {
+            fields.push(Field::new("Section".to_string(), n_sect));
+        }
+
+        let n_desc: Option<Field> = match opts.n_desc {
+            NdescOption::None | NdescOption::Unknown => None,
+            NdescOption::GlobalSymbolType
+            | NdescOption::StaticSymbolType
+            | NdescOption::LocalCommonSymbolType
+            | NdescOption::RegisterType
+            | NdescOption::StructureEltType
+            | NdescOption::SymbolType
+            | NdescOption::ParameterType => Some(Field::new("Type".to_string(), nlist.n_desc.to_string())),
+            NdescOption::LineNumber => Some(Field::new("Line".to_string(), nlist.n_desc.to_string())),
+            NdescOption::NestingLevel => Some(Field::new("Nesting".to_string(), nlist.n_desc.to_string())),
+        };
+        if let Some(n_desc) = n_desc {
+            fields.push(n_desc);
+        }
+
+        let n_value: Option<Field> = match opts.n_value {
+            NvalueOption::None | NvalueOption::Unknown => None,
+            NvalueOption::Address => Some(Field::new("Address".to_string(), nlist.n_value.hex_string())),
+            NvalueOption::Register => Some(Field::new("Register".to_string(), nlist.n_value.to_string())),
+            NvalueOption::StructOffset | NvalueOption::Offset => Some(Field::new("Offset".to_string(), nlist.n_value.to_string())),
+            NvalueOption::LastModTime => Some(Field::new("Last mod".to_string(), nlist.n_value.to_string())),
+            NvalueOption::Sum => Some(Field::new("Sum".to_string(), nlist.n_value.to_string())),
+            NvalueOption::Length => Some(Field::new("Length".to_string(), nlist.n_value.to_string())),
+        };
+        if let Some(n_value) = n_value {
+            fields.push(n_value)
+        }
+
+        fields
     }
 }

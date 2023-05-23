@@ -9,9 +9,10 @@ pub(super) fn out_single_arch_title(printer: &Printer, header: &MachHeader, inde
         index.to_string().bold().bright_white()
     );
     let tail = format!(
-        "CPU type: {}, Subtype: {}, Flags: {}",
+        "CPU type: {}, Subtype: {}, File type: {}, Flags: {}",
         header.cputype.to_string().green(),
         header.cpusubtype.masked().to_string().green(),
+        header.filetype.to_string().green(),
         format!("{:?}", header.flags).green()
     );
     printer.print_line(format!(
