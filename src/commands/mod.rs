@@ -23,37 +23,14 @@ use segs::*;
 use fat::*;
 use headers::*;
 
-const HELP_STRING: &str = "Help:
-# Prints almost all binary info
-schnauzer -p path_to_binary
-
-# Prints symtab
-schnauzer syms -p path_to_binary
-
-# Prints relative paths
-schnauzer rpaths -p path_to_binary
-
-# Prints used dynamic libraries
-schnauzer dylibs -p path_to_binary
-
-# Prints all the segments with sections
-schnauzer segs -p path_to_binary
-
-# Prints the fat archs
-schnauzer fat -p path_to_binary
-
-# Prints headers
-schnauzer headers -p path_to_binary
-";
-
 pub fn handle_with_args() -> Result<()> {
     const PATH_OPT: &str = "p";
 
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
-        helpers::exit_with_help_string(HELP_STRING);
+        helpers::exit_with_help_string();
     } else if requires_help(args.clone()) {
-        helpers::exit_normally_with_help_string(HELP_STRING);
+        helpers::exit_normally_with_help_string();
     }
 
     let mut opts = Options::new();
@@ -61,7 +38,10 @@ pub fn handle_with_args() -> Result<()> {
 
     let path = match opts.parse(args.clone()) {
         Ok(m) => m.opt_str(PATH_OPT),
-        Err(f) => helpers::exit_with_help_string(&f.to_string()),
+        Err(f) => {
+            eprint!("{}\n\n", f.to_string());
+            helpers::exit_with_help_string()
+        },
     };
 
     if let Some(path) = path {
@@ -71,7 +51,8 @@ pub fn handle_with_args() -> Result<()> {
             None => DefaultHandler::new(Printer {}).handle_object(object_type, args)?,
         };
     } else {
-        helpers::exit_with_help_string("Not enough arguments. Provide a valid path to binary");
+        eprint!("Not enough arguments. Provide a valid path to binary\n\n");
+        helpers::exit_with_help_string();
     }
 
     Ok(())
