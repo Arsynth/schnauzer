@@ -20,25 +20,25 @@ cargo install schnauzer
 ### Supported commands
 ```shell
 # Prints almost all binary info
-schnauzer path_to_binary
+schnauzer -p path_to_binary
 
 # Prints symtab
-schnauzer syms path_to_binary
+schnauzer syms -p path_to_binary
 
 # Prints relative paths
-schnauzer rpaths path_to_binary
+schnauzer rpaths -p path_to_binary
 
 # Prints used dynamic libraries
-schnauzer dylibs path_to_binary
+schnauzer dylibs -p path_to_binary
 
 # Prints all the segments with sections
-schnauzer segs path_to_binary
+schnauzer segs -p path_to_binary
 
 # Prints the fat archs
-schnauzer fat path_to_binary
+schnauzer fat -p path_to_binary
 
 # Prints headers
-schnauzer headers path_to_binary
+schnauzer headers -p path_to_binary
 
 ```
 

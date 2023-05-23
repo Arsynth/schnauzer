@@ -1,4 +1,3 @@
-use super::helpers;
 use super::Printer;
 use super::Result;
 use crate::auto_enum_fields::*;
@@ -16,19 +15,14 @@ impl DefaultHandler {
 }
 
 impl DefaultHandler {
-    pub(super) fn handle_with_args(&self) -> Result<()> {
-        let mut args = std::env::args();
-        let _exec_name = args.next();
-
-        let object = helpers::load_object_type_with(&mut args);
-        self.handle_object(object);
-
+    pub(super) fn handle_object(&self, object: ObjectType, _other_args: Vec<String>) -> Result<()> {
+        self.handle_object_type(object);
         Ok(())
     }
 }
 
 impl DefaultHandler {
-    fn handle_object(&self, obj: ObjectType) {
+    fn handle_object_type(&self, obj: ObjectType) {
         match obj {
             ObjectType::Fat(fat) => self.handle_fat(fat),
             ObjectType::MachO(macho) => self.handle_macho(macho, false),

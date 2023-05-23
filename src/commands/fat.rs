@@ -1,6 +1,4 @@
 use super::handler::*;
-use super::helpers::args_after_command_name;
-use super::helpers::load_object_type_with;
 use super::Printer;
 use super::Result;
 use crate::*;
@@ -19,25 +17,13 @@ impl ArchsHandler {
 }
 
 impl Handler for ArchsHandler {
-    fn can_handle_with_args(&self) -> bool {
-        match args_after_command_name(SUBCOMM_NAME.to_string()) {
-            Some(_) => true,
-            None => false,
-        }
+    fn can_handle_with_name(&self, name: &str) -> bool {
+        SUBCOMM_NAME == name
     }
 
-    fn handle_with_args(&self) -> Result<()> {
-        match args_after_command_name(SUBCOMM_NAME.to_string()) {
-            Some(mut args) => {
-                let obj = load_object_type_with(&mut args);
-                self.handle_object(obj);
-                Ok(())
-            }
-            None => Err(result::Error::InvalidArgumentsToCmd(
-                SUBCOMM_NAME.to_string(),
-                std::env::args(),
-            )),
-        }
+    fn handle_object(&self, object: ObjectType, _other_args: Vec<String>) -> Result<()> {
+        self.handle_object(object);
+        Ok(())
     }
 }
 
