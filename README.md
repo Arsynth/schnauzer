@@ -58,19 +58,19 @@ And you get:
 Some info may be too big to be printed with other info that may be inconvenient. So there separate subcommand to print all `nlist`s:
 
 ```shell
-schnauzer syms /bin/cat
+schnauzer syms path_to_binary
 ```
 
 ![example syms output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_syms_3.png?raw=true)
 
 ### Documentation
-docs.rs/schnauzer/0.2.2
+docs.rs/schnauzer/0.2.3
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.2.2"
+schnauzer = "0.2.3"
 ```
 
 ### Examples
