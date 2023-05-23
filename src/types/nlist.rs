@@ -298,6 +298,51 @@ impl Ntype {
     }
 }
 
+impl Ntype {
+    pub fn options(&self) -> SymbolOptions {
+        if let Some(stab) = self.stab_type() {
+            return stab.options();
+        }
+
+        if self.is_undefined() {
+            SymbolOptions {
+                n_name: NnameOption::Some,
+                n_sect: NsectOption::None,
+                n_desc: NdescOption::Raw,
+                n_value: NvalueOption::Raw,
+            }
+        } else if self.is_absolute() {
+            SymbolOptions {
+                n_name: NnameOption::Some,
+                n_sect: NsectOption::None,
+                n_desc: NdescOption::Raw,
+                n_value: NvalueOption::Raw,
+            }
+        } else if self.is_defined_in_n_sect() {
+            SymbolOptions {
+                n_name: NnameOption::Some,
+                n_sect: NsectOption::Some,
+                n_desc: NdescOption::Raw,
+                n_value: NvalueOption::Address,
+            }
+        } else if self.is_prebound() {
+            SymbolOptions {
+                n_name: NnameOption::Some,
+                n_sect: NsectOption::None,
+                n_desc: NdescOption::Raw,
+                n_value: NvalueOption::Raw,
+            }
+        } else {
+            SymbolOptions {
+                n_name: NnameOption::Raw,
+                n_sect: NsectOption::Raw,
+                n_desc: NdescOption::Raw,
+                n_value: NvalueOption::Raw,
+            }
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum StabType {
     /// `N_GSYM`
@@ -404,213 +449,213 @@ impl StabType {
 }
 
 impl StabType {
-    pub fn options(&self) -> StabOptions {
+    pub fn options(&self) -> SymbolOptions {
         match self {
             // global symbol: name,,NO_SECT,type,0
-            StabType::GlobalSymbol => StabOptions {
+            StabType::GlobalSymbol => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::GlobalSymbolType,
                 n_value: NvalueOption::None,
             },
             // procedure name (f77 kludge): name,,NO_SECT,0,0
-            StabType::ProcedureName => StabOptions {
+            StabType::ProcedureName => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::None,
             },
             // procedure: name,,n_sect,linenumber,address
-            StabType::Procedure => StabOptions {
+            StabType::Procedure => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::LineNumber,
                 n_value: NvalueOption::Address,
             },
             // static symbol: name,,n_sect,type,address
-            StabType::StaticSymbol => StabOptions {
+            StabType::StaticSymbol => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::StaticSymbolType,
                 n_value: NvalueOption::Address,
             },
             // .lcomm symbol: name,,n_sect,type,address
-            StabType::LocalCommon => StabOptions {
+            StabType::LocalCommon => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::LocalCommonSymbolType,
                 n_value: NvalueOption::Address,
             },
             // begin nsect sym: 0,,n_sect,0,address
-            StabType::BeginSection => StabOptions {
+            StabType::BeginSection => SymbolOptions {
                 n_name: NnameOption::None,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::Address,
             },
             // AST file path: name,,NO_SECT,0,0
-            StabType::AstFilePath => StabOptions {
+            StabType::AstFilePath => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::None,
             },
             // emitted with gcc2_compiled and in gcc source
-            StabType::Nopt => StabOptions {
+            StabType::Nopt => SymbolOptions {
                 n_name: NnameOption::Unknown,
                 n_sect: NsectOption::Unknown,
                 n_desc: NdescOption::Unknown,
                 n_value: NvalueOption::Unknown,
             },
             // register sym: name,,NO_SECT,type,register
-            StabType::RegisterSymbol => StabOptions {
+            StabType::RegisterSymbol => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::RegisterType,
                 n_value: NvalueOption::Register,
             },
             // src line: 0,,n_sect,linenumber,address
-            StabType::SourceLine => StabOptions {
+            StabType::SourceLine => SymbolOptions {
                 n_name: NnameOption::None,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::LineNumber,
                 n_value: NvalueOption::Address,
             },
             // end nsect sym: 0,,n_sect,0,address
-            StabType::EndSection => StabOptions {
+            StabType::EndSection => SymbolOptions {
                 n_name: NnameOption::None,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::None,
                 n_value:NvalueOption::Address,
             },
             // structure elt: name,,NO_SECT,type,struct_offset
-            StabType::Ssym => StabOptions {
+            StabType::Ssym => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::StructureEltType,
                 n_value: NvalueOption::StructOffset,
             },
             // source file name: name,,n_sect,0,address
-            StabType::SourceFileName => StabOptions {
+            StabType::SourceFileName => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::Address,
             },
             // object file name: name,,0,0,st_mtime
-            StabType::ObjectFileName => StabOptions {
+            StabType::ObjectFileName => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::Zero,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::LastModTime,
             },
             // local sym: name,,NO_SECT,type,offset
-            StabType::LocalSymbol => StabOptions {
+            StabType::LocalSymbol => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::SymbolType,
                 n_value: NvalueOption::Offset,
             },
             // include file beginning: name,,NO_SECT,0,sum
-            StabType::IncludeFileBeginning => StabOptions {
+            StabType::IncludeFileBeginning => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::Sum,
             },
             // #included file name: name,,n_sect,0,address
-            StabType::IncludedFileName => StabOptions {
+            StabType::IncludedFileName => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::Address,
             },
             // compiler parameters: name,,NO_SECT,0,0
-            StabType::CompilerParameters => StabOptions {
+            StabType::CompilerParameters => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::None,
             },
             // compiler version: name,,NO_SECT,0,0
-            StabType::CompilerVersion => StabOptions {
+            StabType::CompilerVersion => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::None,
             },
             // compiler -O level: name,,NO_SECT,0,0 */
-            StabType::CompilerOlevel => StabOptions {
+            StabType::CompilerOlevel => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::None,
             },
             // parameter: name,,NO_SECT,type,offset
-            StabType::Parameter => StabOptions {
+            StabType::Parameter => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::ParameterType,
                 n_value: NvalueOption::Offset,
             },
             // include file end: name,,NO_SECT,0,0
-            StabType::IncludeFileEnd => StabOptions {
+            StabType::IncludeFileEnd => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::None,
             },
             // alternate entry: name,,n_sect,linenumber,address
-            StabType::AlternateEntry => StabOptions {
+            StabType::AlternateEntry => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::LineNumber,
                 n_value: NvalueOption::Address,
             },
             // left bracket: 0,,NO_SECT,nesting level,address
-            StabType::LeftBracket => StabOptions {
+            StabType::LeftBracket => SymbolOptions {
                 n_name: NnameOption::None,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::NestingLevel,
                 n_value: NvalueOption::Address,
             },
             // deleted include file: name,,NO_SECT,0,sum
-            StabType::DeletedIncludeName => StabOptions {
+            StabType::DeletedIncludeName => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::Sum,
             },
             // right bracket: 0,,NO_SECT,nesting level,address
-            StabType::RightBracket => StabOptions {
+            StabType::RightBracket => SymbolOptions {
                 n_name: NnameOption::None,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::NestingLevel,
                 n_value: NvalueOption::Address,
             },
             // begin common: name,,NO_SECT,0,0
-            StabType::BeginCommon => StabOptions {
+            StabType::BeginCommon => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::None,
             },
             // end common: name,,n_sect,0,0
-            StabType::EndCommon => StabOptions {
+            StabType::EndCommon => SymbolOptions {
                 n_name: NnameOption::Some,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::None,
             },
             // end common (local name): 0,,n_sect,0,address
-            StabType::EndCommonLocalName => StabOptions {
+            StabType::EndCommonLocalName => SymbolOptions {
                 n_name: NnameOption::None,
                 n_sect: NsectOption::Some,
                 n_desc: NdescOption::None,
                 n_value: NvalueOption::Address,
             },
             // second stab entry with length information
-            StabType::LengthStabEntry => StabOptions {
+            StabType::LengthStabEntry => SymbolOptions {
                 n_name: NnameOption::None,
                 n_sect: NsectOption::None,
                 n_desc: NdescOption::None,
@@ -621,7 +666,7 @@ impl StabType {
 }
 
 /// .stabs "n_name", n_type (always constant), n_sect, n_desc, n_value
-pub struct StabOptions {
+pub struct SymbolOptions {
     pub n_name: NnameOption,
     pub n_sect: NsectOption,
     pub n_desc: NdescOption,
@@ -632,12 +677,14 @@ pub enum NnameOption {
     None,
     Unknown,
     Some,
+    Raw,
 }
 pub enum NsectOption {
     None,
     Unknown,
     Some,
     Zero,
+    Raw,
 }
 
 pub enum NdescOption {
@@ -652,6 +699,7 @@ pub enum NdescOption {
     SymbolType,
     ParameterType,
     NestingLevel,
+    Raw,
 }
 
 pub enum NvalueOption {
@@ -664,4 +712,5 @@ pub enum NvalueOption {
     Offset,
     Sum,
     Length,
+    Raw,
 }

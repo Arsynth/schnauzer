@@ -128,11 +128,11 @@ impl SymsHandler {
         } else if ntype.is_absolute() {
             "Absolute".to_string()
         } else if ntype.is_defined_in_n_sect() {
-            format!("Section #{}", nlist.n_sect)
+            "Symbol".to_string()
         } else if ntype.is_prebound() {
             "Prebound".to_string()
         } else if ntype.is_indirect() {
-            "Indirect".to_string()
+            "Same as".to_string()
         } else {
             "".to_string()
         }
@@ -140,23 +140,25 @@ impl SymsHandler {
     }
 
     fn other_symbol_fields(&self, nlist: &Nlist) -> Vec<Field> {
-        if let Some(stab) = nlist.n_type.stab_type() {
-            self.fields_with_options(nlist, stab.options())
-        } else {
-            vec![]
-        }
+        self.fields_with_options(nlist, nlist.n_type.options())
     }
 
-    fn fields_with_options(&self, nlist: &Nlist, opts: StabOptions) -> Vec<Field> {
+    fn fields_with_options(&self, nlist: &Nlist, opts: SymbolOptions) -> Vec<Field> {
+        const SECTION_TITLE: &str = "Section";
+        const N_SECT_TITLE: &str = "n_sect";
+        const N_DESC_TITLE: &str = "n_desc";
+        const N_VALUE_TITLE: &str = "n_value";
+
         let mut fields = vec![];
 
-        let n_sect: Option<String> = match opts.n_sect {
+        let n_sect: Option<Field> = match opts.n_sect {
             NsectOption::None | NsectOption::Unknown => None,
-            NsectOption::Some => Some(nlist.n_sect.to_string()),
-            NsectOption::Zero => Some(0.to_string()),
+            NsectOption::Some => Some(Field::new(SECTION_TITLE.to_string(), nlist.n_sect.to_string())),
+            NsectOption::Zero => Some(Field::new(SECTION_TITLE.to_string(), 0.to_string())),
+            NsectOption::Raw => Some(Field::new(N_SECT_TITLE.to_string(), nlist.n_sect.to_string())),
         };
         if let Some(n_sect) = n_sect {
-            fields.push(Field::new("Section".to_string(), n_sect));
+            fields.push(n_sect);
         }
 
         let n_desc: Option<Field> = match opts.n_desc {
@@ -167,9 +169,18 @@ impl SymsHandler {
             | NdescOption::RegisterType
             | NdescOption::StructureEltType
             | NdescOption::SymbolType
-            | NdescOption::ParameterType => Some(Field::new("Type".to_string(), nlist.n_desc.to_string())),
-            NdescOption::LineNumber => Some(Field::new("Line".to_string(), nlist.n_desc.to_string())),
-            NdescOption::NestingLevel => Some(Field::new("Nesting".to_string(), nlist.n_desc.to_string())),
+            | NdescOption::ParameterType => {
+                Some(Field::new("Type".to_string(), nlist.n_desc.to_string()))
+            }
+            NdescOption::LineNumber => {
+                Some(Field::new("Line".to_string(), nlist.n_desc.to_string()))
+            }
+            NdescOption::NestingLevel => {
+                Some(Field::new("Nesting".to_string(), nlist.n_desc.to_string()))
+            }
+            NdescOption::Raw => {
+                Some(Field::new(N_DESC_TITLE.to_string(), nlist.n_desc.to_string()))
+            },
         };
         if let Some(n_desc) = n_desc {
             fields.push(n_desc);
@@ -177,12 +188,28 @@ impl SymsHandler {
 
         let n_value: Option<Field> = match opts.n_value {
             NvalueOption::None | NvalueOption::Unknown => None,
-            NvalueOption::Address => Some(Field::new("Address".to_string(), nlist.n_value.hex_string())),
-            NvalueOption::Register => Some(Field::new("Register".to_string(), nlist.n_value.to_string())),
-            NvalueOption::StructOffset | NvalueOption::Offset => Some(Field::new("Offset".to_string(), nlist.n_value.to_string())),
-            NvalueOption::LastModTime => Some(Field::new("Last mod".to_string(), nlist.n_value.to_string())),
+            NvalueOption::Address => Some(Field::new(
+                "Address".to_string(),
+                nlist.n_value.hex_string(),
+            )),
+            NvalueOption::Register => Some(Field::new(
+                "Register".to_string(),
+                nlist.n_value.to_string(),
+            )),
+            NvalueOption::StructOffset | NvalueOption::Offset => {
+                Some(Field::new("Offset".to_string(), nlist.n_value.to_string()))
+            }
+            NvalueOption::LastModTime => Some(Field::new(
+                "Last mod".to_string(),
+                nlist.n_value.to_string(),
+            )),
             NvalueOption::Sum => Some(Field::new("Sum".to_string(), nlist.n_value.to_string())),
-            NvalueOption::Length => Some(Field::new("Length".to_string(), nlist.n_value.to_string())),
+            NvalueOption::Length => {
+                Some(Field::new("Length".to_string(), nlist.n_value.to_string()))
+            }
+            NvalueOption::Raw => {
+                Some(Field::new(N_VALUE_TITLE.to_string(), nlist.n_value.to_string()))
+            },
         };
         if let Some(n_value) = n_value {
             fields.push(n_value)
