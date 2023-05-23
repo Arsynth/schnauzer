@@ -17,6 +17,10 @@ Schnauzer is both library and tool for parsing mach-o files
 cargo install schnauzer
 ```
 
+### Arguments
+
+Since `version 0.2.4`, `schnauzer` requires `-p` or `--path` argument to specify path to file
+
 ### Supported commands
 ```shell
 # Prints almost all binary info
@@ -47,7 +51,7 @@ schnauzer headers -p path_to_binary
 Put something like in your console:
 
 ```shell
-schnauzer /bin/cat
+schnauzer -p /bin/cat
 ```
 
 And you get:
@@ -58,19 +62,19 @@ And you get:
 Some info may be too big to be printed with other info that may be inconvenient. So there separate subcommand to print all `nlist`s:
 
 ```shell
-schnauzer syms path_to_binary
+schnauzer syms -p path_to_binary
 ```
 
 ![example syms output](https://github.com/Arsynth/schnauzer/blob/master/readme_res/example_output_syms_3.png?raw=true)
 
 ### Documentation
-docs.rs/schnauzer/0.2.3
+docs.rs/schnauzer/0.2.4
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.2.3"
+schnauzer = "0.2.4"
 ```
 
 ### Examples
