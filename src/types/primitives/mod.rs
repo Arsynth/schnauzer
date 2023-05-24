@@ -6,6 +6,9 @@ use crate::fmt_ext::printable_uuid_string;
 use super::constants::*;
 use super::auto_enum_fields::*;
 
+pub mod filetype;
+pub use filetype::*;
+
 /// Represents vm_prot_t
 pub type VmProt = Hi32;
 
