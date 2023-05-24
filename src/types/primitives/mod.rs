@@ -9,6 +9,9 @@ use super::auto_enum_fields::*;
 pub mod filetype;
 pub use filetype::*;
 
+pub mod object_flags;
+pub use object_flags::*;
+
 /// Represents vm_prot_t
 pub type VmProt = Hi32;
 
