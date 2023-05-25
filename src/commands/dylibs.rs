@@ -23,19 +23,15 @@ impl Handler for DylibsHandler {
     }
 
     fn handle_object(&self, object: ObjectType, _other_args: Vec<String>) -> Result<()> {
-        self.handle_object(object);
+        match object {
+            ObjectType::Fat(fat) => self.handle_fat(fat),
+            ObjectType::MachO(macho) => self.handle_macho(macho, 0),
+        }
         Ok(())
     }
 }
 
 impl DylibsHandler {
-    fn handle_object(&self, obj: ObjectType) {
-        match obj {
-            ObjectType::Fat(fat) => self.handle_fat(fat),
-            ObjectType::MachO(macho) => self.handle_macho(macho, 0),
-        }
-    }
-
     fn handle_fat(&self, fat: FatObject) {
         for (index, arch) in fat.arch_iterator().enumerate() {
             self.handle_arch(arch, index + 1);

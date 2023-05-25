@@ -1,16 +1,20 @@
-use scroll::{IOread, SizeWith};
-use std::fmt::{Debug, Display, LowerHex};
 use crate::fmt_ext::printable_string;
 use crate::fmt_ext::printable_uuid_string;
+use scroll::{IOread, SizeWith};
+use std::fmt::{Debug, Display, LowerHex};
+use std::ops::BitOr;
 
-use super::constants::*;
 use super::auto_enum_fields::*;
+use super::constants::*;
 
 pub mod filetype;
 pub use filetype::*;
 
 pub mod object_flags;
 pub use object_flags::*;
+
+pub mod machine;
+pub use machine::*;
 
 /// Represents vm_prot_t
 pub type VmProt = Hi32;
@@ -150,12 +154,20 @@ impl Display for U64U32 {
 
 /// Represents cpu_type_t
 #[repr(transparent)]
-#[derive(IOread, SizeWith)]
+#[derive(Clone, PartialEq, Eq, IOread, SizeWith)]
 pub struct CPUType(pub u32);
 
 impl CPUType {
     pub fn is_64(&self) -> bool {
         (self.0 & CPU_ARCH_ABI64) == CPU_ARCH_ABI64
+    }
+}
+
+impl BitOr<u32> for CPUType {
+    type Output = Self;
+
+    fn bitor(self, rhs: u32) -> Self::Output {
+        CPUType(self.0 | rhs)
     }
 }
 
@@ -171,17 +183,19 @@ impl Display for CPUType {
     }
 }
 
+impl Copy for CPUType {}
+
 /// Represents cpu_subtype_t
 #[repr(transparent)]
-#[derive(IOread, SizeWith)]
+#[derive(Clone, PartialEq, Eq, IOread, SizeWith)]
 pub struct CPUSubtype(pub u32);
 
 impl CPUSubtype {
-    pub fn masked(&self) -> u32 {
-        self.0 & !CPU_SUBTYPE_MASK
+    pub fn masked(&self) -> CPUSubtype {
+        CPUSubtype(self.0 & !CPU_SUBTYPE_MASK)
     }
 
-    pub fn feature_flags(&self, ) -> Hu32w4 {
+    pub fn feature_flags(&self) -> Hu32w4 {
         Hu32w4((self.0 & CPU_SUBTYPE_MASK) >> 24)
     }
 }
@@ -197,6 +211,8 @@ impl Display for CPUSubtype {
         write!(f, "{}", self.masked())
     }
 }
+
+impl Copy for CPUSubtype {}
 
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
@@ -232,7 +248,7 @@ impl Version32 {
         const MASK: u32 = 0x0000FF00;
         (self.0 & MASK) >> 8
     }
-    
+
     pub fn z(&self) -> u32 {
         const MASK: u32 = 0x000000FF;
         self.0 & MASK
@@ -280,13 +296,29 @@ impl Version64 {
 
 impl Debug for Version64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{}.{}.{}.{}", self.a(), self.b(), self.c(), self.d(), self.e())
+        write!(
+            f,
+            "{}.{}.{}.{}.{}",
+            self.a(),
+            self.b(),
+            self.c(),
+            self.d(),
+            self.e()
+        )
     }
 }
 
 impl Display for Version64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{}.{}.{}.{}", self.a(), self.b(), self.c(), self.d(), self.e())
+        write!(
+            f,
+            "{}.{}.{}.{}.{}",
+            self.a(),
+            self.b(),
+            self.c(),
+            self.d(),
+            self.e()
+        )
     }
 }
 

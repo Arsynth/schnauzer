@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["syms", "-p", "/bin/cat"],
+            "args": ["fat", "-p", "/bin/cat"],
             "cwd": "${workspaceFolder}"
         },
         {

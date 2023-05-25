@@ -22,7 +22,10 @@ impl Handler for ArchsHandler {
     }
 
     fn handle_object(&self, object: ObjectType, _other_args: Vec<String>) -> Result<()> {
-        self.handle_object(object);
+        match object {
+            ObjectType::Fat(fat) => self.handle_fat(fat),
+            _ => (),
+        };
         Ok(())
     }
 }
@@ -34,14 +37,6 @@ const SIZE_STR: &str = "Size";
 const ALIGN_STR: &str = "Align";
 
 impl ArchsHandler {
-
-    fn handle_object(&self, obj: ObjectType) {
-        match obj {
-            ObjectType::Fat(fat) => self.handle_fat(fat),
-            _ => (),
-        }
-    }
-
     fn handle_fat(&self, fat: FatObject) {
         for (index, arch) in fat.arch_iterator().enumerate() {
             self.printer.out_list_item_dash(0, index);

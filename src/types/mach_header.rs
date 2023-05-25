@@ -60,6 +60,12 @@ impl MachHeader {
     }
 }
 
+impl MachHeader {
+    pub fn machine(&self) -> Machine {
+        Machine::new(self.cputype, self.cpusubtype)
+    }
+}
+
 impl Debug for MachHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MachHeader")
