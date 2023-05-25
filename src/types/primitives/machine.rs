@@ -8,7 +8,7 @@ pub mod machine_constants {
     use crate::CPUSubtype;
     use crate::CPUType;
 
-    pub const CPU_ARCH_ABI64: u32 = 0x01000000;
+    pub const CPU_ARCH_ABI64: i32 = 0x01000000;
 
     pub const CPU_TYPE_X86: CPUType = CPUType(7);
     pub const CPU_TYPE_X86_64: CPUType = CPUType( CPU_TYPE_X86.0 | CPU_ARCH_ABI64 );

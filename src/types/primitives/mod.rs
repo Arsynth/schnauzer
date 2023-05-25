@@ -45,21 +45,21 @@ impl Display for Hu32 {
 
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
-pub struct Hu32w4(pub u32);
+pub struct Hi32w4(pub i32);
 
-impl Debug for Hu32w4 {
+impl Debug for Hi32w4 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:#010x}", self.0)
     }
 }
 
-impl LowerHex for Hu32w4 {
+impl LowerHex for Hi32w4 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:#010x}", self.0)
     }
 }
 
-impl Display for Hu32w4 {
+impl Display for Hi32w4 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:#04x}", self.0)
     }
@@ -155,7 +155,7 @@ impl Display for U64U32 {
 /// Represents cpu_type_t
 #[repr(transparent)]
 #[derive(Clone, PartialEq, Eq, IOread, SizeWith)]
-pub struct CPUType(pub u32);
+pub struct CPUType(pub i32);
 
 impl CPUType {
     pub fn is_64(&self) -> bool {
@@ -163,10 +163,10 @@ impl CPUType {
     }
 }
 
-impl BitOr<u32> for CPUType {
+impl BitOr<i32> for CPUType {
     type Output = Self;
 
-    fn bitor(self, rhs: u32) -> Self::Output {
+    fn bitor(self, rhs: i32) -> Self::Output {
         CPUType(self.0 | rhs)
     }
 }
@@ -188,15 +188,15 @@ impl Copy for CPUType {}
 /// Represents cpu_subtype_t
 #[repr(transparent)]
 #[derive(Clone, PartialEq, Eq, IOread, SizeWith)]
-pub struct CPUSubtype(pub u32);
+pub struct CPUSubtype(pub i32);
 
 impl CPUSubtype {
     pub fn masked(&self) -> CPUSubtype {
-        CPUSubtype(self.0 & !CPU_SUBTYPE_MASK)
+        CPUSubtype(self.0 & (!CPU_SUBTYPE_MASK as i32))
     }
 
-    pub fn feature_flags(&self) -> Hu32w4 {
-        Hu32w4((self.0 & CPU_SUBTYPE_MASK) >> 24)
+    pub fn feature_flags(&self) -> Hi32w4 {
+        Hi32w4((self.0 & CPU_SUBTYPE_MASK as i32) >> 24)
     }
 }
 
