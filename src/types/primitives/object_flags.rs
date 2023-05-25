@@ -83,133 +83,133 @@ impl Display for ObjectFlags {
 use self::object_flags_constants::*;
 
 impl ObjectFlags {
-    /// See `MH_NOUNDEFS`
+    /// See [`MH_NOUNDEFS`]
     pub fn is_no_undefs(&self) -> bool {
         self.0 & MH_NOUNDEFS > 0
     }
 
-    /// See `MH_INCRLINK`
+    /// See [`MH_INCRLINK`]
     pub fn is_incremental_link(&self) -> bool {
         self.0 & MH_INCRLINK > 0
     }
 
-    /// See `MH_DYLDLINK`
+    /// See [`MH_DYLDLINK`]
     pub fn is_dyld_input(&self) -> bool {
         self.0 & MH_DYLDLINK > 0
     }
 
-    /// See `MH_BINDATLOAD`
+    /// See [`MH_BINDATLOAD`]
     pub fn is_undefs_bound_by_dyld(&self) -> bool {
         self.0 & MH_BINDATLOAD > 0
     }
 
-    /// See `MH_PREBOUND`
+    /// See [`MH_PREBOUND`]
     pub fn is_prebound_undefs(&self) -> bool {
         self.0 & MH_PREBOUND > 0
     }
     
-    /// See `MH_SPLIT_SEGS`
+    /// See [`MH_SPLIT_SEGS`]
     pub fn is_ro_rw_segs_splitted(&self) -> bool {
         self.0 & MH_SPLIT_SEGS > 0
     }
 
     /// Obsolete
-    /// See `MH_LAZY_INIT`
+    /// See [`MH_LAZY_INIT`]
     pub fn is_lazy_init(&self) -> bool {
         self.0 & MH_LAZY_INIT > 0
     }
 
-    /// See `MH_TWOLEVEL`
+    /// See [`MH_TWOLEVEL`]
     pub fn is_two_level_name_space(&self) -> bool {
         self.0 & MH_TWOLEVEL > 0
     }
 
-    /// See `MH_FORCE_FLAT`
+    /// See [`MH_FORCE_FLAT`]
     pub fn is_force_flat(&self) -> bool {
         self.0 & MH_FORCE_FLAT > 0
     }
 
-    /// See `MH_NOMULTIDEFS`
+    /// See [`MH_NOMULTIDEFS`]
     pub fn is_no_multiple_defs(&self) -> bool {
         self.0 & MH_NOMULTIDEFS > 0
     }
     
-    /// See `MH_NOFIXPREBINDING`
+    /// See [`MH_NOFIXPREBINDING`]
     pub fn is_no_fix_prebinding(&self) -> bool {
         self.0 & MH_NOFIXPREBINDING > 0
     }
 
-    /// See `MH_PREBINDABLE`
+    /// See [`MH_PREBINDABLE`]
     pub fn is_prebindable(&self) -> bool {
         self.0 & MH_PREBINDABLE > 0
     }
 
-    /// See `MH_ALLMODSBOUND`
+    /// See [`MH_ALLMODSBOUND`]
     pub fn is_all_modules_bound(&self) -> bool {
         self.0 & MH_ALLMODSBOUND > 0
     }
 
-    /// See `MH_SUBSECTIONS_VIA_SYMBOLS`
+    /// See [`MH_SUBSECTIONS_VIA_SYMBOLS`]
     pub fn is_subsections_via_symbols(&self) -> bool {
         self.0 & MH_SUBSECTIONS_VIA_SYMBOLS > 0
     }
 
-    /// See `MH_CANONICAL`
+    /// See [`MH_CANONICAL`]
     pub fn is_canonical(&self) -> bool {
         self.0 & MH_CANONICAL > 0
     }
 
-    /// See `MH_WEAK_DEFINES`
+    /// See [`MH_WEAK_DEFINES`]
     pub fn is_weak_defines(&self) -> bool {
         self.0 & MH_WEAK_DEFINES > 0
     }
 
-    /// See `MH_BINDS_TO_WEAK`
+    /// See [`MH_BINDS_TO_WEAK`]
     pub fn is_bind_to_weak(&self) -> bool {
         self.0 & MH_BINDS_TO_WEAK > 0
     }
 
-    /// See `MH_ALLOW_STACK_EXECUTION`
+    /// See [`MH_ALLOW_STACK_EXECUTION`]
     pub fn is_allow_stack_execution(&self) -> bool {
         self.0 & MH_ALLOW_STACK_EXECUTION > 0
     }
 
-    /// See `MH_ROOT_SAFE`
+    /// See [`MH_ROOT_SAFE`]
     pub fn is_root_safe(&self) -> bool {
         self.0 & MH_ROOT_SAFE > 0
     }
 
-    /// See `MH_SETUID_SAFE`
+    /// See [`MH_SETUID_SAFE`]
     pub fn is_setuid_safe(&self) -> bool {
         self.0 & MH_SETUID_SAFE > 0
     }
 
-    /// See `MH_NO_REEXPORTED_DYLIBS`
+    /// See [`MH_NO_REEXPORTED_DYLIBS`]
     pub fn is_no_reexported_dylibs(&self) -> bool {
         self.0 & MH_NO_REEXPORTED_DYLIBS > 0
     }
 
-    /// See `MH_PIE`
+    /// See [`MH_PIE`]
     pub fn is_pie(&self) -> bool {
         self.0 & MH_PIE > 0
     }
 
-    /// See `MH_DEAD_STRIPPABLE_DYLIB`
+    /// See [`MH_DEAD_STRIPPABLE_DYLIB`]
     pub fn is_dead_strippable_dylib(&self) -> bool {
         self.0 & MH_DEAD_STRIPPABLE_DYLIB > 0
     }
 
-    /// See `MH_HAS_TLV_DESCRIPTORS`
+    /// See [`MH_HAS_TLV_DESCRIPTORS`]
     pub fn is_has_tlv_descriptors(&self) -> bool {
         self.0 & MH_HAS_TLV_DESCRIPTORS > 0
     }
 
-    /// See `MH_NO_HEAP_EXECUTION`
+    /// See [`MH_NO_HEAP_EXECUTION`]
     pub fn is_no_heap_execution(&self) -> bool {
         self.0 & MH_NO_HEAP_EXECUTION > 0
     }
 
-    /// See `MH_APP_EXTENSION_SAFE`
+    /// See [`MH_APP_EXTENSION_SAFE`]
     pub fn is_app_extension_safe(&self) -> bool {
         self.0 & MH_APP_EXTENSION_SAFE > 0
     }

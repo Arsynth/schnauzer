@@ -2,14 +2,6 @@
 //! 
 //! #References
 //! 
-//! <https://reverseengineering.stackexchange.com/questions/6356/what-is-a-fat-header>
-//! <https://lowlevelbits.org/parsing-mach-o-files/>
-//! <https://opensource.apple.com/source/xnu/xnu-4570.71.2/EXTERNAL_HEADERS/mach-o/loader.h.auto.html>
-//! <https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/fat.h.auto.html>
-//! <https://opensource.apple.com/source/cctools/cctools-698/libmacho/arch.c>
-//! <https://opensource.apple.com/source/cctools/cctools-698/ld/>
-//! <https://blog.xpnsec.com/building-a-mach-o-memory-loader-part-1/>
-//! <https://github.com/aidansteele/osx-abi-macho-file-format-reference>
 
 pub mod result;
 pub mod types;
@@ -34,11 +26,16 @@ type RcCell<T> = Rc<RefCell<T>>;
 
 use reader::RcReader;
 
+/// Topmost struct in the library.
+/// Reads file in lazy manner (doesn't load all contents to memory).
 pub struct Parser {
     reader: RcReader
 }
 
 impl Parser {
+    /// Provide a valid path to binary, library, object file, e.t.c.. 
+    /// Full list of mach-o files you can find there - [filetype_constants].
+    /// For example: `/bin/cat`.
     pub fn build(path: &Path) -> Result<Parser> {
         let reader = Reader::build(path)?;
         Ok(Parser {
@@ -46,6 +43,7 @@ impl Parser {
         })
     }
 
+    /// Returns appropriate object - [FatObject] or [MachObject]
     pub fn parse(self) -> Result<ObjectType> {
         ObjectType::parse(self.reader.clone())
     }
@@ -53,6 +51,8 @@ impl Parser {
 
 #[cfg(test)]
 mod tests {
+    use crate::cpu_constants::CPU_SUBTYPE_LIB64;
+
     use super::*;
 
     #[test]
@@ -102,7 +102,7 @@ mod tests {
         {
             let item = &arch_items[1];
             assert_eq!(item.cputype.0, 16777228);
-            assert_eq!(item.cpusubtype.0, constants::CPU_SUBTYPE_LIB64 | 0x00000002);
+            assert_eq!(item.cpusubtype.0, CPU_SUBTYPE_LIB64 | 0x00000002);
             assert_eq!(item.offset, 98304);
             assert_eq!(item.size, 53488);
             assert_eq!(item.align, 14);

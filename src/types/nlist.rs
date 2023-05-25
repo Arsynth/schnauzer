@@ -227,30 +227,30 @@ pub mod constants {
 /// In that case, the entire n_type field is interpreted as a stabvalue.
 /// See `/usr/include/mach-o/stab.h` for valid stab values.
 ///
-/// `N_PEXT` (0x10) — If this bit is on, this symbol is marked as having limited global scope.
+/// [`N_PEXT`] (0x10) — If this bit is on, this symbol is marked as having limited global scope.
 /// When the file is fed to the static linker, it clears the N_EXT bit for
 /// each symbol with the `N_PEXT` bit set. (The ld option -keep_private_externs turns off this behavior.)
 /// With OS X GCC, you can use the `__private_extern__` function attribute to set this bit.
 ///
-/// `N_TYPE` (0x0e) — These bits define the type of the symbol.
+/// [`N_TYPE`] (0x0e) — These bits define the type of the symbol.
 ///
-/// `N_EXT` (0x01) — If this bit is on, this symbol is an external symbol, a symbol that is either
+/// [`N_EXT`] (0x01) — If this bit is on, this symbol is an external symbol, a symbol that is either
 /// defined outside this file or that is defined in this file but can be referenced by other files.
 ///
 /// Values for the N_TYPE field include:
 ///
-/// `N_UNDF` (0x0) — The symbol is undefined. Undefined symbols are symbols referenced in this
+/// [`N_UNDF`] (0x0) — The symbol is undefined. Undefined symbols are symbols referenced in this
 /// module but defined in a different module. The n_sect field is set to NO_SECT.
 ///
-/// `N_ABS` (0x2) — The symbol is absolute. The linker does not change the value of an absolute symbol.
+/// [`N_ABS`] (0x2) — The symbol is absolute. The linker does not change the value of an absolute symbol.
 /// The n_sect field is set to NO_SECT.
 ///
-/// `N_SECT` (0xe) — The symbol is defined in the section number given in n_sect.
+/// [`N_SECT`] (0xe) — The symbol is defined in the section number given in n_sect.
 ///
-/// `N_PBUD` (0xc) — The symbol is undefined and the image is using a prebound value for the symbol.
+/// [`N_PBUD`] (0xc) — The symbol is undefined and the image is using a prebound value for the symbol.
 /// The n_sect field is set to NO_SECT.
 ///
-/// `N_INDR` (0xa) — The symbol is defined to be the same as another symbol.
+/// [`N_INDR`] (0xa) — The symbol is defined to be the same as another symbol.
 /// The n_value field is an index into the string table specifying the name of the other symbol.
 /// When that symbol is linked, both this and the other symbol have the same defined type and value.
 #[derive(IOread, SizeWith)]

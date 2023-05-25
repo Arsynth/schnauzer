@@ -2,10 +2,8 @@ use crate::fmt_ext::printable_string;
 use crate::fmt_ext::printable_uuid_string;
 use scroll::{IOread, SizeWith};
 use std::fmt::{Debug, Display, LowerHex};
-use std::ops::BitOr;
 
 use super::auto_enum_fields::*;
-use super::constants::*;
 
 pub mod filetype;
 pub use filetype::*;
@@ -45,21 +43,21 @@ impl Display for Hu32 {
 
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
-pub struct Hi32w4(pub i32);
+pub struct Hu32w4(pub u32);
 
-impl Debug for Hi32w4 {
+impl Debug for Hu32w4 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:#010x}", self.0)
     }
 }
 
-impl LowerHex for Hi32w4 {
+impl LowerHex for Hu32w4 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:#010x}", self.0)
     }
 }
 
-impl Display for Hi32w4 {
+impl Display for Hu32w4 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:#04x}", self.0)
     }
@@ -151,68 +149,6 @@ impl Display for U64U32 {
         }
     }
 }
-
-/// Represents cpu_type_t
-#[repr(transparent)]
-#[derive(Clone, PartialEq, Eq, IOread, SizeWith)]
-pub struct CPUType(pub i32);
-
-impl CPUType {
-    pub fn is_64(&self) -> bool {
-        (self.0 & CPU_ARCH_ABI64) == CPU_ARCH_ABI64
-    }
-}
-
-impl BitOr<i32> for CPUType {
-    type Output = Self;
-
-    fn bitor(self, rhs: i32) -> Self::Output {
-        CPUType(self.0 | rhs)
-    }
-}
-
-impl Debug for CPUType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl Display for CPUType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl Copy for CPUType {}
-
-/// Represents cpu_subtype_t
-#[repr(transparent)]
-#[derive(Clone, PartialEq, Eq, IOread, SizeWith)]
-pub struct CPUSubtype(pub i32);
-
-impl CPUSubtype {
-    pub fn masked(&self) -> CPUSubtype {
-        CPUSubtype(self.0 & (!CPU_SUBTYPE_MASK as i32))
-    }
-
-    pub fn feature_flags(&self) -> Hi32w4 {
-        Hi32w4((self.0 & CPU_SUBTYPE_MASK as i32) >> 24)
-    }
-}
-
-impl Debug for CPUSubtype {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.masked().0)
-    }
-}
-
-impl Display for CPUSubtype {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.masked().0)
-    }
-}
-
-impl Copy for CPUSubtype {}
 
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]

@@ -2,29 +2,8 @@
 
 use std::fmt::{Debug, Display};
 
-use crate::{CPUSubtype, CPUType};
-
-pub mod machine_constants {
-    use crate::CPUSubtype;
-    use crate::CPUType;
-
-    pub const CPU_ARCH_ABI64: i32 = 0x01000000;
-
-    pub const CPU_TYPE_X86: CPUType = CPUType(7);
-    pub const CPU_TYPE_X86_64: CPUType = CPUType( CPU_TYPE_X86.0 | CPU_ARCH_ABI64 );
-
-    pub const CPU_TYPE_ARM: CPUType = CPUType(12);
-    pub const CPU_TYPE_ARM64: CPUType = CPUType(CPU_TYPE_ARM.0 | CPU_ARCH_ABI64);
-
-    pub const CPU_SUBTYPE_X86_ALL: CPUSubtype = CPUSubtype(3);
-    pub const CPU_SUBTYPE_X86_64_ALL: CPUSubtype = CPUSubtype(3);
-    pub const CPU_SUBTYPE_X86_ARCH1: CPUSubtype = CPUSubtype(4);
-    pub const CPU_SUBTYPE_X86_64_H: CPUSubtype = CPUSubtype(8);
-
-    pub const CPU_SUBTYPE_ARM64_ALL: CPUSubtype = CPUSubtype(0);
-    pub const CPU_SUBTYPE_ARM64_V8: CPUSubtype = CPUSubtype(1);
-    pub const CPU_SUBTYPE_ARM64E: CPUSubtype = CPUSubtype(2);
-}
+pub mod cpu;
+pub use cpu::*;
 
 pub struct Machine {
     cpu_type: CPUType,
@@ -41,13 +20,13 @@ impl Machine {
 }
 
 impl Machine {
-    /// If returned None, use the raw values - `Machine.cpu_type` and `Machine.cpu_subtype`
+    /// If returned None, use the raw values - [Machine]'s `cpu_type` and `cpu_subtype`
     pub fn cpu(&self) -> Option<CPU> {
         CPU::new(self.cpu_type, self.cpu_subtype)
     }
 }
 
-use self::machine_constants::*;
+use self::cpu_constants::*;
 
 #[allow(non_camel_case_types)]
 pub enum CPU {
