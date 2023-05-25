@@ -5,6 +5,7 @@ use super::Printer;
 use super::Result;
 use crate::auto_enum_fields::Field;
 use crate::*;
+use super::common::*;
 
 static SUBCOMM_NAME: &str = "headers";
 
@@ -31,16 +32,6 @@ impl Handler for HeadersHandler {
         Ok(())
     }
 }
-
-const MAGIC_STR: &str = "Magic";
-const CPU_TYPE_STR: &str = "CPU type";
-const CPU_SUBTYPE_STR: &str = "CPU subtype";
-const ARCH_STR: &str = "Arch";
-const CAPS_STR: &str = "Capabilities";
-const FILETYPE_STR: &str = "File type";
-const N_CMDS_STR: &str = "Commands";
-const SIZE_OF_CMDS_STR: &str = "Size of commands";
-const FLAGS_STR: &str = "Flags";
 
 impl HeadersHandler {
     fn handle_fat(&self, fat: FatObject) {

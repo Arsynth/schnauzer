@@ -202,13 +202,13 @@ impl CPUSubtype {
 
 impl Debug for CPUSubtype {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.masked())
+        write!(f, "{}", self.masked().0)
     }
 }
 
 impl Display for CPUSubtype {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.masked())
+        write!(f, "{:?}", self.masked().0)
     }
 }
 

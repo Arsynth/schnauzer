@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["fat", "-p", "/bin/cat"],
+            "args": ["-p", "/bin/cat"],
             "cwd": "${workspaceFolder}"
         },
         {
