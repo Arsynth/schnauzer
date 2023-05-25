@@ -160,13 +160,13 @@ MH_PIE
 ```
 
 ### Documentation
-docs.rs/schnauzer/0.2.4
+docs.rs/schnauzer/0.2.5
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.2.4"
+schnauzer = "0.2.5"
 ```
 
 ### Examples
