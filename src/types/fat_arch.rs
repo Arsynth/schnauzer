@@ -48,6 +48,10 @@ impl FatArch {
     pub fn object(&self) -> Result<MachObject> {
         MachObject::parse(self.reader.clone(), self.offset as usize)
     }
+
+    pub fn machine(&self) -> Machine {
+        Machine::new(self.cputype, self.cpusubtype)
+    }
 }
 
 impl Debug for FatArch {

@@ -1,8 +1,9 @@
+use super::common::*;
 use super::handler::*;
 use super::Printer;
 use super::Result;
-use crate::*;
 use crate::auto_enum_fields::Field;
+use crate::*;
 
 static SUBCOMM_NAME: &str = "fat";
 
@@ -30,8 +31,6 @@ impl Handler for ArchsHandler {
     }
 }
 
-const CPU_TYPE_STR: &str = "CPU type";
-const CPU_SUBTYPE_STR: &str = "CPU subtype";
 const OFFSET_STR: &str = "Offset";
 const SIZE_STR: &str = "Size";
 const ALIGN_STR: &str = "Align";
@@ -40,13 +39,27 @@ impl ArchsHandler {
     fn handle_fat(&self, fat: FatObject) {
         for (index, arch) in fat.arch_iterator().enumerate() {
             self.printer.out_list_item_dash(0, index);
-            let fields = vec![
-                Field::new(CPU_TYPE_STR.to_string(), arch.cputype.to_string()),
-                Field::new(CPU_SUBTYPE_STR.to_string(), arch.cpusubtype.masked().to_string()),
+            let mut fields = match arch.machine().cpu() {
+                Some(cpu) => {
+                    vec![Field::new(ARCH_STR.to_string(), cpu.to_string())]
+                }
+                None => {
+                    vec![
+                        Field::new(CPU_TYPE_STR.to_string(), arch.cputype.to_string()),
+                        Field::new(
+                            CPU_SUBTYPE_STR.to_string(),
+                            arch.cpusubtype.masked().to_string(),
+                        ),
+                    ]
+                }
+            };
+
+            fields.append(&mut vec![
                 Field::new(OFFSET_STR.to_string(), arch.offset.to_string()),
                 Field::new(SIZE_STR.to_string(), arch.size.to_string()),
                 Field::new(ALIGN_STR.to_string(), arch.align.to_string()),
-            ];
+            ]);
+
             self.printer.out_default_colored_fields(fields, "\n")
         }
     }
