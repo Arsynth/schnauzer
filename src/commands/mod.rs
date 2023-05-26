@@ -13,10 +13,11 @@ mod helpers;
 use super::output::Printer;
 use super::result::*;
 
+use colored::Colorize;
 use default::*;
 use dylibs::*;
 use fat::*;
-use getopts::{HasArg, Occur, Options};
+use getopts::{Options};
 use handler::*;
 use headers::*;
 use rpaths::*;
@@ -33,23 +34,38 @@ pub fn handle_with_args() -> Result<()> {
         helpers::exit_normally_with_help_string();
     }
 
+    let handler = matched_handler(&args[1]);
+    let args = match handler {
+        Some(_) => match args.get(2..) {
+            Some(args) => args,
+            None => {
+                helpers::exit_with_help_string();
+            },
+        },
+        None => match args.get(1..) {
+            Some(args) => args,
+            None => {
+                helpers::exit_with_help_string();
+            },
+        },
+    };
+
+    if args.len() == 0 {
+        helpers::exit_with_help_string();
+    }
+
     let mut opts = Options::new();
-    opts.opt(
+    opts.optopt(
         PATH_OPT,
         "path",
         "Path to file",
         "FILE",
-        HasArg::Yes,
-        Occur::Req,
     );
 
-    let mut free_args: Vec<String> = Vec::new();
-
     let path = match opts.parse(args.clone()) {
-        Ok(m) => {
-            let mut free = m.free.clone();
-            free_args.append(&mut free);
-            m.opt_str(PATH_OPT)
+        Ok(m) => match m.opt_str(PATH_OPT) {
+            Some(path) => path,
+            None => args[0].clone(),
         }
         Err(f) => {
             eprint!("{}\n\n", f.to_string());
@@ -57,30 +73,18 @@ pub fn handle_with_args() -> Result<()> {
         }
     };
 
-    if let Some(path) = path {
-        let object_type = helpers::load_object_type_with(&path)?;
-        match matched_handler(&args[1]) {
-            Some(h) => {
-                if free_args.len() > 2 {
-                    eprint!("Unexpected arguments: {}\n\n", free_args[2..].join(", "));
-                    helpers::exit_with_help_string();
-                }
-                h.handle_object(object_type, args)?
-            },
-            None => {
-                if free_args.len() > 1 {
-                    eprint!("Unexpected arguments: {}\n\n", free_args[1..].join(", "));
-                    helpers::exit_with_help_string();
-                }
-                DefaultHandler::new(Printer {}).handle_object(object_type, args)?
-            },
-        };
-    } else {
-        eprint!("Not enough arguments. Provide a valid path to binary\n\n");
-        helpers::exit_with_help_string();
+    let args = Vec::from(args);
+    let object_type = match helpers::load_object_type_with(&path) {
+        Ok(obj) => obj,
+        Err(err) => {
+            eprint!("\"{}\":\n{:#?}\n\n", path.bright_white(), err);
+            helpers::exit_with_help_string()
+        },
+    };
+    match handler {
+        Some(handler) => handler.handle_object(object_type, args),
+        None => DefaultHandler::new(Printer {}).handle_object(object_type, args),
     }
-
-    Ok(())
 }
 
 fn requires_help(args: Vec<String>) -> bool {

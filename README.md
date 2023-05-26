@@ -19,13 +19,19 @@ cargo install schnauzer
 
 ## Arguments
 
-Since `version 0.2.4`, `schnauzer` requires `-p` or `--path` argument to specify path to file
+Call to `schnauzer` should have the next pattern:
+```shell
+#
+schnauzer [CMD] path_to_binary
+```
+
+You also can specify path with `-p` or `--path` (But this not required)
 
 ## Supported commands (examples)
 ### Default
 ```shell
 # Prints almost all binary info
-schnauzer -p path_to_binary
+schnauzer path_to_binary
 ```
 ```
 Fat arch:
@@ -59,7 +65,7 @@ Fat arch:
 ### syms
 ```shell
 # Prints symtab
-schnauzer syms -p path_to_binary
+schnauzer syms path_to_binary
 ```
 ```
 Arch #1 (Arch: x86_64, File type: Exec, Flags: 0x00200085):
@@ -81,7 +87,7 @@ n_desc: 256, n_value: 0
 ### rpaths
 ```shell
 # Prints relative paths
-schnauzer rpaths -p path_to_binary
+schnauzer rpaths path_to_binary
 ```
 ```
 Arch #0 (Arch: arm64, File type: Exec, Flags: 0x04a18085):
@@ -97,7 +103,7 @@ Arch #0 (Arch: arm64, File type: Exec, Flags: 0x04a18085):
 ### dylibs
 ```shell
 # Prints used dynamic libraries
-schnauzer dylibs -p path_to_binary
+schnauzer dylibs path_to_binary
 ```
 ```
 Arch #1 (Arch: x86_64, File type: Exec, Flags: 0x00200085):
@@ -110,7 +116,7 @@ Arch #2 (Arch: arm64e, File type: Exec, Flags: 0x00200085):
 ### segs
 ```shell
 # Prints all the segments with sections
-schnauzer segs -p path_to_binary
+schnauzer segs path_to_binary
 ```
 ```
 ...
@@ -132,7 +138,7 @@ schnauzer segs -p path_to_binary
 ### fat
 ```shell
 # Prints the fat archs
-schnauzer fat -p path_to_binary
+schnauzer fat path_to_binary
 ```
 ```
 [0] Arch: x86_64, Offset: 16384, Size: 70080, Align: 14
@@ -142,7 +148,7 @@ schnauzer fat -p path_to_binary
 ### headers
 ```shell
 # Prints headers
-schnauzer headers -p path_to_binary
+schnauzer headers path_to_binary
 ```
 ```
 [0] Magic: cffaedfe, Arch: x86_64, Capabilities: 0x00, File type: Exec, Commands: 17, Size of commands: 1544, Flags: 0x00200085
@@ -160,13 +166,13 @@ MH_PIE
 ```
 
 ### Documentation
-docs.rs/schnauzer/0.2.5
+docs.rs/schnauzer/0.2.6
 
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.2.5"
+schnauzer = "0.2.6"
 ```
 
 ### Examples

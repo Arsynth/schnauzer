@@ -5,25 +5,25 @@ use std::{path::Path};
 
 const HELP_STRING: &str = "Help:
 # Prints almost all binary info
-schnauzer -p path_to_binary
+schnauzer path_to_binary
 
 # Prints symtab
-schnauzer syms -p path_to_binary
+schnauzer syms path_to_binary
 
 # Prints relative paths
-schnauzer rpaths -p path_to_binary
+schnauzer rpaths path_to_binary
 
 # Prints used dynamic libraries
-schnauzer dylibs -p path_to_binary
+schnauzer dylibs path_to_binary
 
 # Prints all the segments with sections
-schnauzer segs -p path_to_binary
+schnauzer segs path_to_binary
 
 # Prints the fat archs
-schnauzer fat -p path_to_binary
+schnauzer fat path_to_binary
 
 # Prints headers
-schnauzer headers -p path_to_binary
+schnauzer headers path_to_binary
 ";
 
 pub(crate) fn load_object_type_with(path: &str) -> Result<ObjectType> {
