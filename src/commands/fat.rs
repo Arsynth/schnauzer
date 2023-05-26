@@ -39,7 +39,7 @@ impl ArchsHandler {
     fn handle_fat(&self, fat: FatObject) {
         for (index, arch) in fat.arch_iterator().enumerate() {
             self.printer.out_list_item_dash(0, index);
-            let mut fields = match arch.machine().cpu() {
+            let mut fields = match arch.printable_cpu() {
                 Some(cpu) => {
                     vec![Field::new(ARCH_STR.to_string(), cpu.to_string())]
                 }

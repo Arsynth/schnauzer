@@ -45,7 +45,7 @@ impl HeadersHandler {
 
         let mut fields = vec![Field::new(MAGIC_STR.to_string(), header.magic.to_string())];
 
-        match header.machine().cpu() {
+        match header.printable_cpu() {
             Some(cpu) => {
                 fields.push(Field::new(ARCH_STR.to_string(), cpu.to_string()));
             }

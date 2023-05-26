@@ -5,43 +5,26 @@ use std::fmt::{Debug, Display};
 pub mod cpu;
 pub use cpu::*;
 
-pub struct Machine {
-    cpu_type: CPUType,
-    cpu_subtype: CPUSubtype,
-}
-
-impl Machine {
-    pub fn new(cpu_type: CPUType, cpu_subtype: CPUSubtype) -> Self {
-        Machine {
-            cpu_type,
-            cpu_subtype,
-        }
-    }
-}
-
-impl Machine {
-    /// If returned None, use the raw values - [Machine]'s `cpu_type` and `cpu_subtype`
-    pub fn cpu(&self) -> Option<CPU> {
-        CPU::new(self.cpu_type, self.cpu_subtype)
-    }
-}
-
 use self::cpu_constants::*;
 
+/// Convenience struct for printing architecture short string.
+/// As this structure implements [std::fmt::Display], its function 'to_string()' returns values like: arm64, arm64e, x86_64, x86_64h.
+/// TODO: Support other architectures.
 #[allow(non_camel_case_types)]
-pub enum CPU {
+pub enum PrintableCPU {
     x86_64(SubtypeX86_64),
     arm64(SubtypeArm64),
 }
 
-impl CPU {
-    pub fn new(cpu_type: CPUType, cpu_subtype: CPUSubtype) -> Option<Self> {
-        match cpu_type {
-            CPU_TYPE_X86_64 => match SubtypeX86_64::new(cpu_subtype) {
+impl PrintableCPU {
+    /// Returns `PrintableCPU` if both `cputype` and `cpusubtype` supported by printable structure.
+    pub fn new(cputype: CPUType, cpusubtype: CPUSubtype) -> Option<Self> {
+        match cputype {
+            CPU_TYPE_X86_64 => match SubtypeX86_64::new(cpusubtype) {
                 Some(s) => Some(Self::x86_64(s)),
                 None => None,
             },
-            CPU_TYPE_ARM64 => match SubtypeArm64::new(cpu_subtype) {
+            CPU_TYPE_ARM64 => match SubtypeArm64::new(cpusubtype) {
                 Some(s) => Some(Self::arm64(s)),
                 None => None,
             },
@@ -50,7 +33,7 @@ impl CPU {
     }
 }
 
-impl Debug for CPU {
+impl Debug for PrintableCPU {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::x86_64(arg0) => write!(f, "{}", arg0),
@@ -59,7 +42,7 @@ impl Debug for CPU {
     }
 }
 
-impl Display for CPU {
+impl Display for PrintableCPU {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }

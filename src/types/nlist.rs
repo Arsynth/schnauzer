@@ -23,48 +23,49 @@ pub struct Nlist {
     /// See `Ntype`
     pub n_type: Ntype,
 
+    ///
     /// An integer specifying the number of the section that this symbol can be found in,
-    /// or `NO_SECT` if the symbol is not to be found in any section of this image.
+    /// or [`NO_SECT`] if the symbol is not to be found in any section of this image.
     /// The sections are contiguously numbered across segments, starting from 1,
-    /// according to the order they appear in the `LC_SEGMENT` load commands.
+    /// according to the order they appear in the [`LC_SEGMENT`] load commands.
     pub n_sect: u8,
 
     /// A 16-bit value providing additional information about the nature of this symbol for non-stab symbols.
     /// The reference flags can be accessed using the `REFERENCE_TYPE` mask (0xF) and are defined as follows:
     ///
-    /// `REFERENCE_FLAG_UNDEFINED_NON_LAZY` (0x0) — This symbol is a reference to an external non-lazy (data) symbol.
+    /// [`REFERENCE_FLAG_UNDEFINED_NON_LAZY`] (0x0) — This symbol is a reference to an external non-lazy (data) symbol.
     ///
-    /// `REFERENCE_FLAG_UNDEFINED_LAZY` (0x1) — This symbol is a reference to an external lazy symbol—that is, to a function call.
+    /// [`REFERENCE_FLAG_UNDEFINED_LAZY`] (0x1) — This symbol is a reference to an external lazy symbol—that is, to a function call.
     ///
-    /// `REFERENCE_FLAG_DEFINED` (0x2) — This symbol is defined in this module.
+    /// [`REFERENCE_FLAG_DEFINED`] (0x2) — This symbol is defined in this module.
     ///
-    /// `REFERENCE_FLAG_PRIVATE_DEFINED` (0x3) — This symbol is defined in this module and is
+    /// [`REFERENCE_FLAG_PRIVATE_DEFINED`] (0x3) — This symbol is defined in this module and is
     /// visible only to modules within this shared library.
     ///
-    /// `REFERENCE_FLAG_PRIVATE_UNDEFINED_NON_LAZY` (0x4) — This symbol is defined in another module in this file,
+    /// [`REFERENCE_FLAG_PRIVATE_UNDEFINED_NON_LAZY`] (0x4) — This symbol is defined in another module in this file,
     /// is a non-lazy (data) symbol, and is visible only to modules within this shared library.
     ///
-    /// `REFERENCE_FLAG_PRIVATE_UNDEFINED_LAZY` (0x5) — This symbol is defined in another module in this file,
+    /// [`REFERENCE_FLAG_PRIVATE_UNDEFINED_LAZY`] (0x5) — This symbol is defined in another module in this file,
     /// is a lazy (function) symbol, and is visible only to modules within this shared library.
     ///
     /// Additionally, the following bits might also be set:
     ///
-    /// `REFERENCED_DYNAMICALLY` (0x10) — Must be set for any defined symbol that is referenced by dynamic-loader
+    /// [`REFERENCED_DYNAMICALLY`] (0x10) — Must be set for any defined symbol that is referenced by dynamic-loader
     /// APIs (such as dlsym and NSLookupSymbolInImage) and not ordinary undefined symbol references.
     /// The strip tool uses this bit to avoid removing symbols that must exist: If the symbol has this bit set,
     /// strip does not strip it.
     ///
-    /// `N_DESC_DISCARDED` (0x20) — Sometimes used by the dynamic linker at runtime in a fully linked image.
+    /// [`N_DESC_DISCARDED`] (0x20) — Sometimes used by the dynamic linker at runtime in a fully linked image.
     /// Do not set this bit in a fully linked image.
     ///
-    /// `N_NO_DEAD_STRIP` (0x20) — When set in a relocatable object file (file type MH_OBJECT) on a defined symbol,
+    /// [`N_NO_DEAD_STRIP`] (0x20) — When set in a relocatable object file (file type MH_OBJECT) on a defined symbol,
     /// indicates to the static linker to never dead-strip the symbol. (Note that the same bit (0x20) is used for two nonoverlapping purposes.)
     ///
-    /// `N_WEAK_REF` (0x40) — Indicates that this undefined symbol is a weak reference.
+    /// [`N_WEAK_REF`] (0x40) — Indicates that this undefined symbol is a weak reference.
     /// If the dynamic linker cannot find a definition for this symbol, it sets the address of
     /// this symbol to 0. The static linker sets this symbol given the appropriate weak-linking flags.
     ///
-    /// `N_WEAK_DEF` (0x80) — Indicates that this symbol is a weak definition. If the static linker or the dynamic
+    /// [`N_WEAK_DEF`] (0x80) — Indicates that this symbol is a weak definition. If the static linker or the dynamic
     /// linker finds another (non-weak) definition for this symbol, the weak definition is ignored.
     /// Only symbols in a coalesced section can be marked as a weak definition.
     ///
@@ -72,7 +73,7 @@ pub struct Nlist {
     /// structure is set), the high 8 bits of n_desc specify the number of the library in which
     /// this undefined symbol is defined. Use the macro `GET_LIBRARY_ORDINAL` to obtain this value and
     /// the macro `SET_LIBRARY_ORDINAL` to set it. Zero specifies the current image. 1 through 253 specify
-    /// the library number according to the order of `LC_LOAD_DYLIB` commands in the file. The value 254 is used
+    /// the library number according to the order of [`LC_LOAD_DYLIB`] commands in the file. The value 254 is used
     /// for undefined symbols that are to be dynamically looked up (supported only in OS X v10.3 and later).
     /// For plug–ins that load symbols from the executable program they are linked against, 255 specifies
     ///  the executable image. For flat namespace images, the high 8 bits must be 0.
@@ -85,13 +86,13 @@ pub struct Nlist {
     ///
     /// ### Discussion
     ///
-    /// Common symbols must be of type N_UNDF and must have the N_EXT bit set.
+    /// Common symbols must be of type [N_UNDF] and must have the [N_EXT] bit set.
     /// The n_value for a common symbol is the size (in bytes) of the data of the symbol.
     /// In C, a common symbol is a variable that is declared but not initialized in this file.
     /// Common symbols can appear only in MH_OBJECT Mach-O files.
     pub n_value: Nvalue,
 
-    /// Depends on `n_strx`, `stroff` of `LcSymtab` [and image offset in file if that in fat file]
+    /// Depends on `n_strx`, `stroff` of [`LcSymtab`] (and image offset in file if that in fat file)
     pub name: Option<NlistStr>,
 }
 

@@ -32,7 +32,7 @@ pub mod object_flags_constants {
     /// the binary is not prebound but can have its prebinding redone. only used when MH_PREBOUND is not set.  
     pub const MH_PREBINDABLE: u32 = 0x800;
     /// indicates that this binary binds to all two-level namespace modules of its dependent libraries. 
-    /// Only used when MH_PREBINDABLE and MH_TWOLEVEL are both set.  
+    /// Only used when [MH_PREBINDABLE] and [MH_TWOLEVEL] are both set.  
     pub const MH_ALLMODSBOUND: u32 = 0x1000;
     /// safe to divide up the sections into sub-sections via symbols for dead code stripping  
     pub const MH_SUBSECTIONS_VIA_SYMBOLS: u32 = 0x2000;
@@ -50,15 +50,15 @@ pub mod object_flags_constants {
     pub const MH_SETUID_SAFE: u32 = 0x80000;
     /// When this bit is set on a dylib, the static linker does not need to examine dependent dylibs to see if any are re-exported  
     pub const MH_NO_REEXPORTED_DYLIBS: u32 = 0x100000;
-    /// When this bit is set, the OS will load the main executable at a random address. Only used in MH_EXECUTE filetypes.  
+    /// When this bit is set, the OS will load the main executable at a random address. Only used in [MH_EXECUTE] filetypes.  
     pub const MH_PIE: u32 = 0x200000;
     /// Only for use on dylibs.  When linking against a dylib that has this bit set, the static linker will 
-    /// automatically not create a LC_LOAD_DYLIB load command to the dylib if no symbols are being referenced from the dylib.  
+    /// automatically not create a [LC_LOAD_DYLIB] load command to the dylib if no symbols are being referenced from the dylib.  
     pub const MH_DEAD_STRIPPABLE_DYLIB: u32 = 0x400000;
-    /// Contains a section of type S_THREAD_LOCAL_VARIABLES  
+    /// Contains a section of type [S_THREAD_LOCAL_VARIABLES]  
     pub const MH_HAS_TLV_DESCRIPTORS: u32 = 0x800000;
     /// When this bit is set, the OS will run the main executable with a non-executable heap even on platforms (e.g. i386) that 
-    /// don't require it. Only used in MH_EXECUTE filetypes.  
+    /// don't require it. Only used in [MH_EXECUTE] filetypes.  
     pub const MH_NO_HEAP_EXECUTION: u32 = 0x1000000;
     /// The code was linked for use in an application extension.  
     pub const MH_APP_EXTENSION_SAFE: u32 = 0x02000000;

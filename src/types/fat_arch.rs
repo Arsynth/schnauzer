@@ -49,8 +49,8 @@ impl FatArch {
         MachObject::parse(self.reader.clone(), self.offset as usize)
     }
 
-    pub fn machine(&self) -> Machine {
-        Machine::new(self.cputype, self.cpusubtype)
+    pub fn printable_cpu(&self) -> Option<PrintableCPU> {
+        PrintableCPU::new(self.cputype, self.cpusubtype)
     }
 }
 

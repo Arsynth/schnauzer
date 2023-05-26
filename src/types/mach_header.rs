@@ -61,8 +61,9 @@ impl MachHeader {
 }
 
 impl MachHeader {
-    pub fn machine(&self) -> Machine {
-        Machine::new(self.cputype, self.cpusubtype)
+    /// Returns [PrintableCPU] if both `cputype` and `cpusubtype` supported by printable structure.
+    pub fn printable_cpu(&self) -> Option<PrintableCPU> {
+        PrintableCPU::new(self.cputype, self.cpusubtype)
     }
 }
 

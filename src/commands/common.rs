@@ -19,7 +19,7 @@ pub(super) fn out_single_arch_title(printer: &Printer, header: &MachHeader, inde
         index.to_string().bold().bright_white()
     );
 
-    let arch_str = match header.machine().cpu() {
+    let arch_str = match header.printable_cpu() {
         Some(cpu) => format!("{ARCH_STR}: {}", cpu.to_string().green()),
         None => format!(
             "{CPU_TYPE_STR}: {}, {CPU_SUBTYPE_STR}: {}",
