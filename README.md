@@ -21,13 +21,13 @@ cargo install schnauzer
 
 Call to `schnauzer` should have the next pattern:
 ```shell
-#
 schnauzer [CMD] path_to_binary
 ```
+Where `CMD` is optional. See [Supported commands](#supported-commands) section
 
 You also can specify path with `-p` or `--path` (But this not required)
 
-## Supported commands (examples)
+## Supported commands
 ### Default
 ```shell
 # Prints almost all binary info
