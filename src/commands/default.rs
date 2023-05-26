@@ -36,7 +36,7 @@ impl DefaultHandler {
     }
 
     fn handle_arch(&self, arch: FatArch) {
-        println!("{}", "Fat arch:".bold().bright_white());
+        self.printer.print_line(format!("{}", "Fat arch:".bold().bright_white()));
 
         for field in arch.all_fields() {
             self.printer.out_dashed_field(&field.name, &field.value, 0);

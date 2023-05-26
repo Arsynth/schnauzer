@@ -81,6 +81,6 @@ impl DylibsHandler {
             "",
         );
         self.printer.print_colored_string(")".bright_white());
-        self.printer.print_line("".to_string());
+        self.printer.print_line("");
     }
 }

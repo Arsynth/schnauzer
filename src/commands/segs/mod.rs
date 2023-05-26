@@ -36,7 +36,7 @@ impl SegsHandler {
     fn handle_fat(&self, fat: FatObject) {
         for (index, arch) in fat.arch_iterator().enumerate() {
             self.handle_arch(arch, index + 1);
-            println!("");
+            self.printer.print_line("")
         }
     }
 
@@ -77,7 +77,7 @@ impl SegsHandler {
 
         for section in seg.sections_iterator() {
             self.handle_section32(section, *sect_index);
-            self.printer.print_line("".to_string());
+            self.printer.print_line("");
             *sect_index += 1;
         }
     }
@@ -108,7 +108,7 @@ impl SegsHandler {
 
         for section in seg.sections_iterator() {
             self.handle_section64(section, *sect_index);
-            self.printer.print_line("".to_string());
+            self.printer.print_line("");
             *sect_index += 1;
         }
     }

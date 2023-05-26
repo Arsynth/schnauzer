@@ -1,4 +1,5 @@
 use colored::{self, ColoredString, Colorize};
+use std::fmt::Display;
 
 use crate::auto_enum_fields::Field;
 
@@ -58,11 +59,11 @@ impl Printer {
         println!("{string}");
     }
 
-    pub(crate) fn print_line(&self, line: String) {
+    pub(crate) fn print_line(&self, line: impl Display) {
         println!("{line}");
     }
 
-    pub(crate) fn print_string(&self, string: String) {
+    pub(crate) fn print_string(&self, string: impl Display) {
         print!("{string}");
     }
     

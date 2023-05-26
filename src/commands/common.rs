@@ -14,7 +14,7 @@ pub(super) const FLAGS_STR: &str = "Flags";
 pub(super) fn out_single_arch_title(printer: &Printer, header: &MachHeader, index: usize) {
     let head = format!(
         "{} {}{}",
-        "Arch".bold().bright_white(),
+        ARCH_STR.bold().bright_white(),
         "#".dimmed(),
         index.to_string().bold().bright_white()
     );

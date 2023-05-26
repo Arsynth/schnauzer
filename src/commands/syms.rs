@@ -36,7 +36,7 @@ impl SymsHandler {
     fn handle_fat(&self, fat: FatObject) {
         for (index, arch) in fat.arch_iterator().enumerate() {
             self.handle_arch(arch, index + 1);
-            println!("");
+            self.printer.print_line("");
         }
     }
 
