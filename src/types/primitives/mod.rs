@@ -26,10 +26,10 @@ macro_rules! from_ctx_64_tuple_struct {
     ($t:ident, $main:ty, $alt:ty) => {
         // pub struct $t(pub $main);
 
-        impl FromCtx<U64Context> for $t {
-            fn from_ctx(this: &[u8], ctx: U64Context) -> Self {
+        impl FromCtx<X64Context> for $t {
+            fn from_ctx(this: &[u8], ctx: X64Context) -> Self {
                 match ctx {
-                    U64Context::Whole(e) => match e {
+                    X64Context::On(e) => match e {
                         Endian::Little => $t(<$main>::from_le_bytes(
                             this[..std::mem::size_of::<$main>()].try_into().unwrap(),
                         )),
@@ -37,7 +37,7 @@ macro_rules! from_ctx_64_tuple_struct {
                             this[..std::mem::size_of::<$main>()].try_into().unwrap(),
                         )),
                     },
-                    U64Context::Low32(e) => match e {
+                    X64Context::Off(e) => match e {
                         Endian::Little => $t(<$alt>::from_le_bytes(
                             this[..std::mem::size_of::<$alt>()].try_into().unwrap(),
                         ) as $main),
@@ -49,11 +49,11 @@ macro_rules! from_ctx_64_tuple_struct {
             }
         }
 
-        impl SizeWith<U64Context> for $t {
-            fn size_with(ctx: &U64Context) -> usize {
+        impl SizeWith<X64Context> for $t {
+            fn size_with(ctx: &X64Context) -> usize {
                 match ctx {
-                    U64Context::Whole(_) => std::mem::size_of::<$main>(),
-                    U64Context::Low32(_) => std::mem::size_of::<$alt>(),
+                    X64Context::On(_) => std::mem::size_of::<$main>(),
+                    X64Context::Off(_) => std::mem::size_of::<$alt>(),
                 }
             }
         }
@@ -61,10 +61,10 @@ macro_rules! from_ctx_64_tuple_struct {
     ($t:ident, $main:ty, 0) => {
         // pub struct $t(pub $main);
 
-        impl FromCtx<U64Context> for $t {
-            fn from_ctx(this: &[u8], ctx: U64Context) -> Self {
+        impl FromCtx<X64Context> for $t {
+            fn from_ctx(this: &[u8], ctx: X64Context) -> Self {
                 match ctx {
-                    U64Context::Whole(e) => match e {
+                    X64Context::On(e) => match e {
                         Endian::Little => $t(<$main>::from_le_bytes(
                             this[..std::mem::size_of::<$main>()].try_into().unwrap(),
                         )),
@@ -72,16 +72,16 @@ macro_rules! from_ctx_64_tuple_struct {
                             this[..std::mem::size_of::<$main>()].try_into().unwrap(),
                         )),
                     },
-                    U64Context::Low32(e) => $t(<$main>::default()),
+                    X64Context::Off(e) => $t(<$main>::default()),
                 }
             }
         }
 
-        impl SizeWith<U64Context> for $t {
-            fn size_with(ctx: &U64Context) -> usize {
+        impl SizeWith<X64Context> for $t {
+            fn size_with(ctx: &X64Context) -> usize {
                 match ctx {
-                    U64Context::Whole(_) => std::mem::size_of::<$main>(),
-                    U64Context::Low32(_) => 0,
+                    X64Context::On(_) => std::mem::size_of::<$main>(),
+                    X64Context::Off(_) => 0,
                 }
             }
         }
@@ -95,7 +95,7 @@ macro_rules! num_display {
                 write!(f, "{}", self.0)
             }
         }
-        
+
         impl Display for $t {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{}", self.0)
@@ -111,13 +111,13 @@ macro_rules! hex_display {
                 write!(f, "{:#0width$x}", self.0, width = $width)
             }
         }
-        
+
         impl LowerHex for $t {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{:#0width$x}", self.0, width = $width)
             }
         }
-        
+
         impl Display for $t {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{:#0width$x}", self.0, width = $width)
@@ -174,48 +174,13 @@ impl Display for Hu32w4 {
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
 pub struct Hi32(pub i32);
-
-impl Debug for Hi32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#010x}", self.0)
-    }
-}
-
-impl LowerHex for Hi32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#010x}", self.0)
-    }
-}
-
-impl Display for Hi32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#010x}", self.0)
-    }
-}
+hex_display!(Hi32, 10);
 
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
 pub struct Hu64(pub u64);
 from_ctx_64_tuple_struct!(Hu64, u64, u32);
 hex_display!(Hu64, 18);
-
-// impl Debug for Hu64 {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{:#018x}", self.0)
-//     }
-// }
-
-// impl LowerHex for Hu64 {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{:#018x}", self.0)
-//     }
-// }
-
-// impl Display for Hu64 {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{:#018x}", self.0)
-//     }
-// }
 
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
@@ -341,66 +306,124 @@ impl Display for Str16Bytes {
     }
 }
 
-#[derive(Clone)]
-pub enum U64Context {
-    Whole(Endian),
-    Low32(Endian),
+#[derive(Clone, Debug)]
+pub enum X64Context {
+    On(Endian),
+    Off(Endian),
 }
 
-impl Copy for U64Context {}
+impl Copy for X64Context {}
 
-impl U64Context {
+impl X64Context {
     pub fn endian(&self) -> &Endian {
         match self {
-            U64Context::Whole(e) => e,
-            U64Context::Low32(e) => e,
+            X64Context::On(e) => e,
+            X64Context::Off(e) => e,
         }
     }
 
     pub fn is_64(&self) -> bool {
         match self {
-            U64Context::Whole(_) => true,
-            U64Context::Low32(_) => false,
+            X64Context::On(_) => true,
+            X64Context::Off(_) => false,
         }
     }
 }
 
+#[allow(non_camel_case_types)]
 pub struct u64_io(pub u64);
 from_ctx_64_tuple_struct!(u64_io, u64, u32);
 num_display!(u64_io);
 
+#[allow(non_camel_case_types)]
 pub struct u32opt(pub u32);
 from_ctx_64_tuple_struct!(u32opt, u32, 0);
 num_display!(u32opt);
 
-// impl FromCtx<U64Context> for u64_io {
-//     fn from_ctx(this: &[u8], ctx: U64Context) -> Self {
-//         match ctx {
-//             U64Context::Whole(e) => match e {
-//                 Endian::Little => u64_io(u64::from_le_bytes(
-//                     this[..std::mem::size_of::<u64>()].try_into().unwrap(),
-//                 )),
-//                 Endian::Big => u64_io(u64::from_be_bytes(
-//                     this[..std::mem::size_of::<u64>()].try_into().unwrap(),
-//                 )),
-//             },
-//             U64Context::Low32(e) => match e {
-//                 Endian::Little => u64_io(u32::from_le_bytes(
-//                     this[..std::mem::size_of::<u32>()].try_into().unwrap(),
-//                 ) as u64),
-//                 Endian::Big => u64_io(u32::from_be_bytes(
-//                     this[..std::mem::size_of::<u32>()].try_into().unwrap(),
-//                 ) as u64),
-//             },
-//         }
-//     }
-// }
+#[cfg(test)]
+mod test {
+    use super::*;
+    use scroll::IOread;
+    use std::io::{Cursor, SeekFrom};
 
-// impl SizeWith<U64Context> for u64_io {
-//     fn size_with(ctx: &U64Context) -> usize {
-//         match ctx {
-//             U64Context::Whole(_) => std::mem::size_of::<u64>(),
-//             U64Context::Low32(_) => std::mem::size_of::<u32>(),
-//         }
-//     }
-// }
+    #[test]
+    fn u64_ctx_u32opt_test() {
+        let bytes: &[u8] = &[0, 1, 2, 3, 4, 5, 6, 7];
+
+        let ctx = X64Context::On(Endian::Big);
+        assert_eq!(
+            u32opt::size_with(&ctx),
+            4,
+            "Unexpected type size with context: {:?}",
+            ctx
+        );
+
+        let mut cur = Cursor::new(bytes);
+        let opt_32: u32opt = cur.ioread_with(ctx).unwrap();
+        assert_eq!(
+            cur.position(),
+            4,
+            "Invalid position after read. Context: {:?}",
+            ctx
+        );
+        cur.set_position(0);
+        let just_32: u32 = cur.ioread_with(ctx.endian().clone()).unwrap();
+        assert_eq!(opt_32.0, just_32, "Context: {:?}", ctx);
+
+        let ctx = X64Context::Off(Endian::Big);
+        assert_eq!(
+            u32opt::size_with(&ctx),
+            0,
+            "Unexpected type size with context: {:?}",
+            ctx
+        );
+        let mut cur = Cursor::new(bytes);
+        let opt_32: u32opt = cur.ioread_with(ctx).unwrap();
+        assert_eq!(cur.position(), 0, "Invalid position after read.\n Note: Values that optional to read should not read and affect stream.\n Context: {:?}", ctx);
+        assert_eq!(opt_32.0, 0, "Context: {:?}", ctx);
+    }
+    
+    #[test]
+    fn u64_ctx_u64_io_test() {
+        u64_ctx_u64_io_endian(Endian::Big);
+        u64_ctx_u64_io_endian(Endian::Little);
+    }
+
+    fn u64_ctx_u64_io_endian(endian: scroll::Endian) {
+        let bytes: &[u8] = &[0, 1, 2, 3, 4, 5, 6, 7];
+
+        let ctx = X64Context::On(endian);
+        assert_eq!(
+            u64_io::size_with(&ctx),
+            8,
+            "Unexpected type size with context: {:?}",
+            ctx
+        );
+
+        let mut cur = Cursor::new(bytes);
+        let u64io: u64_io = cur.ioread_with(ctx).unwrap();
+        assert_eq!(
+            cur.position(),
+            8,
+            "Invalid position after read. Context: {:?}",
+            ctx
+        );
+        cur.set_position(0);
+        let just_64: u64 = cur.ioread_with(ctx.endian().clone()).unwrap();
+        assert_eq!(u64io.0, just_64, "Context: {:?}", ctx);
+
+        let ctx = X64Context::Off(endian);
+        assert_eq!(
+            u32opt::size_with(&ctx),
+            0,
+            "Unexpected type size with context: {:?}",
+            ctx
+        );
+        let mut cur = Cursor::new(bytes);
+        let u64io: u64_io = cur.ioread_with(ctx).unwrap();
+        assert_eq!(cur.position(), 4, "Invalid position after read.\n Note: u64_io should read as u32 with context Off.\n Context: {:?}", ctx);
+        cur.set_position(0);
+        let just_32: u32 = cur.ioread_with(ctx.endian().clone()).unwrap();
+        assert_eq!(u64io.0, just_32 as u64, "Context: {:?}", ctx);
+    }
+}

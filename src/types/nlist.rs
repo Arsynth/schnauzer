@@ -4,7 +4,7 @@ use super::Hu64;
 use crate::LcStr;
 use crate::RcReader;
 use crate::Result;
-use crate::U64Context;
+use crate::X64Context;
 
 use scroll::IOread;
 use scroll::SizeWith;
@@ -112,9 +112,9 @@ impl Nlist {
         let n_desc: u16 = reader_mut.ioread_with(endian)?;
 
         let ctx = if is_64 {
-            U64Context::Whole(endian)
+            X64Context::On(endian)
         } else {
-            U64Context::Low32(endian)
+            X64Context::Off(endian)
         };
         let n_value: Hu64 = reader_mut.ioread_with(ctx)?;
 

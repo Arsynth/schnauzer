@@ -27,7 +27,7 @@ pub struct Section {
 }
 
 impl Section {
-    pub(super) fn parse(reader: RcReader, ctx: U64Context) -> Result<Self> {
+    pub(super) fn parse(reader: RcReader, ctx: X64Context) -> Result<Self> {
         let endian = ctx.endian().clone();
         let mut reader_mut = reader.borrow_mut();
 

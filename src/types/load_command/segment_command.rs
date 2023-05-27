@@ -30,11 +30,11 @@ pub struct LcSegment {
     pub flags: Hu32,
 
     sects_offset: u64,
-    ctx: U64Context,
+    ctx: X64Context,
 }
 
 impl LcSegment {
-    pub(super) fn parse(reader: RcReader, base_offset: usize, ctx: U64Context) -> Result<Self> {
+    pub(super) fn parse(reader: RcReader, base_offset: usize, ctx: X64Context) -> Result<Self> {
         let endian = *ctx.endian();
         let reader_clone = reader.clone();
         let mut reader_mut = reader.borrow_mut();
@@ -106,13 +106,13 @@ pub struct SectionIterator {
 
     nsects: u32,
     base_offset: u64,
-    ctx: U64Context,
+    ctx: X64Context,
 
     current: u32,
 }
 
 impl SectionIterator {
-    fn new(reader: RcReader, nsects: u32, base_offset: u64, ctx: U64Context) -> Self {
+    fn new(reader: RcReader, nsects: u32, base_offset: u64, ctx: X64Context) -> Self {
         SectionIterator {
             reader,
             nsects,

@@ -1,4 +1,4 @@
-use crate::U64Context;
+use crate::X64Context;
 
 use super::fmt_ext::*;
 use super::Section;
@@ -264,12 +264,12 @@ impl LcVariant {
         // We assume reader already stay right after `cmd` and `cmdsize`
         match cmd {
             LC_SEGMENT => {
-                let c = LcSegment::parse(reader_clone, base_offset, U64Context::Low32(endian))?;
+                let c = LcSegment::parse(reader_clone, base_offset, X64Context::Off(endian))?;
                 Ok(Self::Segment32(c))
             }
             LC_SEGMENT_64 => {
                 std::mem::drop(reader_mut);
-                let c = LcSegment::parse(reader_clone, base_offset, U64Context::Whole(endian))?;
+                let c = LcSegment::parse(reader_clone, base_offset, X64Context::On(endian))?;
                 Ok(Self::Segment64(c))
             }
             LC_ID_DYLIB => {
