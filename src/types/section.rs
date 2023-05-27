@@ -4,7 +4,6 @@ use super::auto_enum_fields::*;
 use super::RcReader;
 use super::Result;
 use schnauzer_derive::AutoEnumFields;
-use scroll::ctx::{FromCtx, SizeWith};
 use scroll::IOread;
 use std::fmt::Debug;
 

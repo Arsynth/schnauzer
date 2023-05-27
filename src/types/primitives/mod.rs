@@ -6,8 +6,6 @@ use scroll::Endian;
 use scroll::{IOread, SizeWith};
 use std::fmt::{Debug, Display, LowerHex};
 
-use super::auto_enum_fields::*;
-
 pub mod filetype;
 pub use filetype::*;
 
@@ -23,6 +21,34 @@ pub type VmProt = Hi32;
 pub type LoadCommandType = u32;
 
 macro_rules! from_ctx_64_tuple_struct {
+    ($t:ident, $main:ty, 0) => {
+        // pub struct $t(pub $main);
+
+        impl FromCtx<X64Context> for $t {
+            fn from_ctx(this: &[u8], ctx: X64Context) -> Self {
+                match ctx {
+                    X64Context::On(e) => match e {
+                        Endian::Little => $t(<$main>::from_le_bytes(
+                            this[..std::mem::size_of::<$main>()].try_into().unwrap(),
+                        )),
+                        Endian::Big => $t(<$main>::from_be_bytes(
+                            this[..std::mem::size_of::<$main>()].try_into().unwrap(),
+                        )),
+                    },
+                    X64Context::Off(_) => $t(<$main>::default()),
+                }
+            }
+        }
+
+        impl SizeWith<X64Context> for $t {
+            fn size_with(ctx: &X64Context) -> usize {
+                match ctx {
+                    X64Context::On(_) => std::mem::size_of::<$main>(),
+                    X64Context::Off(_) => 0,
+                }
+            }
+        }
+    };
     ($t:ident, $main:ty, $alt:ty) => {
         // pub struct $t(pub $main);
 
@@ -54,34 +80,6 @@ macro_rules! from_ctx_64_tuple_struct {
                 match ctx {
                     X64Context::On(_) => std::mem::size_of::<$main>(),
                     X64Context::Off(_) => std::mem::size_of::<$alt>(),
-                }
-            }
-        }
-    };
-    ($t:ident, $main:ty, 0) => {
-        // pub struct $t(pub $main);
-
-        impl FromCtx<X64Context> for $t {
-            fn from_ctx(this: &[u8], ctx: X64Context) -> Self {
-                match ctx {
-                    X64Context::On(e) => match e {
-                        Endian::Little => $t(<$main>::from_le_bytes(
-                            this[..std::mem::size_of::<$main>()].try_into().unwrap(),
-                        )),
-                        Endian::Big => $t(<$main>::from_be_bytes(
-                            this[..std::mem::size_of::<$main>()].try_into().unwrap(),
-                        )),
-                    },
-                    X64Context::Off(e) => $t(<$main>::default()),
-                }
-            }
-        }
-
-        impl SizeWith<X64Context> for $t {
-            fn size_with(ctx: &X64Context) -> usize {
-                match ctx {
-                    X64Context::On(_) => std::mem::size_of::<$main>(),
-                    X64Context::Off(_) => 0,
                 }
             }
         }
@@ -344,7 +342,7 @@ num_display!(u32opt);
 mod test {
     use super::*;
     use scroll::IOread;
-    use std::io::{Cursor, SeekFrom};
+    use std::io::{Cursor};
 
     #[test]
     fn u64_ctx_u32opt_test() {
