@@ -6,6 +6,9 @@ use crate::auto_enum_fields::AutoEnumFields;
 use crate::*;
 use colored::*;
 
+mod confg;
+use confg::*;
+
 static SUBCOMM_NAME: &str = "segs";
 
 pub(super) struct SegsHandler {
@@ -60,14 +63,14 @@ impl SegsHandler {
         let mut sect_index: usize = 1;
         for (index, cmd) in commands.enumerate() {
             match cmd.variant {
-                LcVariant::Segment32(seg) => self.handle_segment_command32(seg, index, &mut sect_index),
-                LcVariant::Segment64(seg) => self.handle_segment_command64(seg, index, &mut sect_index),
+                LcVariant::Segment32(seg) => self.handle_segment_command(seg, index, &mut sect_index),
+                LcVariant::Segment64(seg) => self.handle_segment_command(seg, index, &mut sect_index),
                 _ => (),
             }
         }
     }
 
-    fn handle_segment_command32(&self, seg: LcSegment32, seg_index: usize, sect_index: &mut usize) {
+    fn handle_segment_command(&self, seg: LcSegment, seg_index: usize, sect_index: &mut usize) {
         self.printer.out_list_item_dash(0, seg_index);
         self.printer
             .print_colored_string("Segment (".bright_white());
@@ -76,13 +79,13 @@ impl SegsHandler {
         self.printer.print_colored_string("):\n".bright_white());
 
         for section in seg.sections_iterator() {
-            self.handle_section32(section, *sect_index);
+            self.handle_section(section, *sect_index);
             self.printer.print_line("");
             *sect_index += 1;
         }
     }
 
-    fn handle_section32(&self, section: Section32, index: usize) {
+    fn handle_section(&self, section: Section, index: usize) {
         self.printer.print_string(format!(
             "  {} {}{} {} {} {}{}\n",
             "Section".bright_white(),
@@ -97,35 +100,12 @@ impl SegsHandler {
             self.printer.out_dashed_field(&field.name, &field.value, 1);
         }
     }
+}
 
-    fn handle_segment_command64(&self, seg: LcSegment64, seg_index: usize, sect_index: &mut usize) {
-        self.printer.out_list_item_dash(0, seg_index);
-        self.printer
-            .print_colored_string("Segment (".bright_white());
-        self.printer
-            .out_default_colored_fields(seg.all_fields(), "");
-        self.printer.print_colored_string("):\n".bright_white());
+struct SegmentVariant {
 
-        for section in seg.sections_iterator() {
-            self.handle_section64(section, *sect_index);
-            self.printer.print_line("");
-            *sect_index += 1;
-        }
-    }
+}
 
-    fn handle_section64(&self, section: Section64, index: usize) {
-        self.printer.print_string(format!(
-            "  {} {}{} {} {} {}{}\n",
-            "Section".bright_white(),
-            "#".dimmed(),
-            index.to_string().bright_white(),
-            section.sectname.to_string().yellow(),
-            "Segment".bright_white(),
-            section.segname.to_string().yellow(),
-            ":".bright_white()
-        ));
-        for field in section.all_fields().iter().skip(2) {
-            self.printer.out_dashed_field(&field.name, &field.value, 1);
-        }
-    }
+struct SegmentPrinter {
+
 }

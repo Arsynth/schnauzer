@@ -10,7 +10,7 @@ use std::ops::BitOr;
 use scroll::*;
 
 use self::cpu_constants::*;
-use crate::Hu32w4;
+use crate::Hu32;
 
 #[allow(non_upper_case_globals)]
 pub mod cpu_constants {
@@ -269,8 +269,8 @@ impl CPUSubtype {
         CPUSubtype(self.0 & !CPU_SUBTYPE_MASK)
     }
 
-    pub fn feature_flags(&self) -> Hu32w4 {
-        Hu32w4((self.0 & CPU_SUBTYPE_MASK) >> 24)
+    pub fn feature_flags(&self) -> Hu32 {
+        Hu32((self.0 & CPU_SUBTYPE_MASK) >> 24)
     }
 }
 

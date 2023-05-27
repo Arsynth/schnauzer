@@ -172,7 +172,7 @@ impl SymsHandler {
             NvalueOption::None | NvalueOption::Unknown => None,
             NvalueOption::Address => Some(Field::new(
                 "Address".to_string(),
-                nlist.n_value.hex_string(),
+                nlist.n_value.to_string(),
             )),
             NvalueOption::Register => Some(Field::new(
                 "Register".to_string(),

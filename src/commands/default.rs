@@ -89,41 +89,24 @@ impl DefaultHandler {
                 .out_default_colored_field(&field.name, &field.value, "\n");
         }
         match variant {
-            LcVariant::Segment32(seg) => self.handle_segment_command32(seg, level),
-            LcVariant::Segment64(seg) => self.handle_segment_command64(seg, level),
+            LcVariant::Segment32(seg) => self.handle_segment_command(seg, level),
+            LcVariant::Segment64(seg) => self.handle_segment_command(seg, level),
             _ => (),
         }
     }
 
-    fn handle_segment_command32(&self, seg: LcSegment32, level: usize) {
+    fn handle_segment_command(&self, seg: LcSegment, level: usize) {
         if seg.nsects > 0 {
             self.printer
                 .out_dashed_field("Sections", "", level);
         }
         for section in seg.sections_iterator() {
-            self.handle_section32(section, level + 1);
-        }
-    }
-
-    fn handle_section32(&self, section: Section32, level: usize) {
-        for field in section.all_fields() {
-            self.printer
-                .out_dashed_field(&field.name, &field.value, level);
-        }
-    }
-
-    fn handle_segment_command64(&self, seg: LcSegment64, level: usize) {
-        if seg.nsects > 0 {
-            self.printer
-                .out_dashed_field("Sections", "", level);
-        }
-        for section in seg.sections_iterator() {
-            self.handle_section64(section, level + 1);
+            self.handle_section(section, level + 1);
             self.printer.out_tile(level + 1);
         }
     }
 
-    fn handle_section64(&self, section: Section64, level: usize) {
+    fn handle_section(&self, section: Section, level: usize) {
         for field in section.all_fields() {
             self.printer
                 .out_dashed_field(&field.name, &field.value, level + 1);

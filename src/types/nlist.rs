@@ -1,15 +1,15 @@
 //! <https://opensource.apple.com/source/xnu/xnu-4570.71.2/EXTERNAL_HEADERS/mach-o/nlist.h.auto.html>
 
-use super::U64U32;
+use super::Hu64;
 use crate::LcStr;
 use crate::RcReader;
 use crate::Result;
+use crate::U64Context;
 
 use scroll::IOread;
 use scroll::SizeWith;
 
 type NlistStr = LcStr;
-type Nvalue = U64U32;
 
 /// `nlist`
 /// Describes an entry in the symbol table. Declared in `/usr/include/mach-o/nlist.h`.
@@ -90,7 +90,7 @@ pub struct Nlist {
     /// The n_value for a common symbol is the size (in bytes) of the data of the symbol.
     /// In C, a common symbol is a variable that is declared but not initialized in this file.
     /// Common symbols can appear only in MH_OBJECT Mach-O files.
-    pub n_value: Nvalue,
+    pub n_value: Hu64,
 
     /// Depends on `n_strx`, `stroff` of [`LcSymtab`] (and image offset in file if that in fat file)
     pub name: Option<NlistStr>,
@@ -110,13 +110,13 @@ impl Nlist {
         let n_type: Ntype = reader_mut.ioread_with(endian)?;
         let n_sect: u8 = reader_mut.ioread_with(endian)?;
         let n_desc: u16 = reader_mut.ioread_with(endian)?;
-        let n_value: Nvalue = if is_64 {
-            let val: u64 = reader_mut.ioread_with(endian)?;
-            Nvalue::U64(val)
+
+        let ctx = if is_64 {
+            U64Context::Whole(endian)
         } else {
-            let val: u32 = reader_mut.ioread_with(endian)?;
-            Nvalue::U32(val)
+            U64Context::Low32(endian)
         };
+        let n_value: Hu64 = reader_mut.ioread_with(ctx)?;
 
         // If `n_strx > 0`, name is not neccessarily have value. In case of stab it may be an empty string
         let name: Option<LcStr> = if n_strx > 0 {

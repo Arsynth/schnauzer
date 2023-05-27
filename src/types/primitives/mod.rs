@@ -1,5 +1,8 @@
 use crate::fmt_ext::printable_string;
 use crate::fmt_ext::printable_uuid_string;
+use scroll::ctx::FromCtx;
+use scroll::ctx::SizeWith;
+use scroll::Endian;
 use scroll::{IOread, SizeWith};
 use std::fmt::{Debug, Display, LowerHex};
 
@@ -19,27 +22,132 @@ pub type VmProt = Hi32;
 
 pub type LoadCommandType = u32;
 
+macro_rules! from_ctx_64_tuple_struct {
+    ($t:ident, $main:ty, $alt:ty) => {
+        // pub struct $t(pub $main);
+
+        impl FromCtx<U64Context> for $t {
+            fn from_ctx(this: &[u8], ctx: U64Context) -> Self {
+                match ctx {
+                    U64Context::Whole(e) => match e {
+                        Endian::Little => $t(<$main>::from_le_bytes(
+                            this[..std::mem::size_of::<$main>()].try_into().unwrap(),
+                        )),
+                        Endian::Big => $t(<$main>::from_be_bytes(
+                            this[..std::mem::size_of::<$main>()].try_into().unwrap(),
+                        )),
+                    },
+                    U64Context::Low32(e) => match e {
+                        Endian::Little => $t(<$alt>::from_le_bytes(
+                            this[..std::mem::size_of::<$alt>()].try_into().unwrap(),
+                        ) as $main),
+                        Endian::Big => $t(<$alt>::from_be_bytes(
+                            this[..std::mem::size_of::<$alt>()].try_into().unwrap(),
+                        ) as $main),
+                    },
+                }
+            }
+        }
+
+        impl SizeWith<U64Context> for $t {
+            fn size_with(ctx: &U64Context) -> usize {
+                match ctx {
+                    U64Context::Whole(_) => std::mem::size_of::<$main>(),
+                    U64Context::Low32(_) => std::mem::size_of::<$alt>(),
+                }
+            }
+        }
+    };
+    ($t:ident, $main:ty, 0) => {
+        // pub struct $t(pub $main);
+
+        impl FromCtx<U64Context> for $t {
+            fn from_ctx(this: &[u8], ctx: U64Context) -> Self {
+                match ctx {
+                    U64Context::Whole(e) => match e {
+                        Endian::Little => $t(<$main>::from_le_bytes(
+                            this[..std::mem::size_of::<$main>()].try_into().unwrap(),
+                        )),
+                        Endian::Big => $t(<$main>::from_be_bytes(
+                            this[..std::mem::size_of::<$main>()].try_into().unwrap(),
+                        )),
+                    },
+                    U64Context::Low32(e) => $t(<$main>::default()),
+                }
+            }
+        }
+
+        impl SizeWith<U64Context> for $t {
+            fn size_with(ctx: &U64Context) -> usize {
+                match ctx {
+                    U64Context::Whole(_) => std::mem::size_of::<$main>(),
+                    U64Context::Low32(_) => 0,
+                }
+            }
+        }
+    };
+}
+
+macro_rules! num_display {
+    ($t:ident) => {
+        impl Debug for $t {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+        
+        impl Display for $t {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+    };
+}
+
+macro_rules! hex_display {
+    ($t:ident, $width:expr) => {
+        impl Debug for $t {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{:#0width$x}", self.0, width = $width)
+            }
+        }
+        
+        impl LowerHex for $t {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{:#0width$x}", self.0, width = $width)
+            }
+        }
+        
+        impl Display for $t {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{:#0width$x}", self.0, width = $width)
+            }
+        }
+    };
+}
+
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
 pub struct Hu32(pub u32);
+hex_display!(Hu32, 10);
 
-impl Debug for Hu32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#010x}", self.0)
-    }
-}
+// impl Debug for Hu32 {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{:#010x}", self.0)
+//     }
+// }
 
-impl LowerHex for Hu32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#010x}", self.0)
-    }
-}
+// impl LowerHex for Hu32 {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{:#010x}", self.0)
+//     }
+// }
 
-impl Display for Hu32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#010x}", self.0)
-    }
-}
+// impl Display for Hu32 {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{:#010x}", self.0)
+//     }
+// }
 
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
@@ -88,67 +196,26 @@ impl Display for Hi32 {
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
 pub struct Hu64(pub u64);
+from_ctx_64_tuple_struct!(Hu64, u64, u32);
+hex_display!(Hu64, 18);
 
-impl Debug for Hu64 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#018x}", self.0)
-    }
-}
+// impl Debug for Hu64 {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{:#018x}", self.0)
+//     }
+// }
 
-impl LowerHex for Hu64 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#018x}", self.0)
-    }
-}
+// impl LowerHex for Hu64 {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{:#018x}", self.0)
+//     }
+// }
 
-impl Display for Hu64 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#018x}", self.0)
-    }
-}
-
-pub enum U64U32 {
-    U32(u32),
-    U64(u64),
-}
-
-impl U64U32 {
-    pub fn hex_string(&self) -> String {
-        match self {
-            U64U32::U32(v) => Hu32(*v).to_string(),
-            U64U32::U64(v) => Hu64(*v).to_string(),
-        }
-    }
-}
-
-impl AutoEnumFields for U64U32 {
-    fn all_fields(&self) -> Vec<Field> {
-        let field = match self {
-            Self::U32(val) => Field::new("u32".to_string(), val.to_string()),
-            Self::U64(val) => Field::new("u64".to_string(), val.to_string()),
-        };
-
-        vec![field]
-    }
-}
-
-impl std::fmt::Debug for U64U32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::U32(arg0) => f.debug_tuple("U32").field(arg0).finish(),
-            Self::U64(arg0) => f.debug_tuple("U64").field(arg0).finish(),
-        }
-    }
-}
-
-impl Display for U64U32 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            U64U32::U32(v) => write!(f, "{v}"),
-            U64U32::U64(v) => write!(f, "{v}"),
-        }
-    }
-}
+// impl Display for Hu64 {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{:#018x}", self.0)
+//     }
+// }
 
 #[repr(transparent)]
 #[derive(IOread, SizeWith)]
@@ -273,3 +340,67 @@ impl Display for Str16Bytes {
         write!(f, "{}", &printable_string(&self.0))
     }
 }
+
+#[derive(Clone)]
+pub enum U64Context {
+    Whole(Endian),
+    Low32(Endian),
+}
+
+impl Copy for U64Context {}
+
+impl U64Context {
+    pub fn endian(&self) -> &Endian {
+        match self {
+            U64Context::Whole(e) => e,
+            U64Context::Low32(e) => e,
+        }
+    }
+
+    pub fn is_64(&self) -> bool {
+        match self {
+            U64Context::Whole(_) => true,
+            U64Context::Low32(_) => false,
+        }
+    }
+}
+
+pub struct u64_io(pub u64);
+from_ctx_64_tuple_struct!(u64_io, u64, u32);
+num_display!(u64_io);
+
+pub struct u32opt(pub u32);
+from_ctx_64_tuple_struct!(u32opt, u32, 0);
+num_display!(u32opt);
+
+// impl FromCtx<U64Context> for u64_io {
+//     fn from_ctx(this: &[u8], ctx: U64Context) -> Self {
+//         match ctx {
+//             U64Context::Whole(e) => match e {
+//                 Endian::Little => u64_io(u64::from_le_bytes(
+//                     this[..std::mem::size_of::<u64>()].try_into().unwrap(),
+//                 )),
+//                 Endian::Big => u64_io(u64::from_be_bytes(
+//                     this[..std::mem::size_of::<u64>()].try_into().unwrap(),
+//                 )),
+//             },
+//             U64Context::Low32(e) => match e {
+//                 Endian::Little => u64_io(u32::from_le_bytes(
+//                     this[..std::mem::size_of::<u32>()].try_into().unwrap(),
+//                 ) as u64),
+//                 Endian::Big => u64_io(u32::from_be_bytes(
+//                     this[..std::mem::size_of::<u32>()].try_into().unwrap(),
+//                 ) as u64),
+//             },
+//         }
+//     }
+// }
+
+// impl SizeWith<U64Context> for u64_io {
+//     fn size_with(ctx: &U64Context) -> usize {
+//         match ctx {
+//             U64Context::Whole(_) => std::mem::size_of::<u64>(),
+//             U64Context::Low32(_) => std::mem::size_of::<u32>(),
+//         }
+//     }
+// }

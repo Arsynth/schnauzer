@@ -43,7 +43,7 @@ pub struct Module {
     /// in the __module_info section in the `__OBJC` segment
     pub objc_module_info_addr: u32,
     /// The number of bytes of data for this module that are used in the __module_info section in the __OBJC segment.
-    pub objc_module_info_size: U64U32,
+    pub objc_module_info_size: u64_io,
 }
 
 /// `dylib_reference`

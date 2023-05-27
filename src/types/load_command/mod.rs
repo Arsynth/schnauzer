@@ -1,6 +1,7 @@
+use crate::U64Context;
+
 use super::fmt_ext::*;
-use super::Section32;
-use super::Section64;
+use super::Section;
 use super::RcReader;
 use super::Result;
 use scroll::{Endian, IOread};
@@ -155,9 +156,9 @@ impl LoadCommand {
 #[derive(Debug, AutoEnumFields)]
 pub enum LcVariant {
     /// LC_SEGMENT
-    Segment32(LcSegment32),
+    Segment32(LcSegment),
     /// LC_SEGMENT_64
-    Segment64(LcSegment64),
+    Segment64(LcSegment),
     /// LC_ID_DYLIB
     IdDylib(LcDylib),
     /// LC_LOAD_DYLIB
@@ -263,12 +264,12 @@ impl LcVariant {
         // We assume reader already stay right after `cmd` and `cmdsize`
         match cmd {
             LC_SEGMENT => {
-                let c = LcSegment32::parse(reader_clone, base_offset, endian)?;
+                let c = LcSegment::parse(reader_clone, base_offset, U64Context::Low32(endian))?;
                 Ok(Self::Segment32(c))
             }
             LC_SEGMENT_64 => {
                 std::mem::drop(reader_mut);
-                let c = LcSegment64::parse(reader_clone, base_offset, endian)?;
+                let c = LcSegment::parse(reader_clone, base_offset, U64Context::Whole(endian))?;
                 Ok(Self::Segment64(c))
             }
             LC_ID_DYLIB => {
