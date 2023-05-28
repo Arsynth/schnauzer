@@ -77,7 +77,7 @@ impl Filter {
 pub(super) fn help_string() -> String {
     format!(
         "Usage:\n
-        {EXEC_NAME} {} [--{SEGS_FLAG}] [--{SECTS_FLAG}] [--{SHORT_FLAG}] [--{NO_IDX_FLAG}]
+        {EXEC_NAME} {} path_to_binary [--{SEGS_FLAG}] [--{SECTS_FLAG}] [--{SHORT_FLAG}] [--{NO_IDX_FLAG}]
 
         {} - Print only segments
         {} - Print only sections

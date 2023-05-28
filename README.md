@@ -4,6 +4,8 @@
 
 Schnauzer is both library and tool for parsing mach-o files
 
+[Changelog](https://github.com/Arsynth/schnauzer/blob/master/CHANGELOG.md)
+
 ## Features
 
 * Zero copy. Does not loads whole binary into memory. Uses iterators to list potentially large amount of items
@@ -118,6 +120,19 @@ Arch #2 (Arch: arm64e, File type: Exec, Flags: 0x00200085):
 # Prints all the segments with sections
 schnauzer segs path_to_binary
 ```
+
+```
+Usage:
+
+        schnauzer segs path_to_binary [--segs] [--sects] [--short] [--noidx]
+
+        --segs - Print only segments
+        --sects - Print only sections
+        --short - Print only values and only identifying fields
+        --noidx - Disable printing indices
+```
+
+
 ```
 ...
 [1] Segment (segname: __TEXT, vmaddr: 0x0000000100000000, vmsize: 0x0000000000004000, fileoff: 0, filesize: 16384, maxprot: 0x00000005, initprot: 0x00000005, nsects: 6, flags: 0x00000000):
@@ -165,14 +180,11 @@ MH_TWOLEVEL
 MH_PIE
 ```
 
-### Documentation
-docs.rs/schnauzer/0.2.6
-
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.2.6"
+schnauzer = "0.2.7"
 ```
 
 ### Examples
