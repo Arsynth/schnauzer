@@ -180,8 +180,8 @@ impl<'a> SectionPrinter<'a> {
 
         if self.short {
             self.printer.print_line(vec![
-                self.section.sectname.to_string().yellow().to_string(),
                 self.section.segname.to_string().yellow().to_string(),
+                self.section.sectname.to_string().yellow().to_string(),
             ].join(" "));
         } else {
             self.printer.print_string(format!(
