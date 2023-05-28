@@ -17,59 +17,69 @@ use colored::Colorize;
 use default::*;
 use dylibs::*;
 use fat::*;
-use getopts::{Options};
+use getopts::Options;
 use handler::*;
 use headers::*;
 use rpaths::*;
 use segs::*;
 use syms::*;
 
-pub fn handle_with_args() -> Result<()> {
-    const PATH_OPT: &str = "p";
+use common::EXEC_NAME;
 
+use std::process::exit;
+
+pub fn handle_with_args() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
-        helpers::exit_with_help_string();
-    } else if requires_help(args.clone()) {
-        helpers::exit_normally_with_help_string();
+        eprintln!("{}", common::HELP_STRING);
+        exit(1);
     }
 
-    let handler = matched_handler(&args[1]);
+    let handler = &matched_handler(&args[1]);
+
+    if requires_help(handler::default_options(), args.clone()) {
+        println!("{}", help_string(handler));
+        exit(0);
+    }
+
     let args = match handler {
-        Some(_) => match args.get(2..) {
+        Some(handler) => match args.get(2..) {
             Some(args) => args,
             None => {
-                helpers::exit_with_help_string();
-            },
+                eprintln!("{}", handler.help_string());
+                exit(1);
+            }
         },
         None => match args.get(1..) {
             Some(args) => args,
             None => {
-                helpers::exit_with_help_string();
-            },
+                eprintln!("{}", common::HELP_STRING);
+                exit(1);
+            }
         },
     };
 
     if args.len() == 0 {
-        helpers::exit_with_help_string();
+        eprintln!("{}", common::HELP_STRING);
+        exit(1);
     }
 
-    let mut opts = Options::new();
-    opts.optopt(
-        PATH_OPT,
-        "path",
-        "Path to file",
-        "FILE",
-    );
+    let opts = match handler {
+        Some(h) => h.options(),
+        None => handler::default_options(),
+    };
 
     let path = match opts.parse(args.clone()) {
-        Ok(m) => match m.opt_str(PATH_OPT) {
-            Some(path) => path,
-            None => args[0].clone(),
-        }
+        Ok(m) => match m.opt_defined(common::PATH_OPT_SHORT) {
+            true => match m.opt_str(common::PATH_OPT_SHORT) {
+                Some(path) => path,
+                None => args[0].clone(),
+            },
+            false => args[0].clone(),
+        },
         Err(f) => {
-            eprint!("{}\n\n", f.to_string());
-            helpers::exit_with_help_string()
+            eprintln!("{f}\n\n{}", help_string(handler));
+            exit(1);
         }
     };
 
@@ -78,8 +88,9 @@ pub fn handle_with_args() -> Result<()> {
         Ok(obj) => obj,
         Err(err) => {
             eprint!("\"{}\":\n{:#?}\n\n", path.bright_white(), err);
-            helpers::exit_with_help_string()
-        },
+            eprintln!("{}", common::HELP_STRING);
+            exit(1);
+        }
     };
     match handler {
         Some(handler) => handler.handle_object(object_type, args),
@@ -87,12 +98,20 @@ pub fn handle_with_args() -> Result<()> {
     }
 }
 
-fn requires_help(args: Vec<String>) -> bool {
-    const H_FLAG: &str = "h";
-    let mut opts = Options::new();
-    opts.optflag(H_FLAG, "help", "");
+fn help_string(handler: &Option<Box<dyn Handler>>) -> String {
+    match handler {
+        Some(handler) => {
+            handler.help_string()
+        }
+        None => {
+            common::HELP_STRING.to_string()
+        }
+    }
+}
+
+fn requires_help(opts: Options, args: Vec<String>) -> bool {
     match opts.parse(args) {
-        Ok(m) => m.opt_present(H_FLAG),
+        Ok(m) => m.opt_present(common::HELP_FLAG_SHORT),
         Err(_) => false,
     }
 }

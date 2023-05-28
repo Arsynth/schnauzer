@@ -29,6 +29,17 @@ impl Printer {
             index.to_string().red()
         );
     }
+
+    pub(crate) fn out_index_path_dash(&self, level: usize, index_path: Vec<usize>) {
+        let strings: Vec<String> = index_path.iter().map(|f| f.to_string().red().to_string()).collect();
+        let path = strings.join(&":".white().to_string());
+
+        print!(
+            "{}[{}] ",
+            " ".repeat(level),
+            path,
+        );
+    }
     
     pub(crate) fn out_default_colored_fields(&self, fields: Vec<Field>, tail: &str) {
         let pairs: Vec<String> = fields.iter().map(|f| {

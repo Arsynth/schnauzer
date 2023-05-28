@@ -45,7 +45,7 @@ impl DylibsHandler {
     }
 
     fn handle_macho(&self, macho: MachObject, index: usize) {
-        common::out_single_arch_title(&self.printer, &macho.header(), index);
+        common::out_single_arch_title(&self.printer, &macho.header(), index, false);
         self.handle_load_commands(macho.load_commands_iterator());
     }
 
