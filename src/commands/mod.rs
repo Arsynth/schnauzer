@@ -10,6 +10,9 @@ mod syms;
 mod common;
 mod helpers;
 
+use self::common::help_string_builder::{HelpStringBuilder};
+use self::common::options::{AddToOptions, OptionItem};
+
 use super::output::Printer;
 use super::result::*;
 
@@ -24,8 +27,6 @@ use rpaths::*;
 use segs::*;
 use syms::*;
 
-use common::EXEC_NAME;
-
 use std::process::exit;
 
 pub fn handle_with_args() -> Result<()> {
@@ -35,18 +36,22 @@ pub fn handle_with_args() -> Result<()> {
         exit(1);
     }
 
-    let handler = &matched_handler(&args[1]);
+    let handler = matched_handler(&args[1]);
+    let (command_name, mut option_items) = match &handler {
+        Some(h) => (Some(h.command_name()), h.option_items()),
+        None => (None, handler::default_option_items()),
+    };
 
     if requires_help(handler::default_options(), args.clone()) {
-        println!("{}", help_string(handler));
+        println!("{}", help_string(command_name, &mut option_items));
         exit(0);
     }
 
-    let args = match handler {
-        Some(handler) => match args.get(2..) {
+    let args = match &handler {
+        Some(_) => match args.get(2..) {
             Some(args) => args,
             None => {
-                eprintln!("{}", handler.help_string());
+                eprintln!("{}", help_string(command_name, &mut option_items));
                 exit(1);
             }
         },
@@ -64,10 +69,8 @@ pub fn handle_with_args() -> Result<()> {
         exit(1);
     }
 
-    let opts = match handler {
-        Some(h) => h.options(),
-        None => handler::default_options(),
-    };
+    let mut opts = Options::new();
+    option_items.add_to_opts(&mut opts);
 
     let path = match opts.parse(args.clone()) {
         Ok(m) => match m.opt_defined(common::PATH_OPT_SHORT) {
@@ -78,7 +81,7 @@ pub fn handle_with_args() -> Result<()> {
             false => args[0].clone(),
         },
         Err(f) => {
-            eprintln!("{f}\n\n{}", help_string(handler));
+            eprintln!("{f}\n\n{}", help_string(command_name, &mut option_items));
             exit(1);
         }
     };
@@ -98,10 +101,12 @@ pub fn handle_with_args() -> Result<()> {
     }
 }
 
-fn help_string(handler: &Option<Box<dyn Handler>>) -> String {
-    match handler {
-        Some(handler) => {
-            handler.help_string()
+fn help_string(command_name: Option<String>, option_items: &mut Vec<OptionItem>) -> String {
+    match command_name {
+        Some(command_name) => {
+            let mut help_string_builder = HelpStringBuilder::new(command_name);
+            help_string_builder.add_option_items(option_items);
+            help_string_builder.build_string()
         }
         None => {
             common::HELP_STRING.to_string()

@@ -1,6 +1,12 @@
 use crate::{output::Printer, MachHeader};
 use colored::Colorize;
 
+pub(super) mod format;
+pub(super) use format::*;
+
+pub(super) mod help_string_builder;
+pub(super) mod options;
+
 pub(super) const EXEC_NAME: &str = "schnauzer";
 
 pub(super) const HELP_FLAG_SHORT: &str = "h";
@@ -8,6 +14,8 @@ pub(super) const HELP_FLAG_LONG: &str = "help";
 
 pub(super) const PATH_OPT_SHORT: &str = "p";
 pub(super) const PATH_OPT_LONG: &str = "path";
+
+pub(super) const ARCH_NUM_ARG_LONG: &str = "archnum";
 
 pub(super) const MAGIC_STR: &str = "Magic";
 pub(super) const CPU_TYPE_STR: &str = "CPU type";

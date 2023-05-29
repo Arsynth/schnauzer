@@ -17,6 +17,10 @@ impl RpathsHandler {
 }
 
 impl Handler for RpathsHandler {
+    fn command_name(&self) -> String {
+        SUBCOMM_NAME.to_string()
+    }
+
     fn can_handle_with_name(&self, name: &str) -> bool {
         SUBCOMM_NAME == name
     }

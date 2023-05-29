@@ -19,6 +19,10 @@ impl SymsHandler {
 }
 
 impl Handler for SymsHandler {
+    fn command_name(&self) -> String {
+        SUBCOMM_NAME.to_string()
+    }
+
     fn can_handle_with_name(&self, name: &str) -> bool {
         SUBCOMM_NAME == name
     }

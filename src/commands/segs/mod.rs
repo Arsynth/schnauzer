@@ -1,4 +1,6 @@
 use super::common;
+use super::common::options::AddToOptions;
+use super::handler;
 use super::handler::*;
 use super::Printer;
 use super::Result;
@@ -8,8 +10,7 @@ use colored::*;
 
 mod confg;
 use confg::*;
-
-use super::EXEC_NAME;
+use getopts::Options;
 
 static SUBCOMM_NAME: &str = "segs";
 
@@ -24,47 +25,52 @@ impl SegsHandler {
 }
 
 impl Handler for SegsHandler {
+    fn command_name(&self) -> String {
+        SUBCOMM_NAME.to_string()
+    }
+
     fn can_handle_with_name(&self, name: &str) -> bool {
         SUBCOMM_NAME == name
     }
 
     fn handle_object(&self, object: ObjectType, other_args: Vec<String>) -> Result<()> {
-        let filter = Filter::build(other_args);
+        let mut opts = Options::new();
+        self.option_items().add_to_opts(&mut opts);
+        let config = Config::build(&mut opts, other_args)?;
+
         match object {
-            ObjectType::Fat(fat) => self.handle_fat(fat, &filter),
-            ObjectType::MachO(macho) => self.handle_macho(macho, 0, &filter),
+            ObjectType::Fat(fat) => self.handle_fat(fat, &config),
+            ObjectType::MachO(macho) => self.handle_macho(macho, 0, &config),
         }
         Ok(())
     }
 
-    fn options(&self) -> getopts::Options {
-        confg::Filter::options()
-    }
-
-    fn help_string(&self) -> String {
-        confg::help_string()
+    fn option_items(&self) -> Vec<common::options::OptionItem> {
+        let mut items = handler::default_option_items();
+        items.append(&mut Config::option_items());
+        items
     }
 }
 
 impl SegsHandler {
-    fn handle_fat(&self, fat: FatObject, filter: &Filter) {
+    fn handle_fat(&self, fat: FatObject, config: &Config) {
         for (index, arch) in fat.arch_iterator().enumerate() {
-            self.handle_arch(arch, index + 1, &filter);
+            self.handle_arch(arch, index + 1, &config);
             self.printer.print_line("")
         }
     }
 
-    fn handle_arch(&self, arch: FatArch, index: usize, filter: &Filter) {
+    fn handle_arch(&self, arch: FatArch, index: usize, config: &Config) {
         let object = arch.object().unwrap();
-        self.handle_macho(object, index, filter);
+        self.handle_macho(object, index, config);
     }
 
-    fn handle_macho(&self, macho: MachObject, index: usize, filter: &Filter) {
-        common::out_single_arch_title(&self.printer, &macho.header(), index, filter.short);
-        self.handle_load_commands(macho.load_commands_iterator(), filter);
+    fn handle_macho(&self, macho: MachObject, index: usize, config: &Config) {
+        common::out_single_arch_title(&self.printer, &macho.header(), index, config.format.short);
+        self.handle_load_commands(macho.load_commands_iterator(), config);
     }
 
-    fn handle_load_commands(&self, commands: LoadCommandIterator, filter: &Filter) {
+    fn handle_load_commands(&self, commands: LoadCommandIterator, config: &Config) {
         let commands = commands.filter(|cmd| match cmd.variant {
             LcVariant::Segment32(_) | LcVariant::Segment64(_) => true,
             _ => false,
@@ -75,7 +81,7 @@ impl SegsHandler {
         for (index, cmd) in commands.enumerate() {
             match cmd.variant {
                 LcVariant::Segment32(seg) | LcVariant::Segment64(seg) => {
-                    self.handle_segment_command(seg, index, &mut sect_index, filter)
+                    self.handle_segment_command(seg, index, &mut sect_index, config)
                 }
                 _ => (),
             }
@@ -87,41 +93,35 @@ impl SegsHandler {
         seg: LcSegment,
         seg_index: usize,
         sect_index: &mut usize,
-        filter: &Filter,
+        config: &Config,
     ) {
-        match filter.mode {
-            Mode::Both | Mode::SegmentsOnly => {
-                let seg_printer = SegmentPrinter {
-                    printer: &self.printer,
-                    segment: &seg,
-                    short: filter.short,
-                    show_indices: filter.show_indices,
-                    index: seg_index,
-                };
-                seg_printer.print();
-            },
-            Mode::SectionsOnly => (),
+        if config.show_segs {
+            let seg_printer = SegmentPrinter {
+                printer: &self.printer,
+                segment: &seg,
+                short: config.format.short,
+                show_indices: config.format.show_indices,
+                index: seg_index,
+            };
+            seg_printer.print();
         }
         
-        match filter.mode {
-            Mode::Both | Mode::SectionsOnly => {
-                for section in seg.sections_iterator() {
-                    let sect_printer = SectionPrinter {
-                        printer: &self.printer,
-                        section: &section,
-                        short: filter.short,
-                        show_indices: filter.show_indices,
-                        index: *sect_index,
-                        segment_index: seg_index,
-                    };
-                    sect_printer.print();
-                    if !filter.short {
-                        self.printer.print_line("");
-                    }
-                    *sect_index += 1;
+        if config.show_sects {
+            for section in seg.sections_iterator() {
+                let sect_printer = SectionPrinter {
+                    printer: &self.printer,
+                    section: &section,
+                    short: config.format.short,
+                    show_indices: config.format.show_indices,
+                    index: *sect_index,
+                    segment_index: seg_index,
+                };
+                sect_printer.print();
+                if !config.format.short {
+                    self.printer.print_line("");
                 }
-            },
-            Mode::SegmentsOnly => (),
+                *sect_index += 1;
+            }
         }
     }
 }

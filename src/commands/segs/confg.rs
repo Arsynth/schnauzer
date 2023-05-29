@@ -1,93 +1,58 @@
-use colored::Colorize;
 use getopts::Options;
 
-pub(super) struct Filter {
-    /// Print only identifying fields
-    pub(super) short: bool,
-    /// Display in
-    pub(super) show_indices: bool,
-    /// What to print
-    pub(super) mode: Mode,
-}
-
-pub(super) enum Mode {
-    Both,
-    SegmentsOnly,
-    SectionsOnly,
-}
-
-impl Mode {
-    fn new(show_segs: bool, show_sects: bool) -> Self {
-        if (show_segs && show_sects) || (!show_segs && !show_sects) {
-            Self::Both
-        } else if show_segs {
-            Self::SegmentsOnly
-        } else {
-            Self::SectionsOnly
-        }
-    }
-}
+use crate::commands::common::{options::*, Format};
 
 const SEGS_FLAG: &str = "segs";
 const SECTS_FLAG: &str = "sects";
-const SHORT_FLAG: &str = "short";
-const NO_IDX_FLAG: &str = "noidx";
 
-use super::EXEC_NAME;
-use super::common::HELP_FLAG_SHORT;
-use super::SUBCOMM_NAME;
+pub(super) struct Config {
+    pub(super) format: Format,
+    pub(super) show_segs: bool,
+    pub(super) show_sects: bool,
+}
 
-impl Filter {
-    pub(super) fn build(args: Vec<String>) -> Self {
-        let opts = Self::options();
+impl Config {
+    pub(super) fn build(opts: &mut Options, args: Vec<String>) -> crate::result::Result<Self> {
+        Self::required_option_items().add_to_opts(opts);
 
-        let matches = match opts.parse(args) {
+        let matches = match opts.parse(args.clone()) {
             Ok(m) => m,
-            Err(_) => {
-                eprintln!("{}", help_string());
-                std::process::exit(1);
-            }
+            Err(_) => return Err(crate::result::Error::CantParseArguments),
         };
 
-        if matches.opt_present(HELP_FLAG_SHORT) {
-            println!("{}", help_string());
-            std::process::exit(0);
-        }
+        let segs_only = matches.opt_present(SEGS_FLAG);
+        let sects_only = matches.opt_present(SECTS_FLAG);
+        let nothing = !(segs_only || sects_only);
 
-        Self {
-            short: matches.opt_present(SHORT_FLAG),
-            show_indices: !matches.opt_present(NO_IDX_FLAG),
-            mode: Mode::new(
-                matches.opt_present(SEGS_FLAG),
-                matches.opt_present(SECTS_FLAG),
-            ),
-        }
-    }
-
-    pub(super) fn options() -> Options {
-        let mut opts = super::default_options();
-        opts.optflagopt("", SEGS_FLAG, "", "");
-        opts.optflagopt("", SECTS_FLAG, "", "");
-        opts.optflagopt("", SHORT_FLAG, "", "");
-        opts.optflagopt("", NO_IDX_FLAG, "", "");
-        opts
+        Ok(Self {
+            format: Format::build(opts, args)?,
+            show_segs: segs_only || nothing,
+            show_sects: sects_only || nothing,
+        })
     }
 }
 
-pub(super) fn help_string() -> String {
-    format!(
-        "Usage:\n
-        {EXEC_NAME} {} path_to_binary [--{SEGS_FLAG}] [--{SECTS_FLAG}] [--{SHORT_FLAG}] [--{NO_IDX_FLAG}]
+impl Config {
+    fn required_option_items() -> Vec<OptionItem> {
+        vec![
+            OptionItem {
+                option_type: OptionType::Flag(IsRequired(false)),
+                name: OptionName::Long(SEGS_FLAG.to_string()),
+                description: "Display only segments".to_string(),
+                hint: "".to_string(),
+            },
+            OptionItem {
+                option_type: OptionType::Flag(IsRequired(false)),
+                name: OptionName::Long(SECTS_FLAG.to_string()),
+                description: "Display only sections".to_string(),
+                hint: "".to_string(),
+            },
+        ]
+    }
 
-        {} - Print only segments
-        {} - Print only sections
-        {} - Print only values and only identifying fields
-        {} - Disable printing indices
-        ",
-        SUBCOMM_NAME.bright_white(),
-        format!("--{}", SEGS_FLAG).bright_white(),
-        format!("--{}", SECTS_FLAG).bright_white(),
-        format!("--{}", SHORT_FLAG).bright_white(),
-        format!("--{}", NO_IDX_FLAG).bright_white(),
-    )
+    pub(super) fn option_items() -> Vec<OptionItem> {
+        let mut items = Self::required_option_items();
+        items.append(&mut Format::option_items());
+        items
+    }
 }
