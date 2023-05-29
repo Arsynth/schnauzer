@@ -10,7 +10,7 @@ mod syms;
 mod common;
 mod helpers;
 
-use self::common::help_string_builder::{HelpStringBuilder};
+use self::common::help_string_builder::HelpStringBuilder;
 use self::common::options::{AddToOptions, OptionItem};
 
 use super::output::Printer;
@@ -32,7 +32,7 @@ use std::process::exit;
 pub fn handle_with_args() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
-        eprintln!("{}", common::HELP_STRING);
+        eprintln!("{}", help_string(None));
         exit(1);
     }
 
@@ -42,8 +42,16 @@ pub fn handle_with_args() -> Result<()> {
         None => (None, handler::default_option_items()),
     };
 
+    let mut opts = Options::new();
+    option_items.add_to_opts(&mut opts);
+
+    let help_request = match command_name {
+        Some(command_name) => Some(HelpStringRequest(command_name.clone(), &mut option_items)),
+        None => None,
+    };
+
     if requires_help(handler::default_options(), args.clone()) {
-        println!("{}", help_string(command_name, &mut option_items));
+        println!("{}", help_string(help_request));
         exit(0);
     }
 
@@ -51,26 +59,23 @@ pub fn handle_with_args() -> Result<()> {
         Some(_) => match args.get(2..) {
             Some(args) => args,
             None => {
-                eprintln!("{}", help_string(command_name, &mut option_items));
+                eprintln!("{}", help_string(help_request));
                 exit(1);
             }
         },
         None => match args.get(1..) {
             Some(args) => args,
             None => {
-                eprintln!("{}", common::HELP_STRING);
+                eprintln!("{}", help_string(None));
                 exit(1);
             }
         },
     };
 
     if args.len() == 0 {
-        eprintln!("{}", common::HELP_STRING);
+        eprintln!("{}", help_string(None));
         exit(1);
     }
-
-    let mut opts = Options::new();
-    option_items.add_to_opts(&mut opts);
 
     let path = match opts.parse(args.clone()) {
         Ok(m) => match m.opt_defined(common::PATH_OPT_SHORT) {
@@ -81,7 +86,7 @@ pub fn handle_with_args() -> Result<()> {
             false => args[0].clone(),
         },
         Err(f) => {
-            eprintln!("{f}\n\n{}", help_string(command_name, &mut option_items));
+            eprintln!("{f}\n\n{}", help_string(help_request));
             exit(1);
         }
     };
@@ -91,7 +96,6 @@ pub fn handle_with_args() -> Result<()> {
         Ok(obj) => obj,
         Err(err) => {
             eprint!("\"{}\":\n{:#?}\n\n", path.bright_white(), err);
-            eprintln!("{}", common::HELP_STRING);
             exit(1);
         }
     };
@@ -101,15 +105,26 @@ pub fn handle_with_args() -> Result<()> {
     }
 }
 
-fn help_string(command_name: Option<String>, option_items: &mut Vec<OptionItem>) -> String {
-    match command_name {
-        Some(command_name) => {
-            let mut help_string_builder = HelpStringBuilder::new(command_name);
-            help_string_builder.add_option_items(option_items);
+struct HelpStringRequest<'a>(String, &'a mut Vec<OptionItem>);
+
+fn help_string(request: Option<HelpStringRequest>) -> String {
+    match request {
+        Some(request) => {
+            let mut help_string_builder =
+                HelpStringBuilder::new(request.0.clone(), Some("Usage".to_string()));
+            help_string_builder.add_option_items(request.1);
             help_string_builder.build_string()
         }
         None => {
-            common::HELP_STRING.to_string()
+            let mut result = "".to_string();
+            for handler in available_handlers() {
+                let mut help_string_builder = HelpStringBuilder::new(handler.command_name(), None);
+                help_string_builder.add_option_items(&mut handler.option_items());
+                result += &help_string_builder.build_string();
+                result += "\n";
+            }
+
+            result
         }
     }
 }

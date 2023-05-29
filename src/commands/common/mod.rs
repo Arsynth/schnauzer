@@ -27,29 +27,6 @@ pub(super) const N_CMDS_STR: &str = "Commands";
 pub(super) const SIZE_OF_CMDS_STR: &str = "Size of commands";
 pub(super) const FLAGS_STR: &str = "Flags";
 
-pub(super) const HELP_STRING: &str = "Help:
-# Prints almost all binary info
-schnauzer path_to_binary
-
-# Prints symtab
-schnauzer syms path_to_binary
-
-# Prints relative paths
-schnauzer rpaths path_to_binary
-
-# Prints used dynamic libraries
-schnauzer dylibs path_to_binary
-
-# Prints all the segments with sections
-schnauzer segs path_to_binary
-
-# Prints the fat archs
-schnauzer fat path_to_binary
-
-# Prints headers
-schnauzer headers path_to_binary
-";
-
 pub(super) fn out_single_arch_title(printer: &Printer, header: &MachHeader, index: usize, short: bool) {
     let head = format!(
         "{} {}{}",

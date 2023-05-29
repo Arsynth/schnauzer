@@ -5,13 +5,15 @@ use super::EXEC_NAME;
 
 pub(crate) struct HelpStringBuilder {
     command: String,
+    title: Option<String>,
     items: Vec<OptionItem>,
 }
 
 impl HelpStringBuilder {
-    pub(crate) fn new(command: String) -> Self {
+    pub(crate) fn new(command: String, title: Option<String>) -> Self {
         Self {
             command,
+            title,
             items: Vec::new(),
         }
     }
@@ -23,7 +25,11 @@ impl HelpStringBuilder {
     }
 
     pub(crate) fn build_string(&self) -> String {
-        let mut result = format! {"Usage:\n{EXEC_NAME} {} {} ", self.command, "path_to_binary".bright_white()};
+        let title = match &self.title {
+            Some(title) => format!("{}:\n", title),
+            None => "".to_string(),
+        };
+        let mut result = format! {"{title}{EXEC_NAME} {} {} ", self.command, "FILE".bright_white()};
 
         let arg_list: Vec<String> = self
             .items

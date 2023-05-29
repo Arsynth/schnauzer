@@ -60,7 +60,7 @@ impl AddToOptions for OptionItem {
 
 impl OptionItem {
     pub(crate) fn usage_arg_list_item_string(&self) -> String {
-        let label = self.label().bright_white();
+        let label = self.label();
 
         match self.option_type.is_required() {
             true => label.to_string(),
@@ -69,13 +69,19 @@ impl OptionItem {
     }
 
     pub(crate) fn usage_description_item_string(&self) -> String {
-        let label = self.label().bright_white();
+        let label = self.label();
         format!("{label} - {}", self.description)
     }
 
     fn label(&self) -> String {
-        match &self.name {
+        let name = match &self.name {
             OptionName::Long(s) | OptionName::ShortLong(_, s) => format!("--{s}"),
+        };
+
+        if self.hint.len() > 0 {
+            format!("{} <{}>", name.bright_white(), &self.hint)
+        } else {
+            name.bright_white().to_string()
         }
     }
 }
