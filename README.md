@@ -27,9 +27,20 @@ schnauzer [CMD] path_to_binary
 ```
 Where `CMD` is optional. See [Supported commands](#supported-commands) section
 
+Specify `-h` or `--help` with or without specify subcommand to see description and supported arguments of the subcommand.
+
 You also can specify path with `-p` or `--path` (But this not required)
 
+
+
 ## Supported commands
+* [syms FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]](#syms)
+* [rpaths FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]](#rpaths)
+* [dylibs FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]](#dylibs)
+* [segs FILE [--path <FILE>] [--help] [--arch <NAME>] [--segs] [--sects] [--short] [--noidx]](#segs)
+* [fat FILE [--path <FILE>] [--help] [--arch <NAME>]](#fat)
+* [headers FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]](#headers)
+
 ### Default
 ```shell
 # Prints almost all binary info
@@ -184,7 +195,7 @@ MH_PIE
 
 ```toml
 [dependencies]
-schnauzer = "0.2.7"
+schnauzer = "0.2.8"
 ```
 
 ### Examples

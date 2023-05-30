@@ -11,6 +11,6 @@ Arguments for `segs` subcommand
 ### Added
 Filtering by `arch` parameter to all commands
 Formatting parameters (`short` and `noidx`) for commands: `syms`, `rpaths`, `dylibs`, and `headers`.
-Help for all commands
+Help for each command
 Convenience functions to library
 Documentation for several structs
