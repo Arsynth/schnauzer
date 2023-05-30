@@ -79,6 +79,22 @@ impl ObjectType {
             ObjectType::MachO(o) => vec![o.clone()],
         }
     }
+
+    pub fn arch_with_name(&self, name: &str) -> Option<FatArch> {
+        self.archs().into_iter().find(|a| {
+            match a.printable_cpu() {
+                Some(cpu) => cpu.to_string() == name,
+                None => false,
+            }
+        })
+    }
+
+    pub fn archs(&self) -> Vec<FatArch> {
+        match &self {
+            ObjectType::Fat(fat) => fat.arch_iterator().collect(),
+            ObjectType::MachO(_) => vec![],
+        }
+    }
 }
 
 #[cfg(test)]

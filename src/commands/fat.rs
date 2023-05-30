@@ -1,9 +1,12 @@
+use getopts::*;
+
 use super::common::*;
 use super::handler::*;
 use super::Printer;
 use super::Result;
 use crate::auto_enum_fields::Field;
 use crate::*;
+use super::common::options::*;
 
 static SUBCOMM_NAME: &str = "fat";
 
@@ -26,11 +29,21 @@ impl Handler for ArchsHandler {
         SUBCOMM_NAME == name
     }
 
-    fn handle_object(&self, object: ObjectType, _other_args: Vec<String>) -> Result<()> {
-        match object {
-            ObjectType::Fat(fat) => self.handle_fat(fat),
-            _ => (),
-        };
+    fn handle_object(&self, object: ObjectType, other_args: Vec<String>) -> Result<()> {
+        let mut opts = Options::new();
+        self.accepted_option_items().add_to_opts(&mut opts);
+
+        let filter = ObjectFilter::build(&mut opts, &other_args)?;
+
+        let archs = &filter.get_archs(object);
+        let out_index = archs.len() > 1;
+        for (idx, arch) in archs.iter().enumerate() {
+            if out_index {
+                self.printer.out_list_item_dash(0, idx);
+            }
+            self.handle_arch(arch)
+        }
+
         Ok(())
     }
 }
@@ -40,31 +53,28 @@ const SIZE_STR: &str = "Size";
 const ALIGN_STR: &str = "Align";
 
 impl ArchsHandler {
-    fn handle_fat(&self, fat: FatObject) {
-        for (index, arch) in fat.arch_iterator().enumerate() {
-            self.printer.out_list_item_dash(0, index);
-            let mut fields = match arch.printable_cpu() {
-                Some(cpu) => {
-                    vec![Field::new(ARCH_STR.to_string(), cpu.to_string())]
-                }
-                None => {
-                    vec![
-                        Field::new(CPU_TYPE_STR.to_string(), arch.cputype.to_string()),
-                        Field::new(
-                            CPU_SUBTYPE_STR.to_string(),
-                            arch.cpusubtype.masked().to_string(),
-                        ),
-                    ]
-                }
-            };
+    fn handle_arch(&self, arch: &FatArch) {
+        let mut fields = match arch.printable_cpu() {
+            Some(cpu) => {
+                vec![Field::new(ARCH_STR.to_string(), cpu.to_string())]
+            }
+            None => {
+                vec![
+                    Field::new(CPU_TYPE_STR.to_string(), arch.cputype.to_string()),
+                    Field::new(
+                        CPU_SUBTYPE_STR.to_string(),
+                        arch.cpusubtype.masked().to_string(),
+                    ),
+                ]
+            }
+        };
 
-            fields.append(&mut vec![
-                Field::new(OFFSET_STR.to_string(), arch.offset.to_string()),
-                Field::new(SIZE_STR.to_string(), arch.size.to_string()),
-                Field::new(ALIGN_STR.to_string(), arch.align.to_string()),
-            ]);
+        fields.append(&mut vec![
+            Field::new(OFFSET_STR.to_string(), arch.offset.to_string()),
+            Field::new(SIZE_STR.to_string(), arch.size.to_string()),
+            Field::new(ALIGN_STR.to_string(), arch.align.to_string()),
+        ]);
 
-            self.printer.out_default_colored_fields(fields, "\n")
-        }
+        self.printer.out_default_colored_fields(fields, "\n")
     }
 }

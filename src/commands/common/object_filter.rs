@@ -2,7 +2,7 @@ use getopts::*;
 
 use super::options::*;
 use crate::result::{Error, Result};
-use crate::{MachObject, ObjectType};
+use crate::{MachObject, ObjectType, FatArch};
 
 const ARCH_ARG_SHORT: &str = "a";
 const ARCH_ARG_LONG: &str = "arch";
@@ -32,6 +32,16 @@ impl ObjectFilter {
                 None => vec![],
             },
             None => object_type.mach_objects(),
+        }
+    }
+
+    pub(crate) fn get_archs(&self, object_type: ObjectType) -> Vec<FatArch> {
+        match &self.arch {
+            Some(arch) => match object_type.arch_with_name(&arch) {
+                Some(o) => vec![o],
+                None => vec![],
+            },
+            None => object_type.archs(),
         }
     }
 
