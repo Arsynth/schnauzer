@@ -1,4 +1,5 @@
 use super::common;
+use super::common::ObjectFilter;
 use super::common::options::AddToOptions;
 use super::handler;
 use super::handler::*;
@@ -37,11 +38,17 @@ impl Handler for SegsHandler {
         let mut opts = Options::new();
         self.accepted_option_items().add_to_opts(&mut opts);
         let config = Config::build(&mut opts, &other_args)?;
+        let filter = ObjectFilter::build(&mut opts, &other_args)?;
 
-        match object {
-            ObjectType::Fat(fat) => self.handle_fat(fat, &config),
-            ObjectType::MachO(macho) => self.handle_macho(macho, 0, &config),
+        let objects = &filter.get_objects(object);
+        let out_arch = objects.len() > 1;
+        for (idx, obj) in objects.iter().enumerate() {
+            if out_arch {
+                common::out_single_arch_title(&self.printer, &obj.header(), idx, config.format.short);
+            }
+            self.handle_load_commands(obj.load_commands_iterator(), &config);
         }
+
         Ok(())
     }
 
@@ -53,23 +60,6 @@ impl Handler for SegsHandler {
 }
 
 impl SegsHandler {
-    fn handle_fat(&self, fat: FatObject, config: &Config) {
-        for (index, arch) in fat.arch_iterator().enumerate() {
-            self.handle_arch(arch, index + 1, &config);
-            self.printer.print_line("")
-        }
-    }
-
-    fn handle_arch(&self, arch: FatArch, index: usize, config: &Config) {
-        let object = arch.object().unwrap();
-        self.handle_macho(object, index, config);
-    }
-
-    fn handle_macho(&self, macho: MachObject, index: usize, config: &Config) {
-        common::out_single_arch_title(&self.printer, &macho.header(), index, config.format.short);
-        self.handle_load_commands(macho.load_commands_iterator(), config);
-    }
-
     fn handle_load_commands(&self, commands: LoadCommandIterator, config: &Config) {
         let commands = commands.filter(|cmd| match cmd.variant {
             LcVariant::Segment32(_) | LcVariant::Segment64(_) => true,
