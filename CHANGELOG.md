@@ -9,4 +9,7 @@ Arguments for `segs` subcommand
 
 ## [0.2.8]
 ### Added
-`archnum` parameter
+Filtering by `arch` parameter to all commands
+Help for all commands
+Convenience functions to library
+Documentation for several structs

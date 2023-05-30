@@ -65,7 +65,7 @@ pub mod object_flags_constants {
 }
 
 
-#[derive(IOread, SizeWith)]
+#[derive(Clone, IOread, SizeWith)]
 pub struct ObjectFlags(pub u32);
 
 impl Debug for ObjectFlags {

@@ -63,6 +63,24 @@ impl ObjectType {
     }
 }
 
+impl ObjectType {
+    pub fn mach_object_with_arch(&self, arch: &str) -> Option<MachObject> {
+        self.mach_objects().into_iter().find(|o| {
+            match o.header.printable_cpu() {
+                Some(cpu) => cpu.to_string() == arch,
+                None => false,
+            }
+        })
+    }
+
+    pub fn mach_objects(&self) -> Vec<MachObject> {
+        match self {
+            ObjectType::Fat(f) => f.objects(),
+            ObjectType::MachO(o) => vec![o.clone()],
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::*;

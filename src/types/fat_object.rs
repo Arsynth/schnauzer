@@ -1,16 +1,21 @@
-use super::RcReader;
-use scroll::IOread;
+use crate::MachObject;
+
 use super::constants::*;
 use super::FatArch;
+use super::RcReader;
 use super::Result;
+use scroll::IOread;
 
-use std::fmt::{Debug};
+use std::fmt::Debug;
 use std::io::{Seek, SeekFrom};
 
+/// Represents `fat_header` (but does not include magic)
+/// Some files contains multiple architectures
 pub struct FatObject {
     pub(super) reader: RcReader,
-    arch_list_offset: usize,
+
     pub nfat_arch: u32,
+    arch_list_offset: usize,
 }
 
 impl FatObject {
@@ -28,8 +33,17 @@ impl FatObject {
 }
 
 impl FatObject {
+    /// Iterate over architectures
     pub fn arch_iterator(&self) -> FatArchIterator {
         FatArchIterator::build(self.reader.clone(), self.nfat_arch, self.arch_list_offset).unwrap()
+    }
+
+    /// Collect all existing objects
+    pub fn objects(&self) -> Vec<MachObject> {
+        self.arch_iterator().filter_map(|a| match a.object() {
+            Ok(o) => Some(o),
+            Err(_) => None,
+        }).collect()
     }
 }
 
@@ -45,6 +59,7 @@ impl Debug for FatObject {
     }
 }
 
+/// Iterator over fat architectures
 pub struct FatArchIterator {
     reader: RcReader,
     nfat_arch: u32,

@@ -8,7 +8,7 @@ use scroll::IOread;
 
 use std::fmt::Debug;
 
-#[derive(AutoEnumFields)]
+#[derive(Clone, AutoEnumFields)]
 pub struct MachHeader {
     pub magic: Magic,
     pub cputype: CPUType,

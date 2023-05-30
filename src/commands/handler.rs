@@ -40,11 +40,6 @@ pub(crate) fn default_option_items() -> Vec<OptionItem> {
             description: "Help".to_string(),
             hint: "".to_string(),
         },
-        OptionItem {
-            option_type: OptionType::Arg(IsRequired(false)),
-            name: OptionName::Long(ARCH_NUM_ARG_LONG.to_string()),
-            description: "Filter architecture by number. For example - `0` to use first arch".to_string(),
-            hint: "NUMBER".to_string(),
-        },
+        ObjectFilter::option_item(),
     ]
 }

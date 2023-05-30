@@ -6,6 +6,7 @@ use super::Result;
 use std::fmt::Debug;
 use std::io::{Seek, SeekFrom};
 
+#[derive(Clone)]
 pub struct MachObject {
     reader: RcReader,
 

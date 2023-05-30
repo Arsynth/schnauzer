@@ -125,7 +125,7 @@ macro_rules! hex_display {
 }
 
 #[repr(transparent)]
-#[derive(IOread, SizeWith)]
+#[derive(Clone, IOread, SizeWith)]
 pub struct Hu32(pub u32);
 hex_display!(Hu32, 10);
 

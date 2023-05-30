@@ -53,7 +53,7 @@ pub mod filetype_constants {
 
 use self::filetype_constants::*;
 
-#[derive(IOread, SizeWith)]
+#[derive(Clone, IOread, SizeWith)]
 pub struct FileType(pub u32);
 
 impl FileType {
