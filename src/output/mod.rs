@@ -78,6 +78,11 @@ impl Printer {
         print!("{string}");
     }
     
+    pub(crate) fn print_strings(&self, strings: Vec<impl Display>, sep: &str) {
+        let v: Vec<String> = strings.iter().map(|s| format!("{s}")).collect();
+        print!("{}", v.join(sep));
+    }
+
     pub(crate) fn print_colored_string(&self, string: ColoredString) {
         print!("{string}");
     }

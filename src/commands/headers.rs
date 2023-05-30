@@ -1,11 +1,13 @@
 use colored::Colorize;
 
+use super::common::options::*;
+use super::common::*;
 use super::handler::*;
 use super::Printer;
 use super::Result;
 use crate::auto_enum_fields::Field;
 use crate::*;
-use super::common::*;
+use getopts::*;
 
 static SUBCOMM_NAME: &str = "headers";
 
@@ -28,59 +30,86 @@ impl Handler for HeadersHandler {
         SUBCOMM_NAME == name
     }
 
-    fn handle_object(&self, object: ObjectType, _other_args: Vec<String>) -> Result<()> {
-        match object {
-            ObjectType::Fat(fat) => self.handle_fat(fat),
-            ObjectType::MachO(macho) => self.handle_mach_header(macho.header(), 0),
+    fn handle_object(&self, object: ObjectType, other_args: Vec<String>) -> Result<()> {
+        let mut opts = Options::new();
+        self.accepted_option_items().add_to_opts(&mut opts);
+
+        let format = &Format::build(&mut opts, &other_args)?;
+        let filter = ObjectFilter::build(&mut opts, &other_args)?;
+
+        let objects = &filter.get_objects(object);
+
+        for (idx, obj) in objects.iter().enumerate() {
+            self.handle_mach_header(obj.header(), idx, format);
         }
+
         Ok(())
+    }
+
+    fn accepted_option_items(&self) -> Vec<OptionItem> {
+        let mut result = default_option_items();
+        result.append(&mut Format::option_items());
+        result
     }
 }
 
 impl HeadersHandler {
-    fn handle_fat(&self, fat: FatObject) {
-        for (index, arch) in fat.arch_iterator().enumerate() {
-            self.handle_mach_header(arch.object().unwrap().header(), index)
+    fn handle_mach_header(&self, header: &MachHeader, index: usize, format: &Format) {
+        if format.show_indices {
+            self.printer.out_list_item_dash(0, index);
         }
-    }
 
-    fn handle_mach_header(&self, header: &MachHeader, index: usize) {
-        self.printer.out_list_item_dash(0, index);
+        if format.short {
+            let mut strings: Vec<String> = vec![header.magic.to_string().green().to_string()];
 
-        let mut fields = vec![Field::new(MAGIC_STR.to_string(), header.magic.to_string())];
+            let mut cpu_tokens = match header.printable_cpu() {
+                Some(cpu) => vec![cpu.to_string().green().to_string()],
+                None => vec![
+                    header.cputype.to_string().green().to_string(),
+                    header.cpusubtype.masked().to_string().green().to_string(),
+                ],
+            };
 
-        match header.printable_cpu() {
-            Some(cpu) => {
-                fields.push(Field::new(ARCH_STR.to_string(), cpu.to_string()));
-            }
-            None => {
-                fields.append(&mut vec![
-                    Field::new(CPU_TYPE_STR.to_string(), header.cputype.to_string()),
-                    Field::new(
-                        CPU_SUBTYPE_STR.to_string(),
-                        header.cpusubtype.masked().to_string(),
-                    ),
-                ]);
-            }
-        };
+            strings.append(&mut cpu_tokens);
 
-        fields.append(&mut vec![
-            Field::new(
-                CAPS_STR.to_string(),
-                header.cpusubtype.feature_flags().to_string(),
-            ),
-            Field::new(FILETYPE_STR.to_string(), header.filetype.to_string()),
-            Field::new(N_CMDS_STR.to_string(), header.ncmds.to_string()),
-            Field::new(SIZE_OF_CMDS_STR.to_string(), header.sizeofcmds.to_string()),
-            Field::new(FLAGS_STR.to_string(), header.flags.to_string()),
-        ]);
+            self.printer.print_strings(strings, " ");
+            self.printer.print_line("");
+        } else {
+            let mut fields = vec![Field::new(MAGIC_STR.to_string(), header.magic.to_string())];
 
-        self.printer.out_default_colored_fields(fields, "\n");
+            match header.printable_cpu() {
+                Some(cpu) => {
+                    fields.push(Field::new(ARCH_STR.to_string(), cpu.to_string()));
+                }
+                None => {
+                    fields.append(&mut vec![
+                        Field::new(CPU_TYPE_STR.to_string(), header.cputype.to_string()),
+                        Field::new(
+                            CPU_SUBTYPE_STR.to_string(),
+                            header.cpusubtype.masked().to_string(),
+                        ),
+                    ]);
+                }
+            };
 
-        self.printer
-            .print_line(format!("{}", "Flags(detailed):".bright_white()));
-        self.printer
-            .print_line(printable_flags::strings_for_flags(header.flags.0).join("\n"))
+            fields.append(&mut vec![
+                Field::new(
+                    CAPS_STR.to_string(),
+                    header.cpusubtype.feature_flags().to_string(),
+                ),
+                Field::new(FILETYPE_STR.to_string(), header.filetype.to_string()),
+                Field::new(N_CMDS_STR.to_string(), header.ncmds.to_string()),
+                Field::new(SIZE_OF_CMDS_STR.to_string(), header.sizeofcmds.to_string()),
+                Field::new(FLAGS_STR.to_string(), header.flags.to_string()),
+            ]);
+
+            self.printer.out_default_colored_fields(fields, "\n");
+
+            self.printer
+                .print_line(format!("{}", "Flags(detailed):".bright_white()));
+            self.printer
+                .print_line(printable_flags::strings_for_flags(header.flags.0).join("\n"))
+        }
     }
 }
 
