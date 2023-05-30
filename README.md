@@ -34,12 +34,12 @@ You also can specify path with `-p` or `--path` (But this not required)
 
 
 ## Supported commands
-* [syms FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]](#syms)
-* [rpaths FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]](#rpaths)
-* [dylibs FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]](#dylibs)
-* [segs FILE [--path <FILE>] [--help] [--arch <NAME>] [--segs] [--sects] [--short] [--noidx]](#segs)
-* [fat FILE [--path <FILE>] [--help] [--arch <NAME>]](#fat)
-* [headers FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]](#headers)
+* [`syms FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#syms)
+* [`rpaths FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#rpaths)
+* [`dylibs FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#dylibs)
+* [`segs FILE [--path <FILE>] [--help] [--arch <NAME>] [--segs] [--sects] [--short] [--noidx]`](#segs)
+* [`fat FILE [--path <FILE>] [--help] [--arch <NAME>]`](#fat)
+* [`headers FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#headers)
 
 ### Default
 ```shell
