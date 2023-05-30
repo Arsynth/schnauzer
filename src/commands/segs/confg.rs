@@ -12,7 +12,7 @@ pub(super) struct Config {
 }
 
 impl Config {
-    pub(super) fn build(opts: &mut Options, args: Vec<String>) -> crate::result::Result<Self> {
+    pub(super) fn build(opts: &mut Options, args: &[String]) -> crate::result::Result<Self> {
         Self::required_option_items().add_to_opts(opts);
 
         let matches = match opts.parse(args.clone()) {

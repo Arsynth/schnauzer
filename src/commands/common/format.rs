@@ -12,9 +12,7 @@ pub(crate) struct Format {
 }
 
 impl Format {
-    pub(crate) fn build(opts: &mut Options, args: Vec<String>) -> crate::result::Result<Self> {
-        Self::option_items().add_to_opts(opts);
-
+    pub(crate) fn build(opts: &mut Options, args: &[String]) -> crate::result::Result<Self> {
         let matches = match opts.parse(args) {
             Ok(m) => m,
             Err(_) => return Err(crate::result::Error::CantParseArguments),

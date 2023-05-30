@@ -1,10 +1,14 @@
 use super::common;
+use super::common::Format;
+use super::common::ObjectFilter;
+use super::common::options::AddToOptions;
 use super::handler::*;
 use super::Printer;
 use super::Result;
 use crate::auto_enum_fields::*;
 use crate::*;
 use colored::*;
+use getopts::*;
 
 static SUBCOMM_NAME: &str = "syms";
 
@@ -27,51 +31,53 @@ impl Handler for SymsHandler {
         SUBCOMM_NAME == name
     }
 
-    fn handle_object(&self, object: ObjectType, _other_args: Vec<String>) -> Result<()> {
-        match object {
-            ObjectType::Fat(fat) => self.handle_fat(fat),
-            ObjectType::MachO(macho) => self.handle_macho(macho, 0),
+    fn handle_object(&self, object: ObjectType, other_args: Vec<String>) -> Result<()> {
+        let mut opts = Options::new();
+        self.accepted_option_items().add_to_opts(&mut opts);
+
+        let format = &Format::build(&mut opts, &other_args)?;
+        let filter = ObjectFilter::build(&mut opts, &other_args)?;
+
+        let objects = &filter.get_objects(object);
+        let out_arch = objects.len() > 1;
+        for (idx, obj) in objects.iter().enumerate() {
+            if out_arch {
+                common::out_single_arch_title(&self.printer, &obj.header(), idx, format.short);
+            }
+            self.handle_load_commands(obj.load_commands_iterator(), format);
         }
+
         Ok(())
+    }
+
+    fn accepted_option_items(&self) -> Vec<common::options::OptionItem> {
+        let mut result = default_option_items();
+        result.append(&mut Format::option_items());
+        result
     }
 }
 
 impl SymsHandler {
-    fn handle_fat(&self, fat: FatObject) {
-        for (index, arch) in fat.arch_iterator().enumerate() {
-            self.handle_arch(arch, index + 1);
-            self.printer.print_line("");
-        }
-    }
-
-    fn handle_arch(&self, arch: FatArch, index: usize) {
-        let object = arch.object().unwrap();
-        self.handle_macho(object, index);
-    }
-
-    fn handle_macho(&self, macho: MachObject, index: usize) {
-        common::out_single_arch_title(&self.printer, &macho.header(), index, false);
-        self.handle_load_commands(macho.load_commands_iterator());
-    }
-
-    fn handle_load_commands(&self, commands: LoadCommandIterator) {
+    fn handle_load_commands(&self, commands: LoadCommandIterator, format: &Format) {
         let commands = commands.flat_map(|cmd| match cmd.variant {
             LcVariant::Symtab(symtab) => Some(symtab),
             _ => None,
         });
         for cmd in commands {
-            self.handle_symtab_command(cmd);
+            self.handle_symtab_command(cmd, format);
         }
     }
 
-    fn handle_symtab_command(&self, symtab: LcSymtab) {
+    fn handle_symtab_command(&self, symtab: LcSymtab, format: &Format) {
         for (index, nlist) in symtab.nlist_iterator().enumerate() {
-            self.handle_nlist(nlist, index);
+            self.handle_nlist(nlist, index, format);
         }
     }
 
-    fn handle_nlist(&self, nlist: Nlist, index: usize) {
-        self.printer.out_list_item_dash(0, index);
+    fn handle_nlist(&self, nlist: Nlist, index: usize, format: &Format) {
+        if format.show_indices {
+            self.printer.out_list_item_dash(0, index);
+        }
 
         let title = self.type_title(&nlist);
         let name: String = match &nlist.name {
@@ -95,9 +101,11 @@ impl SymsHandler {
 
         self.printer.print_line(label);
 
-        let other_fields = self.other_symbol_fields(&nlist);
-        if other_fields.len() > 0 {
-            self.printer.out_default_colored_fields(other_fields, "\n");
+        if !format.short {
+            let other_fields = self.other_symbol_fields(&nlist);
+            if other_fields.len() > 0 {
+                self.printer.out_default_colored_fields(other_fields, "\n");
+            }
         }
     }
 

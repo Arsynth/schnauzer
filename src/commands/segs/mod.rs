@@ -35,8 +35,8 @@ impl Handler for SegsHandler {
 
     fn handle_object(&self, object: ObjectType, other_args: Vec<String>) -> Result<()> {
         let mut opts = Options::new();
-        self.option_items().add_to_opts(&mut opts);
-        let config = Config::build(&mut opts, other_args)?;
+        self.accepted_option_items().add_to_opts(&mut opts);
+        let config = Config::build(&mut opts, &other_args)?;
 
         match object {
             ObjectType::Fat(fat) => self.handle_fat(fat, &config),
@@ -45,7 +45,7 @@ impl Handler for SegsHandler {
         Ok(())
     }
 
-    fn option_items(&self) -> Vec<common::options::OptionItem> {
+    fn accepted_option_items(&self) -> Vec<common::options::OptionItem> {
         let mut items = handler::default_option_items();
         items.append(&mut Config::option_items());
         items

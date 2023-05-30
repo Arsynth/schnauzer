@@ -38,7 +38,7 @@ pub fn handle_with_args() -> Result<()> {
 
     let handler = matched_handler(&args[1]);
     let (command_name, mut option_items) = match &handler {
-        Some(h) => (Some(h.command_name()), h.option_items()),
+        Some(h) => (Some(h.command_name()), h.accepted_option_items()),
         None => (None, handler::default_option_items()),
     };
 
@@ -119,7 +119,7 @@ fn help_string(request: Option<HelpStringRequest>) -> String {
             let mut result = "".to_string();
             for handler in available_handlers() {
                 let mut help_string_builder = HelpStringBuilder::new(handler.command_name(), None);
-                help_string_builder.add_option_items(&mut handler.option_items());
+                help_string_builder.add_option_items(&mut handler.accepted_option_items());
                 result += &help_string_builder.build_string();
                 result += "\n";
             }

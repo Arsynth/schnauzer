@@ -15,7 +15,7 @@ pub(super) trait Handler {
     /// Function takes remainder of args, that it, without exec and subcommand names
     fn handle_object(&self, object: ObjectType, other_args: Vec<String>) -> Result<()>;
 
-    fn option_items(&self) -> Vec<OptionItem> {
+    fn accepted_option_items(&self) -> Vec<OptionItem> {
         default_option_items()
     }
 }
@@ -27,7 +27,7 @@ pub(crate) fn default_options() -> Options {
 }
 
 pub(crate) fn default_option_items() -> Vec<OptionItem> {
-    vec![
+    let mut result = vec![
         OptionItem {
             option_type: OptionType::Arg(IsRequired(false)),
             name: OptionName::ShortLong(PATH_OPT_SHORT.to_string(), PATH_OPT_LONG.to_string()),
@@ -40,6 +40,9 @@ pub(crate) fn default_option_items() -> Vec<OptionItem> {
             description: "Help".to_string(),
             hint: "".to_string(),
         },
-        ObjectFilter::option_item(),
-    ]
+    ];
+
+    result.append(&mut ObjectFilter::option_items());
+
+    result
 }
