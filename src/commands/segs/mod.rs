@@ -30,6 +30,10 @@ impl Handler for SegsHandler {
         SUBCOMM_NAME.to_string()
     }
 
+    fn description(&self) -> String {
+        "Prints segment commands with sections".to_string()
+    }
+
     fn can_handle_with_name(&self, name: &str) -> bool {
         SUBCOMM_NAME == name
     }

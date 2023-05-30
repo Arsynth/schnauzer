@@ -37,16 +37,16 @@ pub fn handle_with_args() -> Result<()> {
     }
 
     let handler = matched_handler(&args[1]);
-    let (command_name, mut option_items) = match &handler {
-        Some(h) => (Some(h.command_name()), h.accepted_option_items()),
-        None => (None, handler::default_option_items()),
+    let (command_name, description, mut option_items) = match &handler {
+        Some(h) => (Some(h.command_name()), h.description(), h.accepted_option_items()),
+        None => (None, "".to_string(), handler::default_option_items()),
     };
 
     let mut opts = Options::new();
     option_items.add_to_opts(&mut opts);
 
     let help_request = match command_name {
-        Some(command_name) => Some(HelpStringRequest(command_name.clone(), &mut option_items)),
+        Some(command_name) => Some(HelpStringRequest(command_name.clone(), description, &mut option_items)),
         None => None,
     };
 
@@ -105,20 +105,22 @@ pub fn handle_with_args() -> Result<()> {
     }
 }
 
-struct HelpStringRequest<'a>(String, &'a mut Vec<OptionItem>);
+struct HelpStringRequest<'a>(String, String, &'a mut Vec<OptionItem>);
 
 fn help_string(request: Option<HelpStringRequest>) -> String {
     match request {
         Some(request) => {
             let mut help_string_builder =
-                HelpStringBuilder::new(request.0.clone(), Some("Usage".to_string()));
-            help_string_builder.add_option_items(request.1);
+                HelpStringBuilder::new(request.0.clone());
+                help_string_builder.description = Some(request.1);
+                help_string_builder.show_usage_title = true;
+            help_string_builder.add_option_items(request.2);
             help_string_builder.build_string()
         }
         None => {
             let mut result = "".to_string();
             for handler in available_handlers() {
-                let mut help_string_builder = HelpStringBuilder::new(handler.command_name(), None);
+                let mut help_string_builder = HelpStringBuilder::new(handler.command_name());
                 help_string_builder.add_option_items(&mut handler.accepted_option_items());
                 result += &help_string_builder.build_string();
                 result += "\n";

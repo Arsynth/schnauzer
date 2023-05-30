@@ -26,6 +26,10 @@ impl Handler for RpathsHandler {
         SUBCOMM_NAME.to_string()
     }
 
+    fn description(&self) -> String {
+        "Prints all relative paths".to_string()
+    }
+
     fn can_handle_with_name(&self, name: &str) -> bool {
         SUBCOMM_NAME == name
     }

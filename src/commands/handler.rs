@@ -10,6 +10,7 @@ use super::common::*;
 
 pub(super) trait Handler {
     fn command_name(&self) -> String;
+    fn description(&self) -> String;
 
     fn can_handle_with_name(&self, name: &str) -> bool;
     /// Function takes remainder of args, that it, without exec and subcommand names
