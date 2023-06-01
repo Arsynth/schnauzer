@@ -35,7 +35,8 @@ pub mod build_tool_version;
 pub use build_tool_version::*;
 
 pub mod dylib;
-pub use dylib::*;
+
+pub mod reloc;
 
 pub use super::fmt_ext;
 

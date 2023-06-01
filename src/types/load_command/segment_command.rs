@@ -1,8 +1,8 @@
 use crate::RcReader;
 use crate::Result;
-use crate::constants::*;
 use crate::primitives::*;
 
+use scroll::ctx::SizeWith;
 use scroll::{IOread};
 
 use std::fmt::Debug;
@@ -29,12 +29,13 @@ pub struct LcSegment {
     pub nsects: u32,
     pub flags: Hu32,
 
+    object_file_offset: u64,
     sects_offset: u64,
     ctx: X64Context,
 }
 
 impl LcSegment {
-    pub(super) fn parse(reader: RcReader, base_offset: usize, ctx: X64Context) -> Result<Self> {
+    pub(super) fn parse(reader: RcReader, base_offset: usize, object_file_offset: u64, ctx: X64Context) -> Result<Self> {
         let endian = *ctx.endian();
         let reader_clone = reader.clone();
         let mut reader_mut = reader.borrow_mut();
@@ -68,6 +69,7 @@ impl LcSegment {
             initprot,
             nsects,
             flags,
+            object_file_offset,
             sects_offset,
             ctx,
         })
@@ -96,6 +98,7 @@ impl LcSegment {
             self.reader.clone(),
             self.nsects,
             self.sects_offset,
+            self.object_file_offset,
             self.ctx,
         )
     }
@@ -106,17 +109,19 @@ pub struct SectionIterator {
 
     nsects: u32,
     base_offset: u64,
+    object_file_offset: u64,
     ctx: X64Context,
 
     current: u32,
 }
 
 impl SectionIterator {
-    fn new(reader: RcReader, nsects: u32, base_offset: u64, ctx: X64Context) -> Self {
+    fn new(reader: RcReader, nsects: u32, base_offset: u64, object_file_offset: u64, ctx: X64Context) -> Self {
         SectionIterator {
             reader,
             nsects,
             base_offset,
+            object_file_offset,
             current: 0,
             ctx,
         }
@@ -131,7 +136,7 @@ impl Iterator for SectionIterator {
             return None;
         }
 
-        let offset = self.base_offset + BYTES_PER_SECTION64 as u64 * self.current as u64;
+        let offset = self.base_offset + Section::size_with(&self.ctx) as u64 * self.current as u64;
         self.current += 1;
 
         let mut reader_mut = self.reader.borrow_mut();
@@ -141,7 +146,7 @@ impl Iterator for SectionIterator {
 
         std::mem::drop(reader_mut);
 
-        match Section::parse(self.reader.clone(), self.ctx) {
+        match Section::parse(self.reader.clone(), self.ctx, self.object_file_offset) {
             Ok(sect) => Some(sect),
             Err(_) => return None,
         }

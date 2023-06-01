@@ -1,3 +1,5 @@
+pub mod table;
+
 use colored::{self, ColoredString, Colorize};
 use std::fmt::Display;
 

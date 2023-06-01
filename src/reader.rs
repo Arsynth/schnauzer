@@ -1,4 +1,4 @@
-use std::{path::Path, io::{self, Read, Seek, SeekFrom, BufReader, BufRead}, fs::File};
+use std::{path::Path, io::{self, Read, Seek, SeekFrom, BufReader, BufRead}, fs::File, fmt::Debug};
 use crate::fmt_ext;
 
 use super::result::*;
@@ -7,6 +7,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 pub(super) type RcReader = super::RcCell<Reader>;
 
+#[derive(Debug)]
 pub struct Reader {
     buf_read: BufReader<File>,
 }

@@ -19,7 +19,8 @@
                     "kind": "bin"
                 }
             },
-            "args": ["syms", "/bin/cat", "--arch", "x86_64"],
+            // "args": ["syms", "/bin/cat", "--arch", "x86_64"],
+            "args": ["rel", "target/debug/incremental/schnauzer-10au2ifpzd0gz/s-gkcav42b0p-1if0ww9-1gb8dkls2cwuy/1611yq7cyka4fmb4.o"],
             "cwd": "${workspaceFolder}"
         },
         {

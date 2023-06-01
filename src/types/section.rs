@@ -1,15 +1,22 @@
 use super::primitives::*;
 
 use super::auto_enum_fields::*;
+use super::reloc::*;
 use super::RcReader;
 use super::Result;
 use schnauzer_derive::AutoEnumFields;
+use scroll::ctx::SizeWith;
+use scroll::Endian;
 use scroll::IOread;
 use std::fmt::Debug;
+use std::io::Seek;
+use std::io::SeekFrom;
 
 /// Both `section` and `section_64`
 #[derive(Debug, AutoEnumFields)]
 pub struct Section {
+    object_file_offset: u64,
+
     pub sectname: Str16Bytes,
     pub segname: Str16Bytes,
     pub addr: Hu64,
@@ -23,10 +30,17 @@ pub struct Section {
     pub reserved2: u32,
     /// Only for `section_64`
     pub reserved3: u32opt,
+
+    reader: RcReader,
+    endian: Endian,
 }
 
 impl Section {
-    pub(super) fn parse(reader: RcReader, ctx: X64Context) -> Result<Self> {
+    pub(super) fn parse(
+        reader: RcReader,
+        ctx: X64Context,
+        object_file_offset: u64,
+    ) -> Result<Self> {
         let endian = ctx.endian().clone();
         let mut reader_mut = reader.borrow_mut();
 
@@ -43,7 +57,11 @@ impl Section {
         let reserved2: u32 = reader_mut.ioread_with(endian)?;
         let reserved3: u32opt = reader_mut.ioread_with(ctx)?;
 
+        std::mem::drop(reader_mut);
+        let reader = reader.clone();
+
         Ok(Self {
+            object_file_offset,
             sectname,
             segname,
             addr,
@@ -56,6 +74,84 @@ impl Section {
             reserved1,
             reserved2,
             reserved3,
+            reader,
+            endian,
         })
+    }
+}
+
+impl SizeWith<X64Context> for Section {
+    fn size_with(ctx: &X64Context) -> usize {
+        let endian = ctx.endian();
+
+        Str16Bytes::size_with(endian) // sectname
+            + Str16Bytes::size_with(endian) // segname
+            + Hu64::size_with(ctx) // addr
+            + Hu64::size_with(ctx) // size
+            + std::mem::size_of::<u32>() // offset
+            + std::mem::size_of::<u32>() // align
+            + std::mem::size_of::<u32>() // reloff
+            + std::mem::size_of::<u32>() // nreloc
+            + Hu32::size_with(endian) // flags
+            + std::mem::size_of::<u32>() // reserved1
+            + std::mem::size_of::<u32>() // reserved2
+            + u32opt::size_with(ctx) // reserved3
+    }
+}
+
+impl Section {
+    pub fn relocations_iterator(&self) -> RelocationIterator {
+        RelocationIterator::new(
+            self.reader.clone(),
+            self.nreloc,
+            self.object_file_offset + self.reloff as u64,
+            self.endian,
+        )
+    }
+}
+
+pub struct RelocationIterator {
+    reader: RcReader,
+
+    count: u32,
+    base_offset: u64,
+    endian: Endian,
+
+    current: u32,
+}
+
+impl RelocationIterator {
+    fn new(reader: RcReader, count: u32, base_offset: u64, endian: Endian) -> Self {
+        RelocationIterator {
+            reader: reader,
+            count: count,
+            base_offset: base_offset,
+            endian: endian,
+            current: 0,
+        }
+    }
+}
+
+impl Iterator for RelocationIterator {
+    type Item = RelocationInfo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current >= self.count {
+            return None;
+        }
+
+        let offset =
+            self.base_offset + RelocationInfo::size_with(&self.endian) as u64 * self.current as u64;
+        self.current += 1;
+
+        let mut reader_mut = self.reader.borrow_mut();
+        if let Err(_) = reader_mut.seek(SeekFrom::Start(offset as u64)) {
+            return None;
+        }
+
+        match reader_mut.ioread_with::<RelocationInfo>(self.endian) {
+            Ok(info) => Some(info),
+            Err(_) => None,
+        }
     }
 }

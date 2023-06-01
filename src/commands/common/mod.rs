@@ -10,6 +10,8 @@ pub(super) use object_filter::*;
 pub(super) mod help_string_builder;
 pub(super) mod options;
 
+pub(super) mod helpers;
+
 pub(super) const EXEC_NAME: &str = "schnauzer";
 
 pub(super) const HELP_FLAG_SHORT: &str = "h";

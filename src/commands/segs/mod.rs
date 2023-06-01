@@ -9,8 +9,8 @@ use crate::auto_enum_fields::AutoEnumFields;
 use crate::*;
 use colored::*;
 
-mod confg;
-use confg::*;
+mod config;
+use config::*;
 use getopts::Options;
 
 static SUBCOMM_NAME: &str = "segs";

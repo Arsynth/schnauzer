@@ -6,9 +6,9 @@ mod headers;
 mod rpaths;
 mod segs;
 mod syms;
+mod rel;
 
 mod common;
-mod helpers;
 
 use self::common::help_string_builder::HelpStringBuilder;
 use self::common::options::{AddToOptions, OptionItem};
@@ -26,6 +26,7 @@ use headers::*;
 use rpaths::*;
 use segs::*;
 use syms::*;
+use rel::*;
 
 use std::process::exit;
 
@@ -92,7 +93,7 @@ pub fn handle_with_args() -> Result<()> {
     };
 
     let args = Vec::from(args);
-    let object_type = match helpers::load_object_type_with(&path) {
+    let object_type = match common::helpers::load_object_type_with(&path) {
         Ok(obj) => obj,
         Err(err) => {
             eprint!("\"{}\":\n{:#?}\n\n", path.bright_white(), err);
@@ -157,5 +158,6 @@ fn available_handlers() -> Vec<Box<dyn Handler>> {
         Box::new(SegsHandler::new(printer.clone())),
         Box::new(ArchsHandler::new(printer.clone())),
         Box::new(HeadersHandler::new(printer.clone())),
+        Box::new(RelHandler::new(printer.clone())),
     ]
 }
