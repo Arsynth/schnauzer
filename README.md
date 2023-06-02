@@ -1,12 +1,12 @@
-# libschnauzer
+# Schnauzer
 
 ![](https://github.com/Arsynth/schnauzer/actions/workflows/rust.yml/badge.svg)
 
-Schnauzer is both library and tool for parsing mach-o files
+`schnauzer` is both library and tool for parsing mach-o files, printing symbol table, used dynamic libraries, relative paths, relocation entries, e.t.c.. [See full list of commands](#supported-commands).
 
 [Changelog](https://github.com/Arsynth/schnauzer/blob/master/CHANGELOG.md)
 
-## Features
+## Library features
 
 * Zero copy. Does not loads whole binary into memory. Uses iterators to list potentially large amount of items
 * Endian aware
@@ -40,6 +40,7 @@ You also can specify path with `-p` or `--path` (But this not required)
 * [`segs FILE [--path <FILE>] [--help] [--arch <NAME>] [--segs] [--sects] [--short] [--noidx]`](#segs)
 * [`fat FILE [--path <FILE>] [--help] [--arch <NAME>]`](#fat)
 * [`headers FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#headers)
+* [`rel FILE [--path <FILE>] [--help] [--arch <NAME>]`](#rel)
 
 ### Default
 ```shell
@@ -191,11 +192,36 @@ MH_TWOLEVEL
 MH_PIE
 ```
 
+### rel
+```shell
+# Prints relocation entries
+schnauzer rel path_to_binary
+```
+```
+__TEXT __text (5 entries)
+address  pcrel length extern type scattered symbolnum/value 
+000000b0 1     2      1      2    false     10              
+000000ac 0     2      1      4    false     2               
+000000a8 1     2      1      3    false     2               
+0000009c 0     2      1      4    false     1               
+00000098 1     2      1      3    false     1               
+__DATA __const (1 entries)
+address  pcrel length extern type scattered symbolnum/value 
+00000000 0     3      1      0    false     4               
+__DWARF __debug_info (16 entries)
+address  pcrel length extern type scattered symbolnum/value 
+000004c2 0     3      0      0    false     1               
+000004ba 0     3      0      0    false     1               
+00000499 0     3      0      0    false     1               
+00000491 0     3      0      0    false     1               
+00000477 0     3      0      0    false     1              
+```
+
 ### Usage
 
 ```toml
 [dependencies]
-schnauzer = "0.2.8"
+schnauzer = "0.2.9"
 ```
 
 ### Examples

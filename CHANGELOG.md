@@ -14,3 +14,10 @@ All notable changes will be listed here.
 * Help for each command
 * Convenience functions to library
 * Documentation for several structs
+
+## [0.2.9] - 2023-06-01
+### Added
+* New command - `rel`, prints relocation entries
+
+### Fixed
+* Sections parsing
