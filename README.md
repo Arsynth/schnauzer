@@ -34,13 +34,14 @@ You also can specify path with `-p` or `--path` (But this not required)
 
 
 ## Supported commands
-* [`syms FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#syms)
-* [`rpaths FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#rpaths)
-* [`dylibs FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#dylibs)
-* [`segs FILE [--path <FILE>] [--help] [--arch <NAME>] [--segs] [--sects] [--short] [--noidx]`](#segs)
-* [`fat FILE [--path <FILE>] [--help] [--arch <NAME>]`](#fat)
-* [`headers FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#headers)
-* [`rel FILE [--path <FILE>] [--help] [--arch <NAME>]`](#rel)
+* [`schnauzer lc FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#lc)
+* [`schnauzer syms FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#syms)
+* [`schnauzer rpaths FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#rpaths)
+* [`schnauzer dylibs FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#dylibs)
+* [`schnauzer segs FILE [--path <FILE>] [--help] [--arch <NAME>] [--segs] [--sects] [--short] [--noidx]`](#segs)
+* [`schnauzer fat FILE [--path <FILE>] [--help] [--arch <NAME>]`](#fat)
+* [`schnauzer headers FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#headers)
+* [`schnauzer rel FILE [--path <FILE>] [--help] [--arch <NAME>]`](#rel)
 
 ### Default
 ```shell
@@ -76,6 +77,32 @@ Fat arch:
      |*flags: 0x00000000
 ...
 ```
+
+### lc
+```shell
+# Prints load commands
+schnauzer lc path_to_binary
+```
+```
+Arch #0 (Arch: x86_64, File type: Exec, Flags: 0x00200085):
+cmd: LC_SEGMENT_64 cmdsize: 72
+ segname: __PAGEZERO
+ vmaddr: 0x0000000000000000
+ vmsize: 0x0000000100000000
+ fileoff: 0
+ filesize: 0
+ maxprot: 0x00000000
+ initprot: 0x00000000
+ nsects: 0
+ flags: 0x00000000
+cmd: LC_SEGMENT_64 cmdsize: 552
+ segname: __TEXT
+ vmaddr: 0x0000000100000000
+ vmsize: 0x0000000000004000
+ fileoff: 0
+
+```
+
 ### syms
 ```shell
 # Prints symtab
@@ -221,7 +248,7 @@ address  pcrel length extern type scattered symbolnum/value
 
 ```toml
 [dependencies]
-schnauzer = "0.2.9"
+schnauzer = "0.3.0"
 ```
 
 ### Examples

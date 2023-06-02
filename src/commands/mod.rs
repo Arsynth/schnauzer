@@ -7,6 +7,7 @@ mod rpaths;
 mod segs;
 mod syms;
 mod rel;
+mod lc;
 
 mod common;
 
@@ -27,6 +28,7 @@ use rpaths::*;
 use segs::*;
 use syms::*;
 use rel::*;
+use lc::*;
 
 use std::process::exit;
 
@@ -159,5 +161,6 @@ fn available_handlers() -> Vec<Box<dyn Handler>> {
         Box::new(ArchsHandler::new(printer.clone())),
         Box::new(HeadersHandler::new(printer.clone())),
         Box::new(RelHandler::new(printer.clone())),
+        Box::new(LcHandler::new(printer.clone())),
     ]
 }

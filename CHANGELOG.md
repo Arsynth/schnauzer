@@ -21,3 +21,7 @@ All notable changes will be listed here.
 
 ### Fixed
 * Sections parsing
+
+## [0.3.0]
+### Added
+* New command - `lc`, prints load commands
