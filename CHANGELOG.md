@@ -15,7 +15,7 @@ All notable changes will be listed here.
 * Convenience functions to library
 * Documentation for several structs
 
-## [0.2.9] - 2023-06-01
+## [0.2.9] - 2023-06-02
 ### Added
 * New command - `rel`, prints relocation entries
 
