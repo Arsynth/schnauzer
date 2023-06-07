@@ -1,4 +1,5 @@
 pub mod table;
+pub mod hex;
 
 use colored::{self, ColoredString, Colorize};
 use std::fmt::Display;

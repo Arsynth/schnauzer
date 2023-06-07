@@ -9,8 +9,10 @@ use scroll::ctx::SizeWith;
 use scroll::Endian;
 use scroll::IOread;
 use std::fmt::Debug;
+use std::io::Read;
 use std::io::Seek;
 use std::io::SeekFrom;
+use std::io::Write;
 
 /// Both `section` and `section_64`
 #[derive(Debug, AutoEnumFields)]
@@ -77,6 +79,22 @@ impl Section {
             reader,
             endian,
         })
+    }
+}
+
+impl Section {
+    pub fn read_data_to(&self, out: &mut dyn Write) -> Result<()> {
+        let mut reader = self.reader.borrow_mut();
+        reader.seek(SeekFrom::Start(self.object_file_offset + self.offset as u64))?;
+
+        let buf = &mut vec![0u8; self.size.0 as usize];
+        match reader.read_exact(buf) {
+            Ok(_) => match out.write_all(buf) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(crate::result::Error::Other(Box::new(e))),
+            },
+            Err(e) => Err(crate::result::Error::Other(Box::new(e))),
+        }
     }
 }
 

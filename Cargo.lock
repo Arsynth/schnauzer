@@ -3,6 +3,12 @@
 version = 3
 
 [[package]]
+name = "ascii"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d92bec98840b8f03a5ff5413de5293bfcd8bf96467cf5452609f939ec6f5de16"
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -43,6 +49,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kex"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f210bb62d606185ca607717f8c359df9f451a7279ef3f484e5c4fb3b7ed3530d"
+dependencies = [
+ "ascii",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -78,6 +93,7 @@ version = "0.3.0"
 dependencies = [
  "colored",
  "getopts",
+ "kex",
  "schnauzer-derive",
  "scroll",
  "uuid",

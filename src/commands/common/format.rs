@@ -15,7 +15,7 @@ impl Format {
     pub(crate) fn build(opts: &mut Options, args: &[String]) -> crate::result::Result<Self> {
         let matches = match opts.parse(args) {
             Ok(m) => m,
-            Err(_) => return Err(crate::result::Error::CantParseArguments),
+            Err(f) => return Err(crate::result::Error::Text(f.to_string())),
         };
 
         Ok(Self {

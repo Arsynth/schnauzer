@@ -17,7 +17,7 @@ impl Config {
 
         let matches = match opts.parse(args.clone()) {
             Ok(m) => m,
-            Err(_) => return Err(crate::result::Error::CantParseArguments),
+            Err(f) => return Err(crate::result::Error::Text(f.to_string())),
         };
 
         let segs_only = matches.opt_present(SEGS_FLAG);

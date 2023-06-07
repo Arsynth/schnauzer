@@ -8,6 +8,7 @@ mod segs;
 mod syms;
 mod rel;
 mod lc;
+mod data;
 
 mod common;
 
@@ -29,6 +30,7 @@ use segs::*;
 use syms::*;
 use rel::*;
 use lc::*;
+use data::*;
 
 use std::process::exit;
 
@@ -162,5 +164,6 @@ fn available_handlers() -> Vec<Box<dyn Handler>> {
         Box::new(HeadersHandler::new(printer.clone())),
         Box::new(RelHandler::new(printer.clone())),
         Box::new(LcHandler::new(printer.clone())),
+        Box::new(DataHandler::new(printer.clone())),
     ]
 }

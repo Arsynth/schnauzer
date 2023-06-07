@@ -4,7 +4,7 @@ use std::fmt;
 pub enum Error {
     BadMagic(u32),
     BadBufferLength,
-    CantParseArguments,
+    Text(String),
     Other(Box<dyn std::error::Error>),
 }
 
@@ -13,7 +13,7 @@ impl Error {
         match self {
             Error::BadMagic(v) => format!("Unknown magic: {v}"),
             Error::BadBufferLength => format!("Invalid buffer length"),
-            Error::CantParseArguments => format!("Error while parsing arguments"),
+            Error::Text(txt) => txt.clone(),
             Error::Other(e) => format!("Internal error: {:#?}", e),
         }
     }

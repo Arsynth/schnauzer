@@ -15,7 +15,7 @@ impl ObjectFilter {
     pub(crate) fn build(opts: &mut Options, args: &[String]) -> Result<Self> {
         let matches = match opts.parse(args) {
             Ok(m) => m,
-            Err(_) => return Err(Error::CantParseArguments),
+            Err(f) => return Err(Error::Text(f.to_string())),
         };
 
         Ok(Self {

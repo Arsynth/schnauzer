@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Arsynth/schnauzer"
 keywords = ["macho", "mach-o", "parser", "otool", "stab"]
-categories = ["command-line-interface"]
+categories = ["command-line-interface", "parsing"]
 description = "Library for parsing Mach-O files"
 exclude = [
     "testable/*"
@@ -18,4 +18,5 @@ scroll = { version = "0.11.0", features = ["derive"] }
 uuid = "1.3.1"
 colored = "2"
 getopts = "0.2.21"
+kex = "0.1.5"
 schnauzer-derive = { version = "0.1.0", path = "schnauzer-derive" }
