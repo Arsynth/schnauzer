@@ -29,3 +29,7 @@ All notable changes will be listed here.
 ## [0.3.1] - 2023-06-07
 ### Added
 * New command - `data`, prints sections hex dump
+
+## [0.3.2] - 2023-06-08
+### Changed
+* Hex values in section data printed according endianess
