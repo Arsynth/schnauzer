@@ -1,6 +1,6 @@
 use getopts::Options;
 
-use crate::{commands::common::{options::*, Format}, result::Error};
+use crate::{commands::common::{options::*}, result::Error};
 
 const COMMON_ERROR: &str = "Unable to obtain section";
 
@@ -8,7 +8,6 @@ const SECT_FLAG_SHORT: &str = "s";
 const SECT_FLAG_LONG: &str = "sect";
 
 pub(super) struct Config {
-    pub(super) format: Format,
     pub(super) seg: String,
     pub(super) sect: String,
 }
@@ -28,7 +27,6 @@ impl Config {
         match Self::search_after_sect_opt(args) {
             Ok((seg, sect)) => {
                 Ok(Self {
-                    format: Format::build(opts, args)?,
                     seg: seg.clone(),
                     sect: sect.clone(),
                 })
@@ -81,8 +79,6 @@ impl Config {
     }
 
     pub(super) fn option_items() -> Vec<OptionItem> {
-        let mut items = Self::required_option_items();
-        items.append(&mut Format::option_items());
-        items
+        Self::required_option_items()
     }
 }

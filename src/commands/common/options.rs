@@ -75,7 +75,8 @@ impl OptionItem {
 
     fn label(&self) -> String {
         let name = match &self.name {
-            OptionName::Long(s) | OptionName::ShortLong(_, s) => format!("--{s}"),
+            OptionName::Long(l) => format!("--{l}"),
+            OptionName::ShortLong(s, l) => format!("--{l} -{s}"),
         };
 
         if self.hint.len() > 0 {

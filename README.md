@@ -42,6 +42,7 @@ You also can specify path with `-p` or `--path` (But this not required)
 * [`schnauzer fat FILE [--path <FILE>] [--help] [--arch <NAME>]`](#fat)
 * [`schnauzer headers FILE [--path <FILE>] [--help] [--arch <NAME>] [--short] [--noidx]`](#headers)
 * [`schnauzer rel FILE [--path <FILE>] [--help] [--arch <NAME>]`](#rel)
+* [`schnauzer data FILE [--path -p <FILE>] [--help -h] [--arch -a <NAME>] --sect -s <segname sectname>`](#data)
 
 ### Default
 ```shell
@@ -242,6 +243,20 @@ address  pcrel length extern type scattered symbolnum/value
 00000499 0     3      0      0    false     1               
 00000491 0     3      0      0    false     1               
 00000477 0     3      0      0    false     1              
+```
+
+### data
+```shell
+# Prints hex dump
+schnauzer data path_to_binary -s __TEXT __cstring
+```
+```
+Arch #0 (Arch: x86_64, File type: Exec, Flags: 0x00200085):
+__TEXT __cstring
+0000000100003f2a 0062656c 6e737475 76007374 646f7574 |.belnstuv.stdout|
+0000000100003f3a 00757361 67653a20 63617420 5b2d6265 |.usage: cat [-be|
+0000000100003f4a 6c6e7374 75765d20 5b66696c 65202e2e |lnstuv] [file ..|
+0000000100003f5a 2e5d0a00 2d007374 64696e00 25730072 |.]..-.stdin.%s.r|
 ```
 
 ### Usage

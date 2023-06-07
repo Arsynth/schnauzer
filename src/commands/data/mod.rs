@@ -51,7 +51,7 @@ impl Handler for DataHandler {
                     &self.printer,
                     &obj.header(),
                     idx,
-                    config.format.short,
+                    false,
                 );
             }
             self.handle_load_commands(obj.load_commands_iterator(), &config);
