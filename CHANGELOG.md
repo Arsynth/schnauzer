@@ -22,6 +22,10 @@ All notable changes will be listed here.
 ### Fixed
 * Sections parsing
 
-## [0.3.0]
+## [0.3.0] - 2023-06-02
 ### Added
 * New command - `lc`, prints load commands
+
+## [0.3.1] - 2023-06-07
+### Added
+* New command - `data`, prints sections hex dump
