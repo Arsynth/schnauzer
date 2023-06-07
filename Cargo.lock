@@ -50,9 +50,9 @@ dependencies = [
 
 [[package]]
 name = "kex"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f210bb62d606185ca607717f8c359df9f451a7279ef3f484e5c4fb3b7ed3530d"
+checksum = "986d76d143f33de718d0b8c4031ae3cb99f1366172d08f0432e662ac37cad2f5"
 dependencies = [
  "ascii",
 ]
@@ -89,7 +89,7 @@ dependencies = [
 
 [[package]]
 name = "schnauzer"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "colored",
  "getopts",

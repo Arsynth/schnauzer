@@ -263,7 +263,7 @@ __TEXT __cstring
 
 ```toml
 [dependencies]
-schnauzer = "0.3.1"
+schnauzer = "0.3.2"
 ```
 
 ### Examples

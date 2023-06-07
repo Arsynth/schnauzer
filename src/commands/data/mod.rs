@@ -94,7 +94,7 @@ impl DataHandler {
         use crate::output::hex::*;
         println!("{} {}", sect.segname.to_string().yellow(), sect.sectname.to_string().yellow());
 
-        _ = dump_section(&sect);
+        dump_section(&sect).unwrap();
         println!("")
     }
 }

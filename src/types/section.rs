@@ -34,7 +34,7 @@ pub struct Section {
     pub reserved3: u32opt,
 
     reader: RcReader,
-    endian: Endian,
+    pub endian: Endian,
 }
 
 impl Section {
@@ -84,17 +84,31 @@ impl Section {
 
 impl Section {
     pub fn read_data_to(&self, out: &mut dyn Write) -> Result<()> {
+        use std::cmp::min;
+        const BUFFER_SIZE: usize = 4096;
+
         let mut reader = self.reader.borrow_mut();
         reader.seek(SeekFrom::Start(self.object_file_offset + self.offset as u64))?;
 
-        let buf = &mut vec![0u8; self.size.0 as usize];
-        match reader.read_exact(buf) {
-            Ok(_) => match out.write_all(buf) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(crate::result::Error::Other(Box::new(e))),
-            },
-            Err(e) => Err(crate::result::Error::Other(Box::new(e))),
+        let mut remainig = self.size.0 as usize;
+
+        let mut tmp = [0u8; BUFFER_SIZE];
+
+        while remainig > 0 {
+            let to_read = min(remainig, BUFFER_SIZE);
+
+            match reader.read_exact(&mut tmp[..to_read]) {
+                Ok(_) => match out.write_all(&mut tmp[..to_read]) {
+                    Ok(_) => (),
+                    Err(e) => {return Err(crate::result::Error::Other(Box::new(e)));},
+                },
+                Err(e) => {return Err(crate::result::Error::Other(Box::new(e)));},
+            }
+
+            remainig -= to_read;
         }
+
+        Ok(())
     }
 }
 
