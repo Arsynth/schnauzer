@@ -47,7 +47,8 @@ impl Handler for DylibsHandler {
             if out_arch {
                 common::out_single_arch_title(&self.printer, &obj.header(), idx, format.short);
             }
-            self.handle_load_commands(obj.load_commands_iterator(), format);
+            self.handle_rpath_commands(obj.load_commands_iterator(), format);
+            self.handle_dylib_commands(obj.load_commands_iterator(), format);
         }
 
         Ok(())
@@ -61,22 +62,50 @@ impl Handler for DylibsHandler {
 }
 
 impl DylibsHandler {
-    fn handle_load_commands(&self, commands: LoadCommandIterator, format: &Format) {
-        let commands = commands.flat_map(|cmd| match cmd.variant {
-            LcVariant::LoadDylib(dylib) => Some(dylib),
+    fn handle_rpath_commands(&self, commands: LoadCommandIterator, format: &Format) {
+        let commands: Vec<LcRpath> = commands.flat_map(|cmd| match cmd.variant {
+            LcVariant::Rpath(rpath) => Some(rpath),
             _ => None,
-        });
-        for (index, cmd) in commands.enumerate() {
-            self.handle_dylib_command(cmd, index, format);
+        }).collect();
+
+        if commands.len() > 0 {
+            println!("{}", "Relative paths:".cyan());
+            for (index, cmd) in commands.iter().enumerate() {
+                if format.show_indices {
+                    self.printer.out_list_item_dash(0, index);
+                }
+                self.printer.print_line(common::colored_path_string(cmd.path.to_string()));
+            }
+            println!("");
+        } else {
+            println!("{}", "No relative paths".dimmed());
         }
     }
 
-    fn handle_dylib_command(&self, dylib: LcDylib, index: usize, format: &Format) {
+    fn handle_dylib_commands(&self, commands: LoadCommandIterator, format: &Format) {
+        let commands: Vec<LcDylib> = commands.flat_map(|cmd| match cmd.variant {
+            LcVariant::LoadDylib(dylib) => Some(dylib),
+            _ => None,
+        }).collect();
+
+        if commands.len() > 0 {
+            println!("{}", "Dynamic libraries:".cyan());
+            for (index, cmd) in commands.iter().enumerate() {
+                self.handle_dylib_command(cmd, index, format);
+            }
+            println!("");
+        } else {
+            println!("{}", "No dynamic libraries".dimmed());
+        }
+
+    }
+
+    fn handle_dylib_command(&self, dylib: &LcDylib, index: usize, format: &Format) {
         if format.show_indices {
             self.printer.out_list_item_dash(0, index);
         }
 
-        let name = common::colored_path_string(dylib.name);
+        let name = common::colored_path_string(dylib.name.to_string());
         self.printer.print_string(name);
 
         if !format.short {
