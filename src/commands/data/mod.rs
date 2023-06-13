@@ -80,21 +80,27 @@ impl DataHandler {
             _ => None,
         });
 
-        let sections = segs.filter_map(|seg| {
+        let sections: Vec<Section> = segs.filter_map(|seg| {
             seg.sections_iterator()
                 .find(|s| s.sectname.to_string() == config.sect)
-        });
+        }).collect();
+
+        if sections.len() == 0 {
+            println!("{}\n", "Section not found".dimmed());
+        }
 
         for sect in sections {
             self.handle_section(sect);
+            print!("\n\n")
         }
     }
 
     fn handle_section(&self, sect: Section) {
         use crate::output::hex::*;
         println!("{} {}", sect.segname.to_string().yellow(), sect.sectname.to_string().yellow());
-
+        if sect.size.0 == 0 {
+            println!("{}\n", "No data in section".dimmed());
+        }
         dump_section(&sect).unwrap();
-        println!("")
     }
 }

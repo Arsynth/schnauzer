@@ -50,9 +50,9 @@ dependencies = [
 
 [[package]]
 name = "kex"
-version = "0.1.6"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "986d76d143f33de718d0b8c4031ae3cb99f1366172d08f0432e662ac37cad2f5"
+checksum = "b0993c58dcf23771e9d4120fb5316e77944006a06ef9560100c0247ffecd2414"
 dependencies = [
  "ascii",
 ]
