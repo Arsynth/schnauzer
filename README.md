@@ -2,6 +2,8 @@
 
 ![](https://github.com/Arsynth/schnauzer/actions/workflows/rust.yml/badge.svg)
 
+[![demo](https://asciinema.org/a/591299.svg)](https://asciinema.org/a/591299?autoplay=1)
+
 `schnauzer` is both library and tool for parsing mach-o files, printing symbol table, used dynamic libraries, relative paths, relocation entries, e.t.c.. [See full list of commands](#supported-commands).
 
 [Changelog](https://github.com/Arsynth/schnauzer/blob/master/CHANGELOG.md)
@@ -263,7 +265,7 @@ __TEXT __cstring
 
 ```toml
 [dependencies]
-schnauzer = "0.3.3"
+schnauzer = "0.3.4"
 ```
 
 ### Examples
