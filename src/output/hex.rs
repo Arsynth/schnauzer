@@ -12,11 +12,14 @@ pub(crate) fn dump_section(sect: &Section) -> Result<()> {
             Separators::new("", &": ".green().to_string()),
         )),
         ByteFormatter::new(
+            Default::default(),
             Groupping::RepeatingGroup(Group::new(4, " "), 4),
+            Default::default(),
             sect.endian.is_little(),
             Default::default(),
         ),
         Some(CharFormatter::new(".".dimmed().to_string(), Default::default())),
+        false
     );
     
     let mut printer = Printer::new(stdout(), sect.addr.0 as usize, config);
