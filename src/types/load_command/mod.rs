@@ -333,11 +333,13 @@ impl LcVariant {
                 Ok(Self::DyldEnvironment(c))
             }
             LC_THREAD => {
-                let c = reader_mut.ioread_with(endian)?;
+                std::mem::drop(reader_mut);
+                let c = LcThread::parse(reader, base_offset, endian)?;
                 Ok(Self::Thread(c))
             }
             LC_UNIXTHREAD => {
-                let c = reader_mut.ioread_with(endian)?;
+                std::mem::drop(reader_mut);
+                let c = LcThread::parse(reader, base_offset, endian)?;
                 Ok(Self::Thread(c))
             }
             LC_ROUTINES => {
