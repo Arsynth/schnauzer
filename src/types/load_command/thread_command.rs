@@ -9,8 +9,8 @@ use schnauzer_derive::AutoEnumFields;
 #[repr(C)]
 #[derive(Debug, IOread, SizeWith, AutoEnumFields)]
 pub struct LcThread {
-    flavor: u32,
-    count: u32,
+    pub flavor: u32,
+    pub count: u32,
     /* struct XXX_thread_state state   thread state for this flavor */
     /* ... */
 }
