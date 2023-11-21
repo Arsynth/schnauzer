@@ -137,6 +137,7 @@ impl LoadCommand {
         let variant = LcVariant::parse(
             reader.clone(),
             cmd,
+            cmdsize,
             base_offset,
             endian,
             is_64,
@@ -253,6 +254,7 @@ impl LcVariant {
     fn parse(
         reader: RcReader,
         cmd: u32,
+        cmdsize: u32,
         command_offset: usize,
         endian: Endian,
         is_64: bool,
@@ -333,11 +335,13 @@ impl LcVariant {
                 Ok(Self::DyldEnvironment(c))
             }
             LC_THREAD => {
-                let c = reader_mut.ioread_with(endian)?;
+                std::mem::drop(reader_mut);
+                let c = LcThread::parse(reader, cmdsize, base_offset, endian)?;
                 Ok(Self::Thread(c))
             }
             LC_UNIXTHREAD => {
-                let c = reader_mut.ioread_with(endian)?;
+                std::mem::drop(reader_mut);
+                let c = LcThread::parse(reader, cmdsize, base_offset, endian)?;
                 Ok(Self::Thread(c))
             }
             LC_ROUTINES => {
