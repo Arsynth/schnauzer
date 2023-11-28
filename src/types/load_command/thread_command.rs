@@ -24,6 +24,16 @@ pub struct LcThread {
     endian: scroll::Endian,
 }
 
+impl LcThread {
+    pub(super) fn parse(reader: RcReader, cmdsize: u32, base_offset: usize, endian: scroll::Endian) -> Result<Self> {
+        Ok(LcThread { reader, cmdsize, base_offset, endian })
+    }
+
+    pub fn flavor_iterator(&self) -> FlavorIterator {
+        FlavorIterator::new(self.reader.clone(), self.cmdsize, self.base_offset, self.endian)
+    }
+}
+
 #[repr(C)]
 #[derive(AutoEnumFields)]
 pub struct LcThreadFlavor {
@@ -33,25 +43,6 @@ pub struct LcThreadFlavor {
     /* ... */
 
     state_offset: u64
-}
-
-pub struct FlavorIterator {
-    reader: RcReader,
-    base_offset: usize,
-    cmdsize: u32,
-    endian: scroll::Endian,
-
-    current: u32,
-}
-
-impl LcThread {
-    pub(super) fn parse(reader: RcReader, cmdsize: u32, base_offset: usize, endian: scroll::Endian) -> Result<Self> {
-        Ok(LcThread { reader, cmdsize, base_offset, endian })
-    }
-
-    pub fn flavor_iterator(&self) -> FlavorIterator {
-        FlavorIterator::new(self.reader.clone(), self.cmdsize, self.base_offset, self.endian)
-    }
 }
 
 impl LcThreadFlavor {
@@ -92,6 +83,15 @@ impl Debug for LcThreadFlavor {
             .field("count", &self.count)
             .finish()
     }
+}
+
+pub struct FlavorIterator {
+    reader: RcReader,
+    base_offset: usize,
+    cmdsize: u32,
+    endian: scroll::Endian,
+
+    current: u32,
 }
 
 impl FlavorIterator {
