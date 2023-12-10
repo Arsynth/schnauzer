@@ -266,6 +266,7 @@ impl LcVariant {
         // We assume reader already stay right after `cmd` and `cmdsize`
         match cmd {
             LC_SEGMENT => {
+                std::mem::drop(reader_mut);
                 let c = LcSegment::parse(reader_clone, base_offset, object_file_offset, X64Context::Off(endian))?;
                 Ok(Self::Segment32(c))
             }
