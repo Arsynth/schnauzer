@@ -91,6 +91,7 @@ impl DefaultHandler {
         match variant {
             LcVariant::Segment32(seg) => self.handle_segment_command(seg, level),
             LcVariant::Segment64(seg) => self.handle_segment_command(seg, level),
+            LcVariant::Thread(thread) => self.handle_thread_flavor(thread, level),
             _ => (),
         }
     }
@@ -110,6 +111,20 @@ impl DefaultHandler {
         for field in section.all_fields() {
             self.printer
                 .out_dashed_field(&field.name, &field.value, level + 1);
+        }
+    }
+
+    fn handle_thread_flavor(&self, thread: LcThread, level: usize) {
+        self.printer
+            .out_dashed_field("Flavors", "", level);
+
+        for thread_flavor in thread.flavor_iterator() {
+            for field in thread_flavor.all_fields() {
+                self.printer
+                    .out_dashed_field(&field.name, &field.value, level + 1);
+            }
+
+            self.printer.out_tile(level + 1);
         }
     }
 }
